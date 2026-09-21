@@ -91,8 +91,8 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
 })();
 </script>
 
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.63";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
-<script>window.__PSU_WEB_TEST_BUILD="v2.63-fastbase-common-ui-feedback";</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.64";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script>window.__PSU_WEB_TEST_BUILD="v2.64-fastbase-detail-unify-auth-fix";</script>
 <div id="psuBootV247" aria-live="polite"><div class="boot-card-v247"><div class="boot-dot-v247"></div><div class="boot-title-v247">PSU 작업현황</div><div class="boot-sub-v247">최신 정보를 불러오는 중...</div></div></div>
 <script id="web-v247-first-paint-script">
 (function(){
@@ -326,7 +326,7 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
    const memoSecs=[...mbody.querySelectorAll('.section')].filter(s=>{const h=s.querySelector('h4');return h&&['메모','장비 메모','특이사항'].includes(h.textContent.trim())});const sec=memoSecs.length?memoSecs[memoSecs.length-1]:null;
    if(sec){const title=document.createElement('div');title.className='inline-memo-title-v112 inline-memo-head-v167';const label=document.createElement('span');label.dataset.v167MemoLabel='1';label.textContent='추가 메모';const edit=document.createElement('button');edit.type='button';edit.className='master-action-v136 inline-memo-edit-v167';const master=document.body.classList.contains('master-mode');edit.textContent=master?'수정':'메모 추가';edit.onclick=()=>master?openSharedMemoV15(unit):openAddV112(unit,date);title.appendChild(label);title.appendChild(edit);sec.appendChild(title);const box=document.createElement('div');box.id='inlineMemosV112';box.dataset.unit=unit;box.className='inline-memos-v112';box.innerHTML='<div class="inline-memo-empty-v112">메모 불러오는 중...</div>';sec.appendChild(box)}
    [...mbody.querySelectorAll('button')].filter(b=>/메모.*(보기|추가)/.test(b.textContent)&&!b.classList.contains('inline-memo-edit-v167')).forEach(b=>b.remove());
-   loadInlineV112(unit,date);
+   if(!window.__webV264Installed)loadInlineV112(unit,date);
  };
  const oldLoadV112=load;load=function(silent=false){return oldLoadV112(silent)};
  setTimeout(()=>{const ver=document.getElementById('version');if(ver)ver.textContent=WEB_VERSION_V197+' · 메모·연차 입력 가능'},50);
@@ -1195,7 +1195,7 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
  }
  function decorateCardsV138(){document.querySelectorAll('#plist .pitem[data-unit]').forEach(card=>{card.querySelectorAll('.pending-btn-v138').forEach(x=>x.remove());const unit=card.dataset.unit,s=statsV138(unit),head=card.querySelector('.phead');if(!head)return;const b=document.createElement('button');b.type='button';b.className='pending-btn-v138'+(s.open.length?' has-open':'');b.textContent=s.open.length?`미비작업 ${s.open.length}건`:'미비작업';b.onclick=e=>{e.preventDefault();e.stopPropagation();openPendingV138(unit)};const memo=head.querySelector('.sharedbtn-v15');if(memo)head.insertBefore(b,memo);else head.appendChild(b)})}
  const oldRP=window.renderProgress;if(typeof oldRP==='function')window.renderProgress=renderProgress=function(){const r=oldRP();decorateCardsV138();return r};
- const oldDetail=window.showDetail;if(typeof oldDetail==='function')window.showDetail=showDetail=function(unit,date=''){const r=oldDetail(unit,date);setTimeout(()=>{if(!mbody.querySelector('.pending-section-v138')){const s=statsV138(unit),sec=document.createElement('div');sec.className='section pending-section-v138';sec.innerHTML=`<div class="pending-title-v138">미비작업 ${s.open.length?`<span class="pending-count-v138">${s.open.length}건</span>`:'<span style="font-size:11px;color:#94a3b8">없음</span>'}</div><div style="font-size:12px;color:#64748b">${s.open.length?esc(s.open.slice(0,3).map(x=>x.text).join(' · ')):'현재 미완료 작업이 없습니다.'}</div><button class="btn pending-detail-open-v248" type="button" id="pendingOpenDetailV138">미비작업 보기 / 수정</button>`;mbody.appendChild(sec);const pendingOpenBtn=sec.querySelector('#pendingOpenDetailV138');if(pendingOpenBtn)pendingOpenBtn.onclick=ev=>{ev.preventDefault();ev.stopPropagation();openPendingV138(unit)}}},80);return r};
+ const oldDetail=window.showDetail;if(typeof oldDetail==='function')window.showDetail=showDetail=function(unit,date=''){const r=oldDetail(unit,date);setTimeout(()=>{if(!window.__webV264Installed&&!mbody.querySelector('.pending-section-v138')){const s=statsV138(unit),sec=document.createElement('div');sec.className='section pending-section-v138';sec.innerHTML=`<div class="pending-title-v138">미비작업 ${s.open.length?`<span class="pending-count-v138">${s.open.length}건</span>`:'<span style="font-size:11px;color:#94a3b8">없음</span>'}</div><div style="font-size:12px;color:#64748b">${s.open.length?esc(s.open.slice(0,3).map(x=>x.text).join(' · ')):'현재 미완료 작업이 없습니다.'}</div><button class="btn pending-detail-open-v248" type="button" id="pendingOpenDetailV138">미비작업 보기 / 수정</button>`;mbody.appendChild(sec);const pendingOpenBtn=sec.querySelector('#pendingOpenDetailV138');if(pendingOpenBtn)pendingOpenBtn.onclick=ev=>{ev.preventDefault();ev.stopPropagation();openPendingV138(unit)}}},80);return r};
  function ensureLogButtonV138(){const box=document.getElementById('webActionsV131');if(!box||document.getElementById('activityLogBtnV138'))return;const b=document.createElement('button');b.className='mini-v131 master-log-btn-v138';b.id='activityLogBtnV138';b.textContent='접속 기록';box.insertBefore(b,document.getElementById('adminLoginBtnV131'));b.onclick=openActivityLogV138}
  function srcLabelV138(x){return x.sourceKind==='viewer'?'PC 뷰어':x.sourceKind==='admin'?'관리자 프로그램':'웹'}
  function openActivityLogV138(){
@@ -2182,4 +2182,79 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isAdmin()){ensureButtons();if(!scheduleRef)setTimeout(()=>connectSchedule(false),120)}},{passive:true});
 })();
 </script>
+
+<style id="web-v264-calendar-detail-unify-style">
+/* v2.64: 날짜/공휴일/액션을 독립 배치 */
+#calendar .day{position:relative}
+#calendar .date{position:relative;min-height:20px;justify-content:flex-start!important;padding-right:112px}
+#calendar .date>span:first-child{position:relative;z-index:2;flex:0 0 auto}
+#calendar .date>.holiday,#calendar .date>.holiday-v263{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:46%;overflow:hidden;text-overflow:ellipsis;text-align:center;white-space:nowrap;pointer-events:none;margin:0!important}
+#calendar .date>.personal-add-v262{position:absolute;right:58px;top:50%;transform:translateY(-50%);margin:0!important;z-index:4}
+#calendar .date>.annual-leave-badge-v114,#calendar .date>.annual-leave-badge-v115{position:absolute;right:0;top:50%;transform:translateY(-50%);margin:0!important;z-index:4}
+
+/* 상세페이지 공통 UI */
+#mbody.web-detail-unified-v264>.section{margin-top:16px!important;padding-top:13px!important;border-top:1px solid #e5e7eb!important}
+#mbody.web-detail-unified-v264>.section>h4{margin:0 0 8px!important;font-size:14px!important;font-weight:850!important;color:#172033}
+#mbody.web-detail-unified-v264 .web-detail-head-v264{display:flex;align-items:center;gap:7px;margin:0 0 8px}
+#mbody.web-detail-unified-v264 .web-detail-head-v264 h4{margin:0;font-size:14px;font-weight:850;color:#172033}
+#mbody.web-detail-unified-v264 .web-detail-status-v264{font-size:11px;color:#64748b;font-weight:700}
+#mbody.web-detail-unified-v264 .web-detail-action-v264{margin-left:auto;min-height:28px;padding:4px 9px;border:1px solid #a9c4ec;background:#fff;color:#315ea8;border-radius:7px;font-size:11px;font-weight:800;line-height:18px;box-shadow:none;cursor:pointer}
+#mbody.web-detail-unified-v264 .web-detail-box-v264{padding:10px;border:1px solid #e2e8f0;border-radius:8px;background:#f7f9fc;color:#334155;line-height:1.55;white-space:pre-wrap}
+#mbody.web-detail-unified-v264 .web-detail-memo-row-v264+ .web-detail-memo-row-v264{margin-top:7px;padding-top:7px;border-top:1px dashed #d9e0e9}
+#mbody.web-detail-unified-v264 .web-detail-memo-meta-v264{font-size:10px;color:#718096;margin-bottom:3px}
+#mbody.web-detail-unified-v264 .pending-section-v138,#mbody.web-detail-unified-v264 .pending-detail-open-v248{display:none!important}
+/* 새 구조에서는 기존 하단 큰 미비작업 버튼 전용 여백이 필요 없다. */
+@media(max-width:820px){#mbody.web-detail-unified-v264>.section{padding-bottom:0!important}}
+</style>
+<script id="web-v264-auth-pending-detail-script">
+(function(){
+ if(window.__webV264Installed)return;window.__webV264Installed=true;
+ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+ function sess(){return localStorage.getItem('psuWebAdminSessionV131')||''}
+ function rpcToken(s){return new Promise((resolve,reject)=>{try{google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getFirebaseRealtimeTokenV184(s)}catch(e){reject(e)}})}
+ async function ensureAdminFirebaseV264(){
+   let u=window.firebase&&firebase.auth().currentUser;if(u&&!u.isAnonymous)return u;
+   if(window.__firebaseFastWebRestoreV186){try{await window.__firebaseFastWebRestoreV186()}catch(_e){}u=firebase.auth().currentUser;if(u&&!u.isAnonymous)return u}
+   const s=sess();if(s){try{const r=await rpcToken(s);if(r&&r.customToken){await firebase.auth().signInWithCustomToken(r.customToken);u=firebase.auth().currentUser;if(u&&!u.isAnonymous)return u}}catch(_e){}}
+   await sleep(120);u=firebase.auth().currentUser;if(u&&!u.isAnonymous)return u;throw new Error('Firebase 관리자 인증을 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+ }
+ window.__ensureAdminFirebaseV264=ensureAdminFirebaseV264;
+ const oldPersonal=window.openPersonalScheduleV262;if(typeof oldPersonal==='function')window.openPersonalScheduleV262=async function(){try{await ensureAdminFirebaseV264()}catch(e){return psuAlert(e.message||String(e))}return oldPersonal.apply(this,arguments)};
+
+ // 첫 미비작업 조작 전에 해당 장비의 최신 Firebase 값을 받아 stale task id를 제거한다.
+ const oldPending=window.openPendingV138;if(typeof oldPending==='function')window.openPendingV138=async function(unit){
+   try{const f=window.__fbDirectV187;if(f){await f.auth();const rec=await f.read('pending/'+f.b64key(String(unit||''))),tasks=rec&&Array.isArray(rec.tasks)?rec.tasks:[];if(typeof window.__setPendingCacheUnitV143==='function')window.__setPendingCacheUnitV143(String(unit||''),tasks);const p=typeof progressFor==='function'?progressFor(unit):null;if(p)p.pendingTasks=tasks}}
+   catch(e){console.warn('미비작업 최신값 선조회 실패',e)}
+   return oldPending.apply(this,arguments)
+ };
+
+ function fmtMemoTime(v){try{return v?new Date(v).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}catch(_e){return String(v||'')}}
+ async function directMemoItems(unit,date){
+   const raw=window.__psuMemoGetRawV256?await window.__psuMemoGetRawV256(false):{},p=typeof progressFor==='function'?(progressFor(unit)||{}):{},es=typeof eventsFor==='function'?eventsFor(unit):[],e=(date&&es.find(x=>String(x.date||'')===String(date)))||es[0]||{},sn=String(p.sn||e.sn||'');
+   const effective=m=>String(m.memoDate||m.date||m.createdDate||String(m.createdAt||'').slice(0,10)||'');
+   return Object.keys(raw||{}).map(k=>Object.assign({id:k},raw[k]||{})).filter(m=>m&&!m.deleted&&((unit&&String(m.unit||'')===String(unit))||(sn&&String(m.sn||'')===sn))).filter(m=>!date||effective(m)===String(date)).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')))
+ }
+ function pendingTasks(unit){const a=typeof window.__pendingTasksForUnitV246==='function'?window.__pendingTasksForUnitV246(unit):((progressFor(unit)||{}).pendingTasks||[]);return (Array.isArray(a)?a:[]).filter(x=>x&&String(x.text||'').trim())}
+ function removeOldDetailHelpers(){
+   const old=document.getElementById('inlineMemosV112');if(old){const sec=old.closest('.section');old.remove();if(sec){sec.querySelectorAll('.inline-memo-title-v112,.inline-memo-edit-v167').forEach(x=>x.remove())}}
+   document.querySelectorAll('#mbody>.pending-section-v138').forEach(x=>x.remove());
+ }
+ function emptySpecial(sec){if(!sec)return false;const h=sec.querySelector('h4'),pre=sec.querySelector('.pre');return !!(h&&h.textContent.trim()==='특이사항'&&pre&&/등록된\s*특이사항\s*없음/.test(pre.textContent||''))}
+ async function normalizeDetail(unit,date){
+   const body=window.mbody||document.getElementById('mbody');if(!body)return;body.classList.add('web-detail-unified-v264');removeOldDetailHelpers();
+   let sections=[...body.querySelectorAll(':scope > .section')];let special=sections.find(x=>{const h=x.querySelector(':scope > h4');return h&&h.textContent.trim()==='특이사항'});if(special&&emptySpecial(special)){special.remove();special=null}
+   // 기존 장비 메모/중복 메모 섹션을 제거하고 direct Firebase 메모 섹션 하나로 통일.
+   sections=[...body.querySelectorAll(':scope > .section')];sections.filter(x=>{const h=x.querySelector(':scope > h4');return h&&['메모','장비 메모'].includes(h.textContent.trim())}).forEach(x=>x.remove());
+   const memoSec=document.createElement('div');memoSec.className='section web-detail-memo-v264';memoSec.innerHTML='<div class="web-detail-head-v264"><h4>메모</h4><span class="web-detail-status-v264">불러오는 중...</span><button type="button" class="web-detail-action-v264">추가</button></div><div class="web-detail-box-v264">메모를 불러오는 중입니다...</div>';
+   const memoBtn=memoSec.querySelector('button');memoBtn.onclick=e=>{e.preventDefault();e.stopPropagation();window.openSharedMemoV15&&window.openSharedMemoV15(unit,date||'')};
+   const firstSection=body.querySelector(':scope > .section'),anchor=special||firstSection||body.querySelector(':scope > .detail');if(anchor)anchor.insertAdjacentElement('afterend',memoSec);else body.appendChild(memoSec);
+   try{const items=await directMemoItems(unit,date||'');if(!memoSec.isConnected)return;memoSec.querySelector('.web-detail-status-v264').textContent=items.length?`${items.length}건`:'0건';const box=memoSec.querySelector('.web-detail-box-v264');box.innerHTML=items.length?items.map(m=>`<div class="web-detail-memo-row-v264"><div class="web-detail-memo-meta-v264">${esc(m.author||'')}${m.createdAt?` · ${esc(fmtMemoTime(m.createdAt))}`:''}</div><div>${esc(m.text||'')}</div></div>`).join(''):'추가된 메모가 없습니다.'}catch(e){if(memoSec.isConnected)memoSec.querySelector('.web-detail-box-v264').textContent='메모를 불러오지 못했습니다.'}
+   // 미비작업 섹션을 관리자/PC와 같은 헤더+관리+목록 구조로 통일.
+   const all=pendingTasks(unit),open=all.filter(x=>!x.done),pend=document.createElement('div');pend.className='section web-detail-pending-v264';pend.innerHTML=`<div class="web-detail-head-v264"><h4>미비작업</h4><span class="web-detail-status-v264">${open.length?`미완료 ${open.length}건`:all.length?'모두 완료':'등록 없음'}</span><button type="button" class="web-detail-action-v264">관리</button></div><div class="web-detail-box-v264">${open.length?open.slice(0,6).map(x=>`☐ ${esc(x.text)}`).join('<br>'):'미완료 항목이 없습니다.'}${open.length>6?`<br>외 ${open.length-6}건`:''}</div>`;pend.querySelector('button').onclick=e=>{e.preventDefault();e.stopPropagation();window.openPendingV138&&window.openPendingV138(unit)};
+   sections=[...body.querySelectorAll(':scope > .section')];const remain=sections.find(x=>{const h=x.querySelector(':scope > h4');return h&&h.textContent.trim()==='잔건'}),hist=sections.find(x=>{const h=x.querySelector(':scope > h4');return h&&h.textContent.trim()==='스케줄 이력'});if(remain)remain.insertAdjacentElement('afterend',pend);else if(memoSec)memoSec.insertAdjacentElement('afterend',pend);else body.appendChild(pend);if(hist)body.appendChild(hist);
+ }
+ const oldDetail=window.showDetail;if(typeof oldDetail==='function')window.showDetail=function(unit,date=''){const r=oldDetail.apply(this,arguments);setTimeout(()=>normalizeDetail(unit,date),0);setTimeout(()=>{removeOldDetailHelpers()},180);return r};
+})();
+</script>
+
 </body></html>
