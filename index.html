@@ -91,8 +91,8 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
 })();
 </script>
 
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.65";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
-<script>window.__PSU_WEB_TEST_BUILD="v2.65-fastbase-detail-direct-admin-ui-fix";</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.66";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script>window.__PSU_WEB_TEST_BUILD="v2.66-fastbase-detail-stable-masterui";</script>
 <div id="psuBootV247" aria-live="polite"><div class="boot-card-v247"><div class="boot-dot-v247"></div><div class="boot-title-v247">PSU 작업현황</div><div class="boot-sub-v247">최신 정보를 불러오는 중...</div></div></div>
 <script id="web-v247-first-paint-script">
 (function(){
@@ -2258,186 +2258,162 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
 </script>
 
 
-<style id="web-v265-final-detail-direct-style">
-/* v2.65: 개인일정 버튼은 날짜 숫자 바로 옆, 공휴일명은 독립 중앙, 연차는 우측 */
-#calendar .date{position:relative!important;min-height:20px!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;padding-right:58px!important}
-#calendar .date>span:first-child{position:relative!important;z-index:3!important;flex:0 0 auto!important}
-#calendar .date>.personal-add-v262{position:relative!important;left:auto!important;right:auto!important;top:auto!important;transform:none!important;margin:0 0 0 5px!important;z-index:4!important}
-#calendar .date>.holiday,#calendar .date>.holiday-v263{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;max-width:46%!important;text-align:center!important;margin:0!important;pointer-events:none!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
-#calendar .date>.annual-leave-badge-v114,#calendar .date>.annual-leave-badge-v115{position:absolute!important;right:0!important;top:50%!important;transform:translateY(-50%)!important;margin:0!important;z-index:4!important}
 
-/* 상세 공통: 헤더/버튼/내용 박스 */
-#mbody.web-detail-final-v265>.section{margin-top:16px!important;padding-top:13px!important;border-top:1px solid #e5e7eb!important}
-#mbody.web-detail-final-v265 .detail-section-head-v265{display:flex;align-items:center;gap:7px;margin:0 0 8px}
-#mbody.web-detail-final-v265 .detail-section-head-v265 h4{margin:0;font-size:14px;font-weight:850;color:#172033}
-#mbody.web-detail-final-v265 .detail-section-status-v265{font-size:11px;color:#64748b;font-weight:700}
-#mbody.web-detail-final-v265 .detail-action-v265{margin-left:auto;min-height:28px;padding:4px 9px;border:1px solid #a9c4ec;background:#fff;color:#315ea8;border-radius:7px;font-size:11px;font-weight:800;line-height:18px;box-shadow:none;cursor:pointer}
-#mbody.web-detail-final-v265 .detail-box-v265{padding:10px;border:1px solid #e2e8f0;border-radius:8px;background:#f7f9fc;color:#334155;line-height:1.55;white-space:pre-wrap}
-#mbody.web-detail-final-v265 .detail-memo-row-v265{position:relative;padding-right:98px}
-#mbody.web-detail-final-v265 .detail-memo-row-v265+.detail-memo-row-v265{margin-top:8px;padding-top:8px;border-top:1px dashed #d9e0e9}
-#mbody.web-detail-final-v265 .detail-memo-meta-v265{font-size:10px;color:#718096;margin-bottom:3px}
-#mbody.web-detail-final-v265 .detail-memo-actions-v265{position:absolute;right:0;top:0;display:flex;gap:4px}
-#mbody.web-detail-final-v265 .detail-memo-row-v265+.detail-memo-row-v265 .detail-memo-actions-v265{top:8px}
-#mbody.web-detail-final-v265 .detail-memo-actions-v265 button{border:1px solid #c9d3e1;background:#fff;color:#475569;border-radius:6px;padding:3px 7px;font-size:10px;font-weight:750;cursor:pointer}
-#mbody.web-detail-final-v265 .detail-memo-actions-v265 button.danger{border-color:#e5bcbc;color:#a23d3d}
-#mbody.web-detail-final-v265 .master-detail-actions-v136{margin:10px 0 2px!important}
-#mbody.web-detail-final-v265 .detail [data-detail-doc-v265]{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px}
-#mbody.web-detail-final-v265 button{cursor:pointer}
+
+
+
+
+
+
+<style id="web-v266-stable-detail-master-style">
+/* 일정 헤더 */
+#cal .date,#calendar .date{position:relative!important;min-height:20px!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;padding-right:60px!important}
+#cal .date>span:first-child,#calendar .date>span:first-child{position:relative!important;z-index:4!important;flex:0 0 auto!important}
+#cal .personal-add-v618,#calendar .personal-add-v618,#cal .personal-add-v255,#calendar .personal-add-v255{position:relative!important;left:auto!important;right:auto!important;top:auto!important;transform:none!important;margin:0 0 0 5px!important;z-index:4!important}
+#cal .holiday,#calendar .holiday,#cal .holiday-name,#calendar .holiday-name{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;max-width:46%!important;text-align:center!important;margin:0!important;pointer-events:none!important}
+/* 상세페이지 */
+#mbody.web-detail-stable-v266>.section,#mbody.web-detail-stable-v266>.progress-info-detail-v219,#mbody.web-detail-stable-v266>.progress-info-detail-v172{margin:0!important;padding:15px 0!important;border:0!important;border-top:1px solid #e4e9f0!important;border-radius:0!important;background:transparent!important}
+#mbody.web-detail-stable-v266 .detail-head-v266{display:flex!important;align-items:center!important;min-height:29px!important;gap:7px!important;margin:0 0 8px!important}
+#mbody.web-detail-stable-v266 .detail-head-v266 h4{margin:0!important;font-size:14px!important;font-weight:850!important;color:#172033!important;line-height:28px!important}
+#mbody.web-detail-stable-v266 .detail-status-v266{font-size:11px!important;color:#718096!important;font-weight:700!important;white-space:nowrap!important}
+#mbody.web-detail-stable-v266 .detail-action-v266{margin-left:auto!important;height:29px!important;min-height:29px!important;padding:0 10px!important;border:1px solid #a9c4ec!important;background:#fff!important;color:#315ea8!important;border-radius:7px!important;font-size:11px!important;font-weight:800!important;line-height:27px!important;box-shadow:none!important;cursor:pointer!important;white-space:nowrap!important}
+#mbody.web-detail-stable-v266 .detail-box-v266{width:100%!important;min-height:41px!important;padding:10px 11px!important;border:1px solid #e0e6ee!important;border-radius:8px!important;background:#f7f9fc!important;color:#334155!important;line-height:1.55!important;white-space:pre-wrap!important}
+#mbody.web-detail-stable-v266 .detail-memo-row-v266{position:relative;padding-right:94px}.detail-memo-row-v266+.detail-memo-row-v266{margin-top:8px;padding-top:8px;border-top:1px dashed #d9e0e9}.detail-memo-meta-v266{font-size:10px;color:#718096;margin-bottom:3px}.detail-memo-actions-v266{position:absolute;right:0;top:0;display:flex;gap:4px}.detail-memo-row-v266+.detail-memo-row-v266 .detail-memo-actions-v266{top:8px}.detail-memo-actions-v266 button{height:25px;border:1px solid #c9d3e1;background:#fff;color:#475569;border-radius:6px;padding:0 7px;font-size:10px;font-weight:750;cursor:pointer}.detail-memo-actions-v266 button.danger{border-color:#e5bcbc;color:#a23d3d}
+#mbody.web-detail-stable-v266 .master-detail-actions-v136{margin:10px 0 2px!important;display:flex!important;justify-content:flex-end!important;gap:7px!important}
+#mbody.web-detail-stable-v266 [data-detail-doc-v266]{cursor:pointer!important;text-decoration:underline dotted!important;text-underline-offset:3px!important}
+#mbody.web-detail-stable-v266 button{cursor:pointer!important}
+/* 마스터 관리 팝업: 차분한 고밀도 리스트 */
+#mbody.master-panel-v266{padding-top:12px!important}.master-note-v266{padding:10px 12px;border:1px solid #e4e9f0;border-radius:9px;background:#f8fafc;color:#64748b;font-size:11px;line-height:1.5;margin-bottom:10px}.master-summary-v266{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 12px}.master-chip-v266{display:inline-flex;align-items:center;height:27px;padding:0 10px;border:1px solid #dce3ed;border-radius:999px;background:#fff;color:#475569;font-size:11px;font-weight:800}.master-chip-v266.pending{border-color:#efd8a8;background:#fffaf0;color:#93610b}.master-section-v266{border:1px solid #e3e8ef;border-radius:10px;overflow:hidden;margin-top:10px;background:#fff}.master-section-title-v266{padding:10px 12px;background:#f8fafc;border-bottom:1px solid #e8edf3;font-size:12px;font-weight:900;color:#334155}.admin-row-v266{display:grid;grid-template-columns:minmax(150px,1fr) minmax(250px,1.65fr) auto;align-items:center;gap:12px;min-height:48px;padding:8px 12px;border-bottom:1px solid #edf1f5}.admin-row-v266:last-child{border-bottom:0}.admin-row-v266 .name{font-size:12px;font-weight:900;color:#172033}.admin-row-v266 .state{display:inline-flex;margin-left:6px;padding:2px 6px;border-radius:999px;background:#f1f5f9;color:#64748b;font-size:9px;font-weight:800}.admin-row-v266 .meta{font-size:10px;color:#718096;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.admin-row-v266 .acts{display:flex;gap:5px}.admin-row-v266 .acts button,.activity-toolbar-v266 button,.activity-row-v266 button{height:29px;padding:0 9px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#334155;font-size:10px;font-weight:800;cursor:pointer}.admin-row-v266 .acts button.danger,.activity-toolbar-v266 button.danger{border-color:#efc1c1;color:#a33f3f;background:#fffafa}
+.activity-toolbar-v266{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}.activity-toolbar-v266 .spacer{flex:1}.activity-toolbar-v266 button.on{border-color:#8eadd7;background:#eef5ff;color:#245c9c}.activity-count-v266{font-size:10px;color:#718096;margin-left:2px}
+.activity-list-v266{border:1px solid #e3e8ef;border-radius:10px;overflow:hidden;background:#fff}.activity-head-v266,.activity-row-v266{display:grid;grid-template-columns:26px 82px minmax(0,1fr) 128px 48px;align-items:center;column-gap:8px;padding:0 10px}.activity-head-v266{height:30px;background:#f8fafc;border-bottom:1px solid #e5eaf0;color:#718096;font-size:10px;font-weight:800}.activity-row-v266{height:38px;border-bottom:1px solid #edf1f5;font-size:11px}.activity-row-v266:last-child{border-bottom:0}.activity-row-v266 .who{font-weight:900;color:#172033;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.activity-row-v266 .line{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#475569}.activity-row-v266 .time{white-space:nowrap;text-align:right;color:#718096;font-size:10px}.activity-row-v266 button{height:26px;padding:0 7px}.activity-row-v266 input{margin:0}.activity-empty-v266{padding:28px;text-align:center;color:#94a3b8}
+@media(max-width:760px){.admin-row-v266{grid-template-columns:1fr auto}.admin-row-v266 .meta{grid-column:1/-1}.activity-head-v266{display:none}.activity-row-v266{height:auto;min-height:48px;grid-template-columns:22px 76px minmax(0,1fr) 44px;padding:7px 8px}.activity-row-v266 .time{grid-column:3;text-align:left;margin-top:2px}.activity-row-v266 button{grid-column:4;grid-row:1/3}.activity-list-v266{overflow:hidden}}
 </style>
-<script id="web-v265-final-detail-direct-script">
+<script id="web-v266-stable-detail-script">
 (function(){
- if(window.__webV265FinalInstalled)return;window.__webV265FinalInstalled=true;
- const safe=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
- const isMaster=()=>!!(window.__webAuthInfoV136&&window.__webAuthInfoV136.role==='master'&&document.body.classList.contains('master-mode'));
- const fb=()=>window.__fbDirectV187;
- const now=()=>new Date().toISOString();
- function detailBody(){return window.mbody||document.getElementById('mbody')}
+ if(window.__webV266DetailInstalled)return;window.__webV266DetailInstalled=true;
+ const safe=v=>typeof esc==='function'?esc(String(v??'')):String(v??'');const isMaster=()=>!!(window.__webAuthInfoV136&&window.__webAuthInfoV136.role==='master'&&document.body.classList.contains('master-mode'));const fb=()=>window.__fbDirectV187;const now=()=>new Date().toISOString();const clean=v=>{v=String(v??'').trim();return v==='-'?'':v};
  function progress(unit){try{return typeof progressFor==='function'?(progressFor(unit)||{}):{}}catch(_e){return {}}}
- function specialText(unit){const p=progress(unit);try{if(typeof window.unifiedBaseMemoV16==='function')return String(window.unifiedBaseMemoV16(p,unit)||'').trim()}catch(_e){}return String(p.memoUnifiedV439||p.progress||'').trim()}
- function progressVisible(unit){try{return typeof activeProgress==='function'&&activeProgress().some(p=>p&&String(p.unit||'')===String(unit||''))}catch(_e){return false}}
- function setLocalVisible(unit,on){try{if(!window.state)return;state.progressVisibleUnitsV445=Array.isArray(state.progressVisibleUnitsV445)?state.progressVisibleUnitsV445:[];const a=state.progressVisibleUnitsV445.map(x=>String(x||'')),i=a.indexOf(String(unit));if(on&&i<0)state.progressVisibleUnitsV445.push(String(unit));if(!on&&i>=0)state.progressVisibleUnitsV445.splice(i,1);state.progressListInitializedV558=true}catch(_e){}}
- function section(title,status,action){const s=document.createElement('div');s.className='section detail-final-section-v265';s.innerHTML=`<div class="detail-section-head-v265"><h4>${safe(title)}</h4>${status?`<span class="detail-section-status-v265">${safe(status)}</span>`:''}${action?`<button type="button" class="detail-action-v265">${safe(action)}</button>`:''}</div><div class="detail-box-v265"></div>`;return s}
- function removeLegacySections(body){[...body.querySelectorAll(':scope > .section')].forEach(sec=>{const h=sec.querySelector(':scope > h4,.web-detail-head-v264 h4,.detail-section-head-v265 h4');const t=h?(h.textContent||'').trim():'';if(['특이사항','메모','장비 메모','미비작업'].includes(t)||sec.classList.contains('web-detail-memo-v264')||sec.classList.contains('web-detail-pending-v264'))sec.remove()});body.querySelectorAll(':scope > .pending-section-v138').forEach(x=>x.remove())}
+ function specialText(unit){const p=progress(unit);return clean(p.memoUnifiedSetV439===true?p.memoUnifiedV439:p.progress)}
+ function section(title,status,action){const s=document.createElement('div');s.className='section detail-final-v266';s.innerHTML=`<div class="detail-head-v266"><h4>${safe(title)}</h4>${status?`<span class="detail-status-v266">${safe(status)}</span>`:''}${action?`<button type="button" class="detail-action-v266">${safe(action)}</button>`:''}</div><div class="detail-box-v266"></div>`;return s}
+ function title(sec){const h=sec&&sec.querySelector(':scope > h4,:scope > .detail-head-v266 h4,.web-detail-head-v264 h4,.detail-section-head-v265 h4');return h?String(h.textContent||'').trim():''}
+ function clearGenerated(body){body.querySelectorAll(':scope > .detail-final-v266,:scope > .detail-final-section-v265,:scope > .web-detail-memo-v264,:scope > .web-detail-pending-v264,:scope > .pending-section-v138').forEach(x=>x.remove());[...body.querySelectorAll(':scope > .section')].forEach(sec=>{const t=title(sec);if(['특이사항','메모','장비 메모','미비작업'].includes(t))sec.remove()})}
  function formatMemoTime(v){try{return v?new Date(v).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}catch(_e){return String(v||'')}}
  async function memoItems(unit,date){const raw=window.__psuMemoGetRawV256?await window.__psuMemoGetRawV256(false):(fb()?await fb().read('memos')||{}:{}),p=progress(unit),es=typeof eventsFor==='function'?eventsFor(unit):[],e=(date&&es.find(x=>String(x.date||'')===String(date)))||es[0]||{},sn=String(p.sn||e.sn||'');const effective=m=>String(m.memoDate||m.date||m.createdDate||String(m.createdAt||'').slice(0,10)||'');return Object.keys(raw||{}).map(k=>Object.assign({id:k},raw[k]||{})).filter(m=>m&&!m.deleted&&((unit&&String(m.unit||'')===String(unit))||(sn&&String(m.sn||'')===sn))).filter(m=>!date||effective(m)===String(date)).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')))}
- async function memoEdit(item,unit,date,refresh){const text=await psuPromptV148('메모 수정','메모 내용을 수정하세요.',String(item.text||''),'메모 내용');if(text===null)return;const v=String(text||'').trim();if(!v)return psuAlertV148('입력 확인','메모 내용을 입력하세요.');await fb().auth();await fb().update('memos/'+item.id,{text:v,updatedAt:now(),deleted:false});await fb().bump('memo');if(window.__psuMemoGetRawV256)try{await window.__psuMemoGetRawV256(true)}catch(_e){};toastMsg('메모를 수정했습니다.');refresh()}
- async function memoDelete(item,refresh){if(!await psuConfirmV148('메모 삭제','이 메모를 삭제할까요?',String(item.text||''),true))return;await fb().auth();const at=now();await fb().update('memos/'+item.id,{deleted:true,deletedAt:at,updatedAt:at,text:''});await fb().bump('memo');if(window.__psuMemoGetRawV256)try{await window.__psuMemoGetRawV256(true)}catch(_e){};toastMsg('메모를 삭제했습니다.');refresh()}
- function pendingItems(unit){const a=typeof window.__pendingTasksForUnitV246==='function'?window.__pendingTasksForUnitV246(unit):((progress(unit)||{}).pendingTasks||[]);return (Array.isArray(a)?a:[]).filter(x=>x&&String(x.text||'').trim())}
- function docCopy(body){const grid=body.querySelector(':scope > .detail');if(!grid)return;const labels=[...grid.querySelectorAll('.label')];const l=labels.find(x=>/도급/.test(x.textContent||''));const v=l&&l.nextElementSibling;if(!v)return;v.dataset.detailDocV265='1';v.title='클릭해서 도급번호 복사';v.onclick=async e=>{e.preventDefault();e.stopPropagation();const t=String(v.textContent||'').trim();if(!t||t==='미조회')return;try{await navigator.clipboard.writeText(t);toastMsg(`도급번호 ${t} 복사됨`)}catch(_e){await psuPromptV148('도급번호 복사','아래 번호를 복사하세요.',t,t)}}}
- function fixMasterActions(unit,date,body){const detail=body.querySelector(':scope > .detail');const row=body.querySelector('.master-detail-actions-v136');if(!detail||!row)return;detail.insertAdjacentElement('afterend',row);const b=row.querySelector('[data-master-visible]');if(!b)return;const apply=()=>{const on=progressVisible(unit);b.textContent=on?'작업 진행 현황에서 제거':'작업 진행 현황에 추가';b.classList.toggle('danger',on);b.dataset.currentVisible=on?'1':'0'};apply();b.onclick=async e=>{e.preventDefault();e.stopPropagation();const on=progressVisible(unit);const msg=on?'작업 진행 현황에서 이 장비를 제거할까요?':'작업 진행 현황에 이 장비를 추가할까요?';if(!await psuConfirmV148('작업 진행 현황',msg,'',on))return;b.disabled=true;try{await window.__fbMasterVisibleV187(unit,!on);setLocalVisible(unit,!on);apply();toastMsg(on?'작업 진행 현황에서 제거했습니다.':'작업 진행 현황에 추가했습니다.');if(typeof load==='function')try{load(true)}catch(_e){} }catch(err){psuAlertV148('처리 실패',err&&err.message?err.message:String(err))}finally{b.disabled=false}}}
- async function normalize(unit,date){const body=detailBody();if(!body||!document.body.contains(body))return;body.classList.add('web-detail-final-v265');removeLegacySections(body);docCopy(body);fixMasterActions(unit,date,body);
-   const detail=body.querySelector(':scope > .detail');let anchor=body.querySelector(':scope > .progress-info-detail-v219,:scope > .progress-info-detail-v172,:scope > .progress-info-detail-v527')||detail;
-   const sp=specialText(unit);if(sp){const sec=section('특이사항','',isMaster()?'수정':'');sec.querySelector('.detail-box-v265').textContent=sp;if(isMaster()){sec.querySelector('button').onclick=e=>{e.preventDefault();e.stopPropagation();const old=[...body.querySelectorAll('.section')].find(x=>{const h=x.querySelector('h4');return h&&(h.textContent||'').trim()==='특이사항'});if(window.__fbMasterProgressFieldV187){psuPromptV148('특이사항 수정','특이사항을 수정하세요.',sp,'특이사항').then(async v=>{if(v===null)return;await window.__fbMasterProgressFieldV187(unit,{special:String(v||'').trim()});toastMsg('특이사항을 저장했습니다.');setTimeout(()=>showDetail(unit,date),80)})}}}anchor.insertAdjacentElement('afterend',sec);anchor=sec}
-   const memo=section('메모','불러오는 중...','추가');memo.querySelector('button').onclick=e=>{e.preventDefault();e.stopPropagation();window.openSharedMemoV15&&window.openSharedMemoV15(unit,date||'')};anchor.insertAdjacentElement('afterend',memo);anchor=memo;
-   const drawMemo=async()=>{try{const items=await memoItems(unit,date||'');if(!memo.isConnected)return;memo.querySelector('.detail-section-status-v265').textContent=items.length?`${items.length}건`:'0건';const box=memo.querySelector('.detail-box-v265');box.innerHTML=items.length?items.map(m=>`<div class="detail-memo-row-v265" data-mid="${safe(m.id)}"><div class="detail-memo-meta-v265">${safe(m.author||'')}${m.createdAt?` · ${safe(formatMemoTime(m.createdAt))}`:''}</div><div>${safe(m.text||'')}</div>${isMaster()?'<div class="detail-memo-actions-v265"><button data-me>수정</button><button class="danger" data-md>삭제</button></div>':''}</div>`).join(''):'추가된 메모가 없습니다.';if(isMaster())box.querySelectorAll('[data-mid]').forEach(row=>{const it=items.find(x=>String(x.id)===String(row.dataset.mid));const eb=row.querySelector('[data-me]'),db=row.querySelector('[data-md]');if(eb)eb.onclick=ev=>{ev.stopPropagation();memoEdit(it,unit,date,drawMemo)};if(db)db.onclick=ev=>{ev.stopPropagation();memoDelete(it,drawMemo)}})}catch(err){if(memo.isConnected){memo.querySelector('.detail-section-status-v265').textContent='';memo.querySelector('.detail-box-v265').textContent='메모를 불러오지 못했습니다.'}}};drawMemo();
-   const all=pendingItems(unit),open=all.filter(x=>!x.done),pend=section('미비작업',open.length?`미완료 ${open.length}건`:all.length?'모두 완료':'등록 없음','관리');pend.querySelector('.detail-box-v265').innerHTML=open.length?open.slice(0,8).map(x=>`☐ ${safe(x.text)}`).join('<br>'):'미완료 항목이 없습니다.';pend.querySelector('button').onclick=e=>{e.preventDefault();e.stopPropagation();window.openPendingV138&&window.openPendingV138(unit)};
-   const remain=[...body.querySelectorAll(':scope > .section')].find(x=>{const h=x.querySelector(':scope > h4');return h&&(h.textContent||'').trim()==='잔건'});if(remain){remain.insertAdjacentElement('afterend',pend);anchor=pend}else{anchor.insertAdjacentElement('afterend',pend);anchor=pend}
-   const hist=[...body.querySelectorAll(':scope > .section')].find(x=>{const h=x.querySelector(':scope > h4');return h&&(h.textContent||'').trim()==='스케줄 이력'});if(hist)body.appendChild(hist);
-   fixMasterActions(unit,date,body)
+ async function memoEdit(item,unit,date,refresh){const text=await psuPromptV148('메모 수정','메모 내용을 수정하세요.',String(item.text||''),'메모 내용');if(text===null)return;const v=clean(text);if(!v)return psuAlertV148('입력 확인','메모 내용을 입력하세요.');await fb().auth();await fb().update('memos/'+item.id,{text:v,updatedAt:now(),deleted:false});await fb().bump('memo');if(window.__psuMemoGetRawV256)await window.__psuMemoGetRawV256(true).catch(()=>{});toastMsg('메모를 수정했습니다.');refresh()}
+ async function memoDelete(item,refresh){if(!await psuConfirmV148('메모 삭제','이 메모를 삭제할까요?',String(item.text||''),true))return;await fb().auth();const at=now();await fb().update('memos/'+item.id,{deleted:true,deletedAt:at,updatedAt:at,text:''});await fb().bump('memo');if(window.__psuMemoGetRawV256)await window.__psuMemoGetRawV256(true).catch(()=>{});toastMsg('메모를 삭제했습니다.');refresh()}
+ function pendingItems(unit){const a=typeof window.__pendingTasksForUnitV246==='function'?window.__pendingTasksForUnitV246(unit):((progress(unit)||{}).pendingTasks||[]);return(Array.isArray(a)?a:[]).filter(x=>x&&clean(x.text))}
+ function docCopy(body){const grid=body.querySelector(':scope > .detail');if(!grid)return;const l=[...grid.querySelectorAll('.label')].find(x=>/도급/.test(x.textContent||'')),v=l&&l.nextElementSibling;if(!v)return;v.dataset.detailDocV266='1';v.title='클릭해서 도급번호 복사';v.onclick=async e=>{e.preventDefault();e.stopPropagation();const t=clean(v.textContent);if(!t||t==='미조회')return;try{await navigator.clipboard.writeText(t);toastMsg(`도급번호 ${t} 복사됨`)}catch(_e){await psuPromptV148('도급번호 복사','아래 번호를 복사하세요.',t,t)}}}
+ function visible(unit){try{return Array.isArray(state.progressVisibleUnitsV445)&&state.progressVisibleUnitsV445.map(String).includes(String(unit))}catch(_e){try{return typeof activeProgress==='function'&&activeProgress().some(p=>p&&String(p.unit||'')===String(unit))}catch(_x){return false}}}
+ function fixMasterActions(unit,body){const detail=body.querySelector(':scope > .detail'),row=body.querySelector('.master-detail-actions-v136');if(!detail||!row)return;detail.insertAdjacentElement('afterend',row);const b=row.querySelector('[data-master-visible]');if(!b)return;const apply=()=>{const on=visible(unit);b.textContent=on?'작업 진행 현황에서 제거':'작업 진행 현황에 추가';b.classList.toggle('danger',on)};apply();b.onclick=async e=>{e.preventDefault();e.stopPropagation();const on=visible(unit);if(!await psuConfirmV148('작업 진행 현황',on?'작업 진행 현황에서 이 장비를 제거할까요?':'작업 진행 현황에 이 장비를 추가할까요?','',on))return;b.disabled=true;try{await window.__fbMasterVisibleV187(unit,!on);state.progressVisibleUnitsV445=Array.isArray(state.progressVisibleUnitsV445)?state.progressVisibleUnitsV445:[];state.progressVisibleUnitsV445=state.progressVisibleUnitsV445.map(String).filter(x=>x!==String(unit));if(!on)state.progressVisibleUnitsV445.push(String(unit));state.progressListInitializedV558=true;apply();toastMsg(on?'작업 진행 현황에서 제거했습니다.':'작업 진행 현황에 추가했습니다.')}catch(err){psuAlertV148('처리 실패',err&&err.message?err.message:String(err))}finally{b.disabled=false}}}
+ async function normalize(unit,date){const body=window.mbody||document.getElementById('mbody');if(!body||!document.body.contains(body))return;body.classList.remove('master-panel-v266');body.classList.add('web-detail-stable-v266');clearGenerated(body);docCopy(body);fixMasterActions(unit,body);const detail=body.querySelector(':scope > .detail');let anchor=body.querySelector(':scope > .progress-info-detail-v219,:scope > .progress-info-detail-v172')||detail;
+   const sp=specialText(unit);if(sp){const sec=section('특이사항','',isMaster()?'수정':'');sec.querySelector('.detail-box-v266').textContent=sp;if(isMaster())sec.querySelector('button').onclick=async e=>{e.preventDefault();e.stopPropagation();const v=await psuPromptV148('특이사항 수정','특이사항을 수정하세요.',sp,'특이사항');if(v===null)return;await window.__fbMasterProgressFieldV187(unit,{special:clean(v)});toastMsg('특이사항을 저장했습니다.');setTimeout(()=>showDetail(unit,date),80)};anchor.insertAdjacentElement('afterend',sec);anchor=sec}
+   const memo=section('메모','불러오는 중...','추가');memo.querySelector('button').onclick=e=>{e.preventDefault();e.stopPropagation();window.openSharedMemoV15&&window.openSharedMemoV15(unit,date||'')};anchor.insertAdjacentElement('afterend',memo);anchor=memo;const drawMemo=async()=>{try{const items=await memoItems(unit,date||'');if(!memo.isConnected)return;memo.querySelector('.detail-status-v266').textContent=`${items.length}건`;const box=memo.querySelector('.detail-box-v266');box.innerHTML=items.length?items.map(m=>`<div class="detail-memo-row-v266" data-mid="${safe(m.id)}"><div class="detail-memo-meta-v266">${safe(m.author||'')}${m.createdAt?` · ${safe(formatMemoTime(m.createdAt))}`:''}</div><div>${safe(m.text||'')}</div>${isMaster()?'<div class="detail-memo-actions-v266"><button data-me>수정</button><button class="danger" data-md>삭제</button></div>':''}</div>`).join(''):'추가된 메모가 없습니다.';if(isMaster())box.querySelectorAll('[data-mid]').forEach(row=>{const it=items.find(x=>String(x.id)===String(row.dataset.mid)),eb=row.querySelector('[data-me]'),db=row.querySelector('[data-md]');if(eb)eb.onclick=ev=>{ev.stopPropagation();memoEdit(it,unit,date,drawMemo)};if(db)db.onclick=ev=>{ev.stopPropagation();memoDelete(it,drawMemo)}})}catch(_e){if(memo.isConnected){memo.querySelector('.detail-status-v266').textContent='';memo.querySelector('.detail-box-v266').textContent='메모를 불러오지 못했습니다.'}}};drawMemo();
+   const remain=[...body.querySelectorAll(':scope > .section')].find(x=>title(x)==='잔건');if(remain){anchor.insertAdjacentElement('afterend',remain);anchor=remain}
+   const all=pendingItems(unit),open=all.filter(x=>!x.done),pend=section('미비작업',open.length?`미완료 ${open.length}건`:all.length?'모두 완료':'등록 없음','관리');pend.querySelector('.detail-box-v266').innerHTML=open.length?open.slice(0,8).map(x=>`☐ ${safe(x.text)}`).join('<br>'):'미완료 항목이 없습니다.';pend.querySelector('button').onclick=e=>{e.preventDefault();e.stopPropagation();window.openPendingV138&&window.openPendingV138(unit)};anchor.insertAdjacentElement('afterend',pend);anchor=pend;
+   const hist=[...body.querySelectorAll(':scope > .section')].find(x=>title(x)==='스케줄 이력');if(hist){body.appendChild(hist)}fixMasterActions(unit,body)
  }
- const prev=window.showDetail;if(typeof prev==='function')window.showDetail=function(unit,date=''){const r=prev.apply(this,arguments);[0,140,520].forEach(ms=>setTimeout(()=>normalize(unit,date),ms));return r};
+ let timer=0;const old=window.showDetail;if(typeof old==='function')window.showDetail=function(unit,date=''){const r=old.apply(this,arguments);const body=window.mbody||document.getElementById('mbody');if(body)body.classList.remove('master-panel-v266');clearTimeout(timer);timer=setTimeout(()=>normalize(unit,date),560);return r};
 })();
 </script>
-
-<style id="web-v265-direct-master-tools-style">
-.activity-row-v265{border:1px solid #e2e8f0;border-radius:8px;padding:9px;margin:7px 0;background:#fff}.activity-row-v265 .head{display:flex;gap:7px;align-items:center}.activity-row-v265 .who{font-weight:850}.activity-row-v265 .kind,.activity-row-v265 .time{font-size:10px;color:#64748b}.activity-row-v265 .time{margin-left:auto}.activity-row-v265 .detail{font-size:11px;color:#475569;margin-top:5px}.activity-row-v265 .rowwrap{display:flex;align-items:flex-start;gap:7px}.activity-row-v265 .rowmain{flex:1;min-width:0}.activity-row-v265 button{cursor:pointer}.admin-manage-row-v265{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #edf0f4}.admin-manage-row-v265 .main{display:block!important;padding:0!important;overflow:visible!important;min-height:0!important;flex:1}.admin-manage-row-v265 .name{font-weight:850}.admin-manage-row-v265 .meta{font-size:10px;color:#64748b;margin-top:3px}.admin-manage-row-v265 .acts{display:flex;gap:5px}.admin-manage-row-v265 .acts button{cursor:pointer}
-</style>
-<script id="web-v265-direct-master-tools-script">
+<script id="web-v266-direct-master-tools-script">
 (function(){
-  if(window.__webV265MasterToolsInstalled)return;
-  window.__webV265MasterToolsInstalled=true;
+  if(window.__webV266MasterToolsInstalled) return;
+  window.__webV266MasterToolsInstalled=true;
   const isMaster=()=>!!(window.__webAuthInfoV136&&window.__webAuthInfoV136.role==='master'&&document.body.classList.contains('master-mode'));
   const F=()=>window.__fbDirectV187;
   const safe=v=>typeof esc==='function'?esc(String(v??'')):String(v??'');
   const when=v=>{try{const d=new Date(v);return Number.isNaN(d.getTime())?'':d.toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}catch(_e){return ''}};
   async function masterAuth(){
-    if(window.__ensureAdminFirebaseV264)await window.__ensureAdminFirebaseV264();
-    const f=F(); if(!f)throw new Error('Firebase 연결 준비 중입니다.');
+    if(window.__ensureAdminFirebaseV264) await window.__ensureAdminFirebaseV264();
+    const f=F(); if(!f) throw new Error('Firebase 연결 준비 중입니다.');
     await f.auth(); return f;
   }
-  function src(x){return x.sourceKind==='viewer'?'PC 뷰어':x.sourceKind==='admin'?'관리자 프로그램':'웹'}
-  function dedupeActivity(items,minutes){
-    const out=[],seenSession=new Set(),lastByActor=new Map(),win=Math.max(1,Number(minutes)||10)*60000;
+  function src(x){return x.sourceKind==='viewer'?'PC뷰어':x.sourceKind==='admin'?'관리자':'웹'}
+  function dedupe(items,min){
+    const out=[],sid=new Set(),last=new Map(),win=Math.max(1,Number(min)||10)*60000;
     for(const x of items){
       if(String(x.eventType||'')!=='access'){out.push(x);continue}
-      const sid=String(x.sessionId||x.session||'').trim();
-      if(sid){if(seenSession.has(sid))continue;seenSession.add(sid);out.push(x);continue}
-      const t=Date.parse(String(x.at||''))||0,key=`${String(x.actorName||'').trim().toLocaleLowerCase()}|${String(x.sourceKind||'')}`;
-      const prev=lastByActor.get(key); if(prev&&Math.abs(prev-t)<win)continue;
-      lastByActor.set(key,t);out.push(x);
+      const s=String(x.sessionId||x.session||'').trim();
+      if(s){if(sid.has(s))continue;sid.add(s);out.push(x);continue}
+      const t=Date.parse(String(x.at||''))||0,k=`${String(x.actorName||'').trim().toLowerCase()}|${String(x.sourceKind||'')}`,prev=last.get(k);
+      if(prev&&Math.abs(prev-t)<win)continue;last.set(k,t);out.push(x);
     }
     return out;
   }
   async function readActivity(){
     const f=await masterAuth();
     const [raw,st]=await Promise.all([f.read('activityLog'),f.read('activitySettings/current')]);
-    const settings=Object.assign({excludeNames:[],dedupeMinutes:10},st||{}),cut=Date.now()-30*86400000;
-    const ex=new Set((settings.excludeNames||[]).map(x=>String(x||'').trim().toLocaleLowerCase()));
-    let items=Object.keys(raw||{}).map(id=>Object.assign({id},raw[id]||{})).filter(x=>{
-      const t=Date.parse(String(x.at||'')); if(!Number.isFinite(t)||t<cut)return false;
-      const a=String(x.actorName||'').trim().toLocaleLowerCase(); return !a||!ex.has(a);
-    });
+    const settings=Object.assign({excludeNames:[],dedupeMinutes:10},st||{}),cut=Date.now()-30*86400000,ex=new Set((settings.excludeNames||[]).map(x=>String(x||'').trim().toLowerCase()));
+    let items=Object.keys(raw||{}).map(id=>Object.assign({id},raw[id]||{})).filter(x=>{const t=Date.parse(String(x.at||''));if(!Number.isFinite(t)||t<cut)return false;const a=String(x.actorName||'').trim().toLowerCase();return !a||!ex.has(a)});
     items.sort((a,b)=>(Date.parse(b.at||0)||0)-(Date.parse(a.at||0)||0));
-    items=dedupeActivity(items,settings.dedupeMinutes);
-    return {items:items.slice(0,300),settings};
+    return {items:dedupe(items,settings.dedupeMinutes).slice(0,300),settings};
   }
-  async function removeIds(ids){
-    const f=await masterAuth(),a=[...new Set((ids||[]).map(String).filter(Boolean))];
-    await Promise.all(a.map(id=>firebase.database().ref('activityLog/'+id).remove()));
-    await f.bump('activity');
-  }
+  async function removeIds(ids){const f=await masterAuth(),a=[...new Set((ids||[]).map(String).filter(Boolean))];await Promise.all(a.map(id=>firebase.database().ref('activityLog/'+id).remove()));await f.bump('activity')}
   async function setExcluded(names,purge){
     const f=await masterAuth(),clean=[],seen=new Set();
-    (names||[]).forEach(v=>{const n=String(v||'').trim(),k=n.toLocaleLowerCase();if(n&&!seen.has(k)){seen.add(k);clean.push(n)}});
+    (names||[]).forEach(v=>{const n=String(v||'').trim(),k=n.toLowerCase();if(n&&!seen.has(k)){seen.add(k);clean.push(n)}});
     await f.set('activitySettings/current',{excludeNames:clean.slice(0,50),dedupeMinutes:10,updatedAt:new Date().toISOString()});
-    if(purge&&clean.length){
-      const raw=await f.read('activityLog')||{},keys=new Set(clean.map(x=>x.toLocaleLowerCase()));
-      const ids=Object.keys(raw).filter(id=>keys.has(String(raw[id]&&raw[id].actorName||'').trim().toLocaleLowerCase()));
-      await removeIds(ids);
-    }else await f.bump('activity');
+    if(purge&&clean.length){const raw=await f.read('activityLog')||{},keys=new Set(clean.map(x=>x.toLowerCase())),ids=Object.keys(raw).filter(id=>keys.has(String(raw[id]&&raw[id].actorName||'').trim().toLowerCase()));await removeIds(ids)}else await f.bump('activity');
   }
-  async function clearAllActivity(){
-    const f=await masterAuth(),raw=await f.read('activityLog')||{};
-    await Promise.all(Object.keys(raw).map(id=>firebase.database().ref('activityLog/'+id).remove()));
-    await f.bump('activity');
-  }
+  async function clearAll(){const f=await masterAuth(),raw=await f.read('activityLog')||{};await Promise.all(Object.keys(raw).map(id=>firebase.database().ref('activityLog/'+id).remove()));await f.bump('activity')}
   async function openActivity(){
-    if(!isMaster())return psuAlertV148('권한 확인','마스터 권한에서만 볼 수 있습니다.');
-    mtitle.textContent='접속 / 활동 기록';mbody.innerHTML='<div class="empty">기록을 불러오는 중...</div>';modalback.classList.add('show');
-    let all=[],settings={excludeNames:[],dedupeMinutes:10},mode='all',selected=new Set();
-    const refresh=async()=>{try{const r=await readActivity();all=r.items;settings=r.settings;selected=new Set([...selected].filter(id=>all.some(x=>String(x.id)===id)));draw()}catch(e){mbody.innerHTML=`<div class="empty">${safe(e.message||String(e))}</div>`}};
+    if(!isMaster()) return psuAlertV148('권한 확인','마스터 권한에서만 볼 수 있습니다.');
+    mtitle.textContent='접속 / 활동 기록';mbody.classList.add('master-panel-v266');mbody.innerHTML='<div class="empty">기록을 불러오는 중...</div>';modalback.classList.add('show');
+    let all=[],settings={excludeNames:[],dedupeMinutes:10},mode='all',sel=new Set();
+    const refresh=async()=>{try{const r=await readActivity();all=r.items;settings=r.settings;sel=new Set([...sel].filter(id=>all.some(x=>String(x.id)===id)));draw()}catch(e){mbody.innerHTML=`<div class="empty">${safe(e.message||String(e))}</div>`}};
     const draw=()=>{
       const items=all.filter(x=>mode==='all'||x.eventType===mode),access=all.filter(x=>x.eventType==='access').length,acts=all.length-access,excluded=Array.isArray(settings.excludeNames)?settings.excludeNames:[];
-      const rows=items.length?items.map(x=>`<div class="activity-row-v265"><div class="rowwrap"><input type="checkbox" data-ac="${safe(x.id)}" ${selected.has(String(x.id))?'checked':''}><div class="rowmain"><div class="head"><span class="who">${safe(x.actorName||'이름 미등록')}</span><span class="kind">${safe(src(x))}${x.role?` · ${safe(x.role==='master'?'마스터':x.role==='admin'?'관리자':x.role)}`:''}</span><span class="time">${safe(when(x.at))}</span></div><div class="detail">${x.unit?`<b>${safe(x.unit)}</b> · `:''}${safe(x.action||'')}${x.detail?` · ${safe(x.detail)}`:''}</div></div><button class="btn" data-ad="${safe(x.id)}">삭제</button></div></div>`).join(''):'<div class="empty">해당 기록이 없습니다.</div>';
-      mbody.innerHTML=`<div class="admin-reg-note-v131">Firebase 원본을 직접 조회합니다. 접속 기록은 원본 timestamp 최신순이며 동일 세션 중복은 화면에서 합칩니다.${excluded.length?`<br>접속기록 제외 이름: <b>${safe(excluded.join(', '))}</b>`:''}</div><div class="activity-tools-v138"><button data-mode="all" class="${mode==='all'?'on':''}">전체 ${all.length}</button><button data-mode="access" class="${mode==='access'?'on':''}">접속 ${access}</button><button data-mode="activity" class="${mode==='activity'?'on':''}">활동 ${acts}</button></div><div class="activity-manage-v147"><button id="v265SelAll">현재 목록 전체선택</button><button class="danger" id="v265DelSel" ${selected.size?'':'disabled'}>선택 삭제</button><span class="activity-selected-v147">선택 ${selected.size}건</span><span class="spacer"></span><button id="v265Exclude">제외 이름 설정</button><button class="danger" id="v265Clear" ${all.length?'':'disabled'}>전체 기록 삭제</button></div><div>${rows}</div>`;
+      const rows=items.length?items.map(x=>{const detail=[src(x),x.role==='master'?'마스터':x.role==='admin'?'관리자':x.role||'',x.unit||'',x.action||'',x.detail||''].filter(Boolean).join(' · ');return `<div class="activity-row-v266"><input type="checkbox" data-ac="${safe(x.id)}" ${sel.has(String(x.id))?'checked':''}><span class="who">${safe(x.actorName||'이름 미등록')}</span><span class="line" title="${safe(detail)}">${safe(detail)}</span><span class="time">${safe(when(x.at))}</span><button data-ad="${safe(x.id)}">삭제</button></div>`}).join(''):'<div class="activity-empty-v266">해당 기록이 없습니다.</div>';
+      mbody.innerHTML=`<div class="master-note-v266">Firebase 원본 timestamp 최신순 · 동일 세션 중복은 화면에서 자동 합침${excluded.length?` · 제외: <b>${safe(excluded.join(', '))}</b>`:''}</div><div class="activity-toolbar-v266"><button data-mode="all" class="${mode==='all'?'on':''}">전체 ${all.length}</button><button data-mode="access" class="${mode==='access'?'on':''}">접속 ${access}</button><button data-mode="activity" class="${mode==='activity'?'on':''}">활동 ${acts}</button><span class="activity-count-v266">선택 ${sel.size}건</span><span class="spacer"></span><button id="v266SelAll">전체선택</button><button class="danger" id="v266DelSel" ${sel.size?'':'disabled'}>선택 삭제</button><button id="v266Exclude">제외 이름</button><button class="danger" id="v266Clear" ${all.length?'':'disabled'}>전체 삭제</button></div><div class="activity-list-v266"><div class="activity-head-v266"><span></span><span>이름</span><span>접속/활동 내용</span><span style="text-align:right">시간</span><span></span></div>${rows}</div>`;
       mbody.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;draw()});
-      mbody.querySelectorAll('[data-ac]').forEach(c=>c.onchange=()=>{c.checked?selected.add(c.dataset.ac):selected.delete(c.dataset.ac);draw()});
-      mbody.querySelectorAll('[data-ad]').forEach(b=>b.onclick=async()=>{if(!await psuConfirmV148('접속기록 삭제','선택한 기록을 삭제할까요?','',true))return;await removeIds([b.dataset.ad]);toastMsg('기록을 삭제했습니다.');refresh()});
-      document.getElementById('v265SelAll').onclick=()=>{items.forEach(x=>selected.add(String(x.id)));draw()};
-      document.getElementById('v265DelSel').onclick=async()=>{if(!selected.size||!await psuConfirmV148('선택 기록 삭제',`${selected.size}건을 삭제할까요?`,'',true))return;await removeIds([...selected]);selected.clear();toastMsg('선택 기록을 삭제했습니다.');refresh()};
-      document.getElementById('v265Exclude').onclick=async()=>{const raw=await psuPromptV148('제외 이름 설정','접속 기록에서 제외할 이름을 쉼표(,)로 구분해 입력하세요.',excluded.join(', '),'예: 임영규, 오철민');if(raw===null)return;const names=String(raw).split(/[,\n]/).map(x=>x.trim()).filter(Boolean),purge=names.length?await psuConfirmV148('기존 접속기록 정리','설정한 이름들의 기존 접속 기록도 함께 삭제할까요?','활동 기록도 해당 이름이면 같이 정리됩니다.',true):false;await setExcluded(names,purge);toastMsg('제외 이름 설정을 저장했습니다.');refresh()};
-      document.getElementById('v265Clear').onclick=async()=>{if(!await psuConfirmV148('전체 기록 삭제','접속/활동 기록을 모두 삭제할까요?','복구할 수 없습니다.',true))return;await clearAllActivity();selected.clear();toastMsg('전체 기록을 삭제했습니다.');refresh()};
+      mbody.querySelectorAll('[data-ac]').forEach(c=>c.onchange=()=>{c.checked?sel.add(c.dataset.ac):sel.delete(c.dataset.ac);draw()});
+      mbody.querySelectorAll('[data-ad]').forEach(b=>b.onclick=async()=>{if(!await psuConfirmV148('접속기록 삭제','선택한 기록을 삭제할까요?','',true))return;await removeIds([b.dataset.ad]);refresh()});
+      document.getElementById('v266SelAll').onclick=()=>{items.forEach(x=>sel.add(String(x.id)));draw()};
+      document.getElementById('v266DelSel').onclick=async()=>{if(!sel.size||!await psuConfirmV148('선택 기록 삭제',`${sel.size}건을 삭제할까요?`,'',true))return;await removeIds([...sel]);sel.clear();refresh()};
+      document.getElementById('v266Exclude').onclick=async()=>{const raw=await psuPromptV148('제외 이름 설정','접속 기록에서 제외할 이름을 쉼표(,)로 구분해 입력하세요.',excluded.join(', '),'예: 임영규, 오철민');if(raw===null)return;const names=String(raw).split(/[,\n]/).map(x=>x.trim()).filter(Boolean),purge=names.length?await psuConfirmV148('기존 접속기록 정리','설정한 이름들의 기존 기록도 함께 삭제할까요?','',true):false;await setExcluded(names,purge);refresh()};
+      document.getElementById('v266Clear').onclick=async()=>{if(!await psuConfirmV148('전체 기록 삭제','접속/활동 기록을 모두 삭제할까요?','복구할 수 없습니다.',true))return;await clearAll();sel.clear();refresh()};
     };
     refresh();
   }
-  function publicAdmin(x){return {uid:String(x.uid||''),username:String(x.username||''),displayName:String(x.displayName||x.username||''),status:String(x.status||'pending'),role:String(x.role||'admin'),requestedAt:String(x.requestedAt||''),approvedAt:String(x.approvedAt||''),disabledAt:String(x.disabledAt||''),lastLoginAt:String(x.lastLoginAt||'')}}
-  async function adminItems(){
-    const f=await masterAuth(),raw=await f.read('authUsers')||{},rank={pending:0,approved:1,disabled:2};
-    const a=Object.keys(raw).map(uid=>publicAdmin(Object.assign({uid},raw[uid]||{}))).filter(x=>x.username);
-    a.sort((x,y)=>(rank[x.status]??9)-(rank[y.status]??9)||((Date.parse(y.requestedAt||y.approvedAt)||0)-(Date.parse(x.requestedAt||x.approvedAt)||0)));
-    return a;
-  }
+  function pub(x){return {uid:String(x.uid||''),username:String(x.username||''),displayName:String(x.displayName||x.username||''),status:String(x.status||'pending'),role:String(x.role||'admin'),requestedAt:String(x.requestedAt||''),approvedAt:String(x.approvedAt||'')}}
+  async function adminItems(){const f=await masterAuth(),raw=await f.read('authUsers')||{},rank={pending:0,approved:1,disabled:2},a=Object.keys(raw).map(uid=>pub(Object.assign({uid},raw[uid]||{}))).filter(x=>x.username);a.sort((x,y)=>(rank[x.status]??9)-(rank[y.status]??9)||((Date.parse(y.requestedAt||y.approvedAt)||0)-(Date.parse(x.requestedAt||x.approvedAt)||0)));return a}
   function setBadge(n){const b=document.getElementById('adminApprovalBadgeV149');if(!b)return;b.textContent=n>99?'99+':String(n);b.hidden=n<=0}
   async function refreshBadge(){if(!isMaster())return setBadge(0);try{const a=await adminItems();setBadge(a.filter(x=>x.status==='pending').length)}catch(_e){}}
   function scriptAction(action,username){return new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).masterWebAdminActionV149(typeof window.__webAuthTokenV136==='function'?window.__webAuthTokenV136():'',action,username))}
   async function openAdmins(){
-    if(!isMaster())return psuAlertV148('관리자 계정 관리','마스터 권한이 필요합니다.');
-    mtitle.textContent='관리자 계정 관리';mbody.innerHTML='<div class="empty">관리자 계정을 불러오는 중...</div>';modalback.classList.add('show');
+    if(!isMaster()) return psuAlertV148('관리자 계정 관리','마스터 권한이 필요합니다.');
+    mtitle.textContent='관리자 계정 관리';mbody.classList.add('master-panel-v266');mbody.innerHTML='<div class="empty">관리자 계정을 불러오는 중...</div>';modalback.classList.add('show');
     const load=async()=>{
       try{
         const items=await adminItems(),pending=items.filter(x=>x.status==='pending'),approved=items.filter(x=>x.status==='approved'),disabled=items.filter(x=>x.status==='disabled');setBadge(pending.length);
-        const row=x=>{const master=x.role==='master',status=x.status||'pending',label=status==='pending'?'승인 대기':status==='approved'?'사용중':'중지됨';let acts='';if(!master){if(status==='pending')acts=`<button data-aa="approve" data-au="${safe(x.username)}">승인</button><button class="danger" data-aa="reject" data-au="${safe(x.username)}">거절</button>`;else if(status==='approved')acts=`<button data-aa="disable" data-au="${safe(x.username)}">사용중지</button><button class="danger" data-aa="delete" data-au="${safe(x.username)}">삭제</button>`;else acts=`<button data-aa="approve" data-au="${safe(x.username)}">재승인</button><button class="danger" data-aa="delete" data-au="${safe(x.username)}">삭제</button>`}return `<div class="admin-manage-row-v265"><div class="main"><div class="name">${safe(x.displayName||x.username)} · ${master?'마스터':label}</div><div class="meta">아이디 ${safe(x.username)}${x.requestedAt?` · 신청 ${safe(when(x.requestedAt))}`:''}${x.approvedAt?` · 승인 ${safe(when(x.approvedAt))}`:''}</div></div>${acts?`<div class="acts">${acts}</div>`:''}</div>`};
-        mbody.innerHTML=`<div class="admin-reg-note-v131">관리자 목록과 승인 대기 숫자는 Firebase에서 직접 불러옵니다. 승인·중지·삭제는 기존 계정 원본 동기화를 위해 Apps Script 처리 후 즉시 새로고침합니다.</div><div class="admin-manage-summary-v149"><span class="admin-manage-chip-v149 pending">승인 대기 ${pending.length}건</span><span class="admin-manage-chip-v149">사용중 ${approved.filter(x=>x.role!=='master').length}명</span><span class="admin-manage-chip-v149">중지 ${disabled.length}명</span></div><div class="admin-manage-section-v149"><h4>승인 대기</h4>${pending.length?pending.map(row).join(''):'<div class="admin-manage-empty-v149">현재 승인 대기 중인 요청이 없습니다.</div>'}</div><div class="admin-manage-section-v149"><h4>등록 관리자</h4>${approved.concat(disabled).map(row).join('')||'<div class="admin-manage-empty-v149">등록된 관리자 계정이 없습니다.</div>'}</div>`;
-        mbody.querySelectorAll('[data-aa]').forEach(b=>{b.onclick=async()=>{
-          const act=b.dataset.aa,user=b.dataset.au,x=items.find(v=>v.username===user),name=x&&x.displayName||user;let ok=true;
-          if(act==='approve')ok=await psuConfirmV148('관리자 승인',`${name} 계정을 관리자 권한으로 승인할까요?`,user,false);
-          if(act==='reject')ok=await psuConfirmV148('관리자 요청 거절',`${name}의 승인 요청을 거절하고 삭제할까요?`,user,true);
-          if(act==='disable')ok=await psuConfirmV148('관리자 사용중지',`${name}의 관리자 로그인을 중지할까요?`,user,true);
-          if(act==='delete')ok=await psuConfirmV148('관리자 계정 삭제',`${name} 계정을 삭제할까요?`,'삭제 후 다시 가입 신청해야 합니다.',true);
-          if(!ok)return;b.disabled=true;
-          try{const r=await scriptAction(act,user);if(!r||r.ok===false)throw new Error(r&&r.message||'처리하지 못했습니다.');toastMsg('처리했습니다.');setTimeout(load,80)}catch(e){b.disabled=false;psuAlertV148('관리자 계정 관리',e.message||String(e))}
-        }});
+        const row=x=>{
+          const master=x.role==='master',status=x.status||'pending',label=master?'마스터':status==='pending'?'승인 대기':status==='approved'?'사용중':'중지됨';let acts='';
+          if(!master){if(status==='pending')acts=`<button data-aa="approve" data-au="${safe(x.username)}">승인</button><button class="danger" data-aa="reject" data-au="${safe(x.username)}">거절</button>`;else if(status==='approved')acts=`<button data-aa="disable" data-au="${safe(x.username)}">사용중지</button><button class="danger" data-aa="delete" data-au="${safe(x.username)}">삭제</button>`;else acts=`<button data-aa="approve" data-au="${safe(x.username)}">재승인</button><button class="danger" data-aa="delete" data-au="${safe(x.username)}">삭제</button>`}
+          const meta=[`아이디 ${x.username}`,x.requestedAt?`신청 ${when(x.requestedAt)}`:'',x.approvedAt?`승인 ${when(x.approvedAt)}`:''].filter(Boolean).join(' · ');
+          return `<div class="admin-row-v266"><div class="name">${safe(x.displayName||x.username)}<span class="state">${safe(label)}</span></div><div class="meta" title="${safe(meta)}">${safe(meta)}</div>${acts?`<div class="acts">${acts}</div>`:'<div></div>'}</div>`;
+        };
+        mbody.innerHTML=`<div class="master-note-v266">계정 목록과 승인 대기 숫자는 Firebase에서 직접 조회합니다. 승인/중지/삭제만 계정 원본 동기화를 위해 Apps Script로 처리합니다.</div><div class="master-summary-v266"><span class="master-chip-v266 pending">승인 대기 ${pending.length}건</span><span class="master-chip-v266">사용중 ${approved.filter(x=>x.role!=='master').length}명</span><span class="master-chip-v266">중지 ${disabled.length}명</span></div><div class="master-section-v266"><div class="master-section-title-v266">승인 대기</div>${pending.length?pending.map(row).join(''):'<div class="activity-empty-v266">현재 승인 대기 요청이 없습니다.</div>'}</div><div class="master-section-v266"><div class="master-section-title-v266">등록 관리자</div>${approved.concat(disabled).map(row).join('')||'<div class="activity-empty-v266">등록된 관리자 계정이 없습니다.</div>'}</div>`;
+        mbody.querySelectorAll('[data-aa]').forEach(b=>{
+          b.onclick=async()=>{
+            const act=b.dataset.aa,user=b.dataset.au,x=items.find(v=>v.username===user),name=x&&x.displayName||user;let ok=true;
+            if(act==='approve')ok=await psuConfirmV148('관리자 승인',`${name} 계정을 승인할까요?`,user,false);
+            if(act==='reject')ok=await psuConfirmV148('관리자 요청 거절',`${name}의 승인 요청을 거절하고 삭제할까요?`,user,true);
+            if(act==='disable')ok=await psuConfirmV148('관리자 사용중지',`${name}의 관리자 로그인을 중지할까요?`,user,true);
+            if(act==='delete')ok=await psuConfirmV148('관리자 계정 삭제',`${name} 계정을 삭제할까요?`,'삭제 후 다시 가입 신청해야 합니다.',true);
+            if(!ok)return;b.disabled=true;
+            try{const r=await scriptAction(act,user);if(!r||r.ok===false)throw new Error(r&&r.message||'처리하지 못했습니다.');toastMsg('처리했습니다.');setTimeout(load,80)}catch(e){b.disabled=false;psuAlertV148('관리자 계정 관리',e.message||String(e))}
+          };
+        });
       }catch(e){mbody.innerHTML=`<div class="empty">${safe(e.message||String(e))}</div>`}
     };
     load();
   }
-  function bindButtons(){const a=document.getElementById('activityLogBtnV138');if(a)a.onclick=openActivity;const b=document.getElementById('adminApprovalBtnV149');if(b)b.onclick=openAdmins}
-  const mo=new MutationObserver(bindButtons);mo.observe(document.body,{subtree:true,childList:true});
-  let authUsersRef=null;
-  async function attachAdminWatcher(){if(!isMaster()||authUsersRef)return;try{await masterAuth();authUsersRef=firebase.database().ref('authUsers');authUsersRef.on('value',refreshBadge)}catch(_e){}}
-  setTimeout(()=>{bindButtons();refreshBadge();attachAdminWatcher()},350);
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshBadge();attachAdminWatcher()}});
-  window.openActivityLogDirectV265=openActivity;window.openWebAdminManagerDirectV265=openAdmins;
+  function bind(){const a=document.getElementById('activityLogBtnV138');if(a)a.onclick=openActivity;const b=document.getElementById('adminApprovalBtnV149');if(b)b.onclick=openAdmins}
+  const mo=new MutationObserver(bind);mo.observe(document.body,{subtree:true,childList:true});
+  let ref=null;async function watch(){if(!isMaster()||ref)return;try{await masterAuth();ref=firebase.database().ref('authUsers');ref.on('value',refreshBadge)}catch(_e){}}
+  setTimeout(()=>{bind();refreshBadge();watch()},350);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshBadge();watch()}});
+  window.openActivityLogDirectV266=openActivity;window.openWebAdminManagerDirectV266=openAdmins;
 })();
 </script>
 
