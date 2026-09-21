@@ -91,8 +91,8 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
 })();
 </script>
 
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.55";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
-<script>window.__PSU_WEB_TEST_BUILD="v2.55-memo-fast-hidden-name-reset";</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.56";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script>window.__PSU_WEB_TEST_BUILD="v2.56-direct-fast-crud-hidden-name-reset";</script>
 <div id="psuBootV247" aria-live="polite"><div class="boot-card-v247"><div class="boot-dot-v247"></div><div class="boot-title-v247">PSU 작업현황</div><div class="boot-sub-v247">최신 정보를 불러오는 중...</div></div></div>
 <script id="web-v247-first-paint-script">
 (function(){
@@ -1137,10 +1137,38 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
  function fmtV138(v){if(!v)return'';try{return new Date(v).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return''}}
  function applyResponseV138(unit,r){const p=progressFor(unit);if(p&&r&&Array.isArray(r.pendingTasks))p.pendingTasks=r.pendingTasks;if(r&&Array.isArray(r.pendingTasks)&&typeof window.__setPendingCacheUnitV143==='function')window.__setPendingCacheUnitV143(unit,r.pendingTasks);if(r&&r.savedAt)state.savedAt=r.savedAt;if(typeof renderProgress==='function')renderProgress();if(typeof window.__decorateCalendarFlagsV160==='function')window.__decorateCalendarFlagsV160()}
  function callPendingV138(unit,action,taskId,text,ok,fail){const name=userNameV138();if(!name){ensureNameV138().then(()=>callPendingV138(unit,action,taskId,text,ok,fail));return}
-   if(action==='delete'||action==='clearDone'){
-     const session=sessionV138();google.script.run.withSuccessHandler(r=>{if(!r||r.ok===false) return fail?fail(new Error(r&&r.message?r.message:'미비작업 처리 실패')):psuAlert('미비작업 처리 실패');if(action==='delete'&&r.verified!==true)return fail?fail(new Error('미비작업 삭제 확인 실패')):psuAlert('미비작업 삭제 확인 실패');applyResponseV138(unit,r);if(ok)ok(r)}).withFailureHandler(e=>{if(fail)fail(e);else psuAlert(e&&e.message?e.message:String(e))}).pendingTaskActionApiV138(unit,action,taskId||'',text||'',name,clientIdV138(),'web',session,'','');return;
-   }
-   (async()=>{try{const fb=window.__fbDirectV187;if(!fb)throw new Error('Firebase 연결 준비 중');await fb.auth();const key=fb.b64key(unit),ref=firebase.database().ref('pending/'+key);let out=null;await ref.transaction(rec=>{rec=rec&&typeof rec==='object'?rec:{unit:unit,tasks:[]};let tasks=Array.isArray(rec.tasks)?rec.tasks.filter(Boolean):[],id=String(taskId||''),now=new Date().toISOString();if(action==='add'){const t=String(text||'').trim();if(!t)throw new Error('미비작업 내용을 입력하세요.');tasks.push({id:(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)),text:t.slice(0,200),done:false,createdAt:now,completedAt:'',createdBy:name,completedBy:'',createdClientId:clientIdV138()})}else if(action==='toggle'){tasks=tasks.map(x=>String(x.id||'')===id?Object.assign({},x,{done:!x.done,completedAt:!x.done?now:'',completedBy:!x.done?name:''}):x)}else if(action==='edit'){tasks=tasks.map(x=>String(x.id||'')===id?Object.assign({},x,{text:String(text||'').trim().slice(0,200),updatedAt:now,updatedBy:name}):x)}rec.tasks=tasks;rec.updatedAt=now;out={ok:true,unit,pendingTasks:tasks,savedAt:now};return rec});await fb.bump('pending');applyResponseV138(unit,out);if(ok)ok(out)}catch(e){if(fail)fail(e);else psuAlert(e&&e.message?e.message:String(e))}})()}
+   (async()=>{try{
+     const fb=window.__fbDirectV187;if(!fb)throw new Error('Firebase 연결 준비 중');await fb.auth();
+     const key=fb.b64key(unit),ref=firebase.database().ref('pending/'+key),id=String(taskId||''),now=new Date().toISOString();
+     const tr=await ref.transaction(rec=>{
+       rec=rec&&typeof rec==='object'?rec:{unit:unit,tasks:[]};let tasks=Array.isArray(rec.tasks)?rec.tasks.filter(Boolean):[],found=false;
+       if(action==='add'){
+         const t=String(text||'').trim();if(!t)throw new Error('미비작업 내용을 입력하세요.');
+         tasks.push({id:(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)),text:t.slice(0,200),done:false,createdAt:now,completedAt:'',createdBy:name,completedBy:'',createdClientId:clientIdV138()});found=true;
+       }else if(action==='toggle'){
+         tasks=tasks.map(x=>{if(String(x&&x.id||'')!==id)return x;found=true;const done=!x.done;return Object.assign({},x,{done:done,completedAt:done?now:'',completedBy:done?name:''})});
+       }else if(action==='edit'){
+         const t=String(text||'').trim();if(!t)throw new Error('미비작업 내용을 입력하세요.');
+         tasks=tasks.map(x=>{if(String(x&&x.id||'')!==id)return x;found=true;return Object.assign({},x,{text:t.slice(0,200),updatedAt:now,updatedBy:name})});
+       }else if(action==='delete'){
+         tasks=tasks.filter(x=>{if(String(x&&x.id||'')===id){found=true;return false}return true});
+       }else if(action==='clearDone'){
+         if(!pendingAdminV142())throw new Error('관리자 이상 권한에서만 완료항목을 정리할 수 있습니다.');
+         const before=tasks.length;tasks=tasks.filter(x=>!x.done);found=before!==tasks.length;
+       }else throw new Error('지원하지 않는 미비작업 동작입니다.');
+       if(action!=='add'&&action!=='clearDone'&&!found)throw new Error('미비작업 항목을 찾지 못했습니다.');
+       rec.tasks=tasks;rec.updatedAt=now;return rec;
+     });
+     if(!tr||tr.committed===false)throw new Error('미비작업 저장이 완료되지 않았습니다.');
+     const saved=tr.snapshot&&tr.snapshot.val?tr.snapshot.val()||{}:{};
+     const tasks=Array.isArray(saved.tasks)?saved.tasks.filter(Boolean):[];
+     if(action==='delete'&&tasks.some(x=>String(x&&x.id||'')===id))throw new Error('미비작업 삭제 확인 실패');
+     const out={ok:true,unit:unit,pendingTasks:tasks,savedAt:String(saved.updatedAt||now),verified:true};
+     applyResponseV138(unit,out);
+     await fb.bump('pending');
+     if(ok)ok(out);
+   }catch(e){if(fail)fail(e);else psuAlert(e&&e.message?e.message:String(e))}})()
+ }
  function pendingMetaV138(x){const a=[];if(x.createdAt)a.push(`${x.createdBy?esc(x.createdBy)+' · ':''}등록 ${esc(fmtV138(x.createdAt||''))}`);if(x.done&&x.completedAt)a.push(`${x.completedBy?esc(x.completedBy)+' · ':''}완료 ${esc(fmtV138(x.completedAt||''))}`);return a.join(' · ')}
  function pendingAdminV142(){const r=window.__webAuthInfoV136&&window.__webAuthInfoV136.role||'';return r==='admin'||r==='master'}
  function pendingOwnerV142(x){if(!x)return false;const cid=String(x.createdClientId||'').trim(),me=String(clientIdV138()||'').trim();if(cid&&me)return cid===me;return !!userNameV138()&&String(x.createdBy||'').trim()===userNameV138()}
@@ -1936,7 +1964,14 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
      const add=document.getElementById('memoAddV219');add.onclick=async()=>{const memoDate=document.getElementById('memoDateV219').value,a=document.getElementById('memoAuthorV219').value.trim(),t=document.getElementById('memoTextV219').value.trim();if(!memoDate)return psuAlert('메모 날짜를 선택하세요.');if(!a)return psuAlert('작성자 이름을 입력하세요.');if(!t)return psuAlert('메모 내용을 입력하세요.');add.disabled=true;try{localStorage.setItem('psuSharedMemoAuthor',a);await runV219('addSharedMemo',[unit,x.sn,a,t,owner,'',memoDate]);toastMsg('메모를 추가했습니다.');await window.refreshMemoCountsV110();window.openSharedMemoV15(unit,date)}catch(e){add.disabled=false;psuAlert(e&&e.message?e.message:String(e))}};
    }catch(e){mbody.innerHTML=`<div class="pre">${esc(e&&e.message?e.message:String(e))}</div>`}
  };
- window.refreshMemoCountsV110=async function(){try{const r=await runV219('getSharedMemoCounts',[]);totals=r&&r.counts||Object.create(null);byDate=r&&r.countsByDate||Object.create(null);memoCountsReadyV226=true;window.__calendarMemoCountsV160=totals;document.querySelectorAll('#plist .pitem[data-unit]').forEach(card=>{const u=card.dataset.unit||'',b=card.querySelector('.sharedbtn-v15'),n=Number(totals[u]||0);if(b){b.textContent=n?`메모 ${n}건`:'메모';b.title=b.textContent;b.classList.toggle('has-count-v146',!!n)}});normalizeProgressActionsV219();decorateScheduleV219();return r}catch(e){console.warn('v2.19 메모 건수 조회 실패',e);return null}};
+ window.refreshMemoCountsV110=async function(){try{
+   let raw=null;if(typeof window.__psuMemoGetRawV256==='function')raw=await window.__psuMemoGetRawV256(false);else{const fb=window.__fbDirectV187;if(!fb)throw new Error('Firebase 연결 준비 중');raw=await fb.read('memos')||{}}
+   totals=Object.create(null);byDate=Object.create(null);
+   Object.keys(raw||{}).forEach(k=>{const m=raw[k];if(!m||m.deleted)return;const unit=String(m.unit||'').trim();if(!unit)return;const d=effectiveDateV219(m);totals[unit]=(totals[unit]||0)+1;if(!byDate[unit])byDate[unit]=Object.create(null);byDate[unit][d]=(byDate[unit][d]||0)+1});
+   memoCountsReadyV226=true;window.__calendarMemoCountsV160=totals;
+   document.querySelectorAll('#plist .pitem[data-unit]').forEach(card=>{const u=card.dataset.unit||'',b=card.querySelector('.sharedbtn-v15'),n=Number(totals[u]||0);if(b){b.textContent=n?`메모 ${n}건`:'메모';b.title=b.textContent;b.classList.toggle('has-count-v146',!!n)}});
+   normalizeProgressActionsV219();decorateScheduleV219();return {ok:true,counts:totals,countsByDate:byDate,storage:'firebase-direct'}
+ }catch(e){console.warn('v2.56 메모 건수 Firebase 조회 실패',e);return null}};
  const oldFlags=window.__decorateCalendarFlagsV160;if(typeof oldFlags==='function')window.__decorateCalendarFlagsV160=function(){const r=oldFlags.apply(this,arguments);decorateScheduleV219();return r};
  const oldRP=window.renderProgress;if(typeof oldRP==='function')window.renderProgress=renderProgress=function(){const r=oldRP.apply(this,arguments);setTimeout(normalizeProgressActionsV219,0);return r};
  const oldRC=window.renderCalendar;if(typeof oldRC==='function')window.renderCalendar=renderCalendar=function(){const r=oldRC.apply(this,arguments);decorateScheduleV219();return r};
@@ -1987,21 +2022,33 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
    const has=privateUnits.has(unit);b.classList.toggle('has-private-v244',has);b.title=has?'개인메모 등록됨 · 클릭해서 보기/수정':'개인메모 없음 · 클릭해서 등록';return b
  }
  function decorate(){document.querySelectorAll('#plist .pitem[data-unit]').forEach(ensureButton);if(!isAdmin())document.querySelectorAll('.private-note-btn-v244').forEach(x=>x.remove())}
+ const SHARED_NAME_V256='임영규',SHARED_UID_V256='psu-name-6ca73e26e20509f2691babd8161db65b';
+ async function privateIdentV256(){
+   if(!isAdmin())throw new Error('개인메모는 관리자 계정만 사용할 수 있습니다.');
+   let u=window.firebase&&firebase.auth?firebase.auth().currentUser:null;
+   if((!u||u.isAnonymous)&&typeof window.__firebaseFastWebRestoreV186==='function'){try{await window.__firebaseFastWebRestoreV186()}catch(_e){}u=firebase.auth().currentUser}
+   if(!u||u.isAnonymous)throw new Error('관리자 로그인이 필요합니다.');
+   const a=window.__webAuthInfoV136||{},displayName=String(a.displayName||a.username||'').trim(),uid=displayName===SHARED_NAME_V256?SHARED_UID_V256:String(u.uid||'').trim();
+   if(!uid)throw new Error('개인메모 계정을 확인하지 못했습니다.');return {uid:uid,authUid:String(u.uid||''),displayName:displayName,username:String(a.username||''),role:String(a.role||'admin')}
+ }
  async function refresh(force){
    const t=session();if(!isAdmin()||!t){privateUnits=new Set();lastToken='';decorate();return}
    if(listBusy)return;const now=Date.now();if(!force&&t===lastToken&&now-lastFetch<10000){decorate();return}listBusy=true;
-   try{const r=await run('getWebPrivateNoteListV244',[t]),a=Array.isArray(r&&r.units)?r.units:[];privateUnits=new Set(a.map(x=>String(x||'').trim()).filter(Boolean));lastToken=t;lastFetch=Date.now();decorate()}catch(e){console.warn('개인메모 목록 조회 실패',e);decorate()}finally{listBusy=false}
+   try{const ident=await privateIdentV256(),raw=await window.__fbDirectV187.read('privateNotes/'+ident.uid)||{},a=[];Object.values(raw).forEach(n=>{const u=String(n&&n.unit||'').trim(),tx=String(n&&n.text||'').trim();if(u&&tx&&!a.includes(u))a.push(u)});privateUnits=new Set(a);lastToken=t;lastFetch=Date.now();decorate()}catch(e){console.warn('개인메모 목록 Firebase 조회 실패',e);decorate()}finally{listBusy=false}
  }
  function scheduleRefresh(force,delay){clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>refresh(!!force),Number(delay||0))}
  window.openPrivateNoteV244=async function(unit){
-   unit=String(unit||'').trim();if(!isAdmin())return psuAlert('개인메모는 관리자 계정만 사용할 수 있습니다.');const t=session();if(!t)return psuAlert('관리자 로그인이 필요합니다.');const x=info(unit);
+   unit=String(unit||'').trim();if(!isAdmin())return psuAlert('개인메모는 관리자 계정만 사용할 수 있습니다.');if(!session())return psuAlert('관리자 로그인이 필요합니다.');const x=info(unit);
    mtitle.textContent=`${unit} 개인메모`;mbody.innerHTML='<div class="empty">개인메모를 불러오는 중...</div>';modalback.classList.add('show');
    try{
-     const d=await run('getWebPrivateNoteV244',[t,unit]),n=d&&d.note||{},updated=String(n.updatedAt||'');
-     mbody.innerHTML=`<div class="private-note-info-v244"><b>${esc(unit)}</b>${x.sn?` · S/N ${esc(x.sn)}`:''}<br>개인메모입니다. 임영규는 관리자 프로그램·PC뷰어·웹뷰어에서 하나로 연동되고, 다른 관리자는 각 계정별로 분리됩니다.</div>${updated?`<div class="private-note-meta-v244">마지막 수정 ${esc(fmt(updated))}</div>`:''}<textarea class="private-note-text-v244" id="privateNoteTextV244" maxlength="12000" placeholder="개인메모 내용을 입력하세요.">${esc(n.text||'')}</textarea><div class="private-note-actions-v244">${d&&d.exists?'<button class="btn danger" id="privateNoteDeleteV244">삭제</button>':''}<button class="btn primary" id="privateNoteSaveV244">저장</button></div>`;
-     const save=document.getElementById('privateNoteSaveV244'),del=document.getElementById('privateNoteDeleteV244'),tb=document.getElementById('privateNoteTextV244');
-     save.onclick=async()=>{const text=String(tb&&tb.value||'').trim();if(!text)return psuAlert('개인메모 내용을 입력하세요.');save.disabled=true;try{await run('saveWebPrivateNoteV244',[session(),unit,x.sn,text]);toastMsg('개인메모를 저장했습니다.');await refresh(true);await window.openPrivateNoteV244(unit)}catch(e){save.disabled=false;psuAlert(e&&e.message?e.message:String(e))}};
-     if(del)del.onclick=async()=>{if(!await psuConfirm('이 개인메모를 삭제할까요?'))return;del.disabled=true;try{await run('deleteWebPrivateNoteV244',[session(),unit]);toastMsg('개인메모를 삭제했습니다.');await refresh(true);await window.openPrivateNoteV244(unit)}catch(e){del.disabled=false;psuAlert(e&&e.message?e.message:String(e))}};
+     const ident=await privateIdentV256(),fb=window.__fbDirectV187,key=fb.b64key(unit),path='privateNotes/'+ident.uid+'/'+key,raw=await fb.read(path)||{},exists=!!String(raw.text||'').trim(),updated=String(raw.updatedAt||'');
+     const render=note=>{const ex=!!String(note&&note.text||'').trim(),up=String(note&&note.updatedAt||'');mbody.innerHTML=`<div class="private-note-info-v244"><b>${esc(unit)}</b>${x.sn?` · S/N ${esc(x.sn)}`:''}<br>개인메모입니다. 임영규는 관리자 프로그램·PC뷰어·웹뷰어에서 하나로 연동되고, 다른 관리자는 각 계정별로 분리됩니다.</div>${up?`<div class="private-note-meta-v244">마지막 수정 ${esc(fmt(up))}</div>`:''}<textarea class="private-note-text-v244" id="privateNoteTextV244" maxlength="12000" placeholder="개인메모 내용을 입력하세요.">${esc(note&&note.text||'')}</textarea><div class="private-note-actions-v244">${ex?'<button class="btn danger" id="privateNoteDeleteV244">삭제</button>':''}<button class="btn primary" id="privateNoteSaveV244">저장</button></div>`;
+       const save=document.getElementById('privateNoteSaveV244'),del=document.getElementById('privateNoteDeleteV244'),tb=document.getElementById('privateNoteTextV244');
+       if(save)save.onclick=async()=>{const tx=String(tb&&tb.value||'').trim();if(!tx)return psuAlert('개인메모 내용을 입력하세요.');save.disabled=true;try{const now=new Date().toISOString(),newNote={unit:unit,sn:x.sn||'',text:tx,createdAt:String(note&&note.createdAt||'').trim()||now,updatedAt:now};await fb.set(path,newNote);privateUnits.add(unit);decorate();toastMsg('개인메모를 저장했습니다.');render(newNote);setTimeout(()=>updateUsageV256(ident,ex?'update':'create').catch(()=>{}),0)}catch(e){save.disabled=false;psuAlert(e&&e.message?e.message:String(e))}};
+       if(del)del.onclick=async()=>{if(!await psuConfirm('이 개인메모를 삭제할까요?'))return;del.disabled=true;try{await fb.del(path);privateUnits.delete(unit);decorate();toastMsg('개인메모를 삭제했습니다.');render({});setTimeout(()=>updateUsageV256(ident,'delete').catch(()=>{}),0)}catch(e){del.disabled=false;psuAlert(e&&e.message?e.message:String(e))}};
+     };
+     async function updateUsageV256(ident,op){try{const ref=firebase.database().ref('privateNoteUsage/'+ident.uid),cnt=privateUnits.size;await ref.transaction(cur=>{cur=cur&&typeof cur==='object'?cur:{};const now=new Date().toISOString();if(!cur.firstUsedAt)cur.firstUsedAt=now;cur.lastUsedAt=now;cur.username=ident.username;cur.displayName=ident.displayName;cur.useCount=Number(cur.useCount||0)+1;if(op==='create')cur.createCount=Number(cur.createCount||0)+1;if(op==='update')cur.updateCount=Number(cur.updateCount||0)+1;if(op==='delete')cur.deleteCount=Number(cur.deleteCount||0)+1;cur.activeEquipmentCount=cnt;return cur})}catch(_e){}}
+     render(raw);setTimeout(()=>updateUsageV256(ident,'open').catch(()=>{}),0);
    }catch(e){mbody.innerHTML=`<div class="pre">${esc(e&&e.message?e.message:String(e))}</div>`}
  };
  const oldRP=window.renderProgress;if(typeof oldRP==='function')window.renderProgress=renderProgress=function(){const r=oldRP.apply(this,arguments);setTimeout(()=>{decorate();scheduleRefresh(false,20)},0);return r};
@@ -2022,67 +2069,35 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
  addEventListener('pagehide',()=>{try{clearTimeout(t);if(window.state)localStorage.setItem('psuWebDisplayCacheV253',JSON.stringify({at:Date.now(),state:state}))}catch(_e){}});
 })();
 </script>
-<script id="web-v255-memo-fast-display-script">
+<script id="web-v256-direct-fast-crud-script">
 (function(){
- if(window.__webV255MemoFastInstalled)return;window.__webV255MemoFastInstalled=true;
- const oldMemoOpen=window.openSharedMemoV15;
- const oldPrivateOpen=window.openPrivateNoteV244;
- function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
- function fmt(v){try{return new Date(v).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}catch(_e){return String(v||'')}}
- function effective(m){const v=String(m&&m.memoDate||'').trim();if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;try{const d=new Date(String(m&&m.createdAt||''));if(!isNaN(d))return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}catch(_e){}return String(m&&m.createdAt||'').slice(0,10)}
- function ownerToken(){let t='';try{t=localStorage.getItem('psuSharedMemoOwnerV18')||''}catch(_e){}if(!t){try{t=crypto.randomUUID()}catch(_e){t=Date.now().toString(36)+Math.random().toString(36).slice(2)}try{localStorage.setItem('psuSharedMemoOwnerV18',t)}catch(_e){}}return t}
+ if(window.__webV256DirectFastInstalled)return;window.__webV256DirectFastInstalled=true;
+ const fb=()=>window.__fbDirectV187;
+ let raw=null,ready=false,loading=null,watchRef=null,watchStarted=false;
  async function sha(v){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(v||'')));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
- function session(){try{return localStorage.getItem('psuWebAdminSessionV131')||''}catch(_e){return ''}}
- function run(name,args){return new Promise((resolve,reject)=>{try{let r=google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);r[name].apply(r,args||[])}catch(e){reject(e)}})}
+ function ownerToken(){let t='';try{t=localStorage.getItem('psuSharedMemoOwnerV18')||''}catch(_e){}if(!t){try{t=crypto.randomUUID()}catch(_e){t=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)}try{localStorage.setItem('psuSharedMemoOwnerV18',t)}catch(_e){}}return t}
+ function effective(m){const v=String(m&&m.memoDate||'').trim();if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;try{const d=new Date(String(m&&m.createdAt||''));if(!isNaN(d))return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}catch(_e){}return String(m&&m.createdAt||'').slice(0,10)}
+ function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+ function fmt(s){try{return new Date(s).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}catch(_e){return String(s||'')}}
  function info(unit){const p=typeof progressFor==='function'?(progressFor(unit)||{}):{},e=(typeof activeEvents==='function'?(activeEvents()||[]):[]).find(x=>x&&String(x.unit||'')===String(unit))||{};return {sn:String(p.sn||e.sn||'')}}
- function memoCacheKey(unit,date){return 'psuWebMemoDisplayV255:'+encodeURIComponent(String(unit||''))+'|'+String(date||'')}
- function readMemoCache(unit,date){try{const x=JSON.parse(localStorage.getItem(memoCacheKey(unit,date))||'null');return x&&Array.isArray(x.items)&&Date.now()-Number(x.at||0)<86400000?x.items:null}catch(_e){return null}}
- function writeMemoCache(unit,date,items){try{localStorage.setItem(memoCacheKey(unit,date),JSON.stringify({at:Date.now(),items:items||[]}))}catch(_e){}}
- let memoRawV255=null,memoRawAtV255=0,memoRawPromiseV255=null;
- function clearMemoCache(unit){try{const pre='psuWebMemoDisplayV255:'+encodeURIComponent(String(unit||''))+'|';Object.keys(localStorage).forEach(k=>{if(k.startsWith(pre))localStorage.removeItem(k)})}catch(_e){}memoRawV255=null;memoRawAtV255=0}
- async function allMemosV255(force=false){
-   if(!force&&memoRawV255&&Date.now()-memoRawAtV255<12000)return memoRawV255;
-   if(memoRawPromiseV255&&!force)return memoRawPromiseV255;
-   const fb=window.__fbDirectV187;if(!fb||typeof fb.read!=='function')throw new Error('Firebase 직접 조회 준비 중');
-   memoRawPromiseV255=Promise.resolve(fb.read('memos')).then(raw=>{memoRawV255=raw||{};memoRawAtV255=Date.now();return memoRawV255}).finally(()=>{memoRawPromiseV255=null});
-   return memoRawPromiseV255;
- }
- async function directMemos(unit,sn,date){
-   const [raw,oh]=await Promise.all([allMemosV255(false),sha(ownerToken())]),master=String(window.__webAuthInfoV136&&window.__webAuthInfoV136.role||'')==='master';
-   return Object.keys(raw||{}).map(k=>Object.assign({id:k},raw[k]||{})).filter(m=>m&&!m.deleted&&((unit&&String(m.unit||'')===String(unit))||(sn&&String(m.sn||'')===String(sn)))).filter(m=>!date||effective(m)===date).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))).map(m=>Object.assign({},m,{memoDate:effective(m),canEdit:master||(!!oh&&String(m.ownerHash||'')===oh)}));
- }
- function renderMemo(unit,date,items){
-   const x=info(unit),owner=ownerToken(),sess=session(),defaultDate=date||today(),author=localStorage.getItem('psuSharedMemoAuthor')||window.__psuUserNameV138||'';
-   const note=date?`<div class="pre"><b>${esc(date)}</b> 일정에 지정된 메모만 표시합니다. 메모 날짜는 추가/수정 시 바꿀 수 있습니다.</div>`:'<div class="pre">이 장비에 등록된 <b>전체 날짜 메모</b>를 표시합니다.</div>';
+ async function startWatch(){if(watchStarted||!window.firebase)return;watchStarted=true;try{await fb().auth();watchRef=firebase.database().ref('memos');watchRef.on('value',s=>{raw=s.val()||{};ready=true;loading=null;if(typeof window.refreshMemoCountsV110==='function')window.refreshMemoCountsV110().catch(()=>{})},e=>console.warn('메모 실시간 구독 실패',e))}catch(e){watchStarted=false}}
+ async function getRaw(force=false){if(!force&&ready)return raw||{};if(loading&&!force)return loading;const f=fb();if(!f)throw new Error('Firebase 연결 준비 중');loading=f.read('memos').then(v=>{raw=v||{};ready=true;return raw}).finally(()=>{loading=null});startWatch();return loading}
+ window.__psuMemoGetRawV256=getRaw;
+ function putLocal(id,item){if(!raw||typeof raw!=='object')raw={};raw[id]=item;ready=true}
+ async function itemsFor(unit,sn,date){const [r,oh,u]=await Promise.all([getRaw(false),sha(ownerToken()),fb().auth()]),master=String(window.__webAuthInfoV136&&window.__webAuthInfoV136.role||'')==='master';return Object.keys(r||{}).map(k=>Object.assign({id:k},r[k]||{})).filter(m=>m&&!m.deleted&&((unit&&String(m.unit||'')===String(unit))||(sn&&String(m.sn||'')===String(sn)))).filter(m=>!date||effective(m)===date).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))).map(m=>Object.assign({},m,{memoDate:effective(m),canEdit:master||String(m.ownerHash||'')===oh||String(m.createdUid||'')===String(u&&u.uid||'')}))}
+ async function bumpLater(){try{await fb().bump('memo')}catch(e){console.warn('메모 revision 갱신 실패',e);setTimeout(()=>fb().bump('memo').catch(()=>{}),1200)}}
+ function render(unit,date,items){
+   const x=info(unit),defaultDate=date||today(),author=localStorage.getItem('psuSharedMemoAuthor')||window.__psuUserNameV138||'',note=date?`<div class="pre"><b>${esc(date)}</b> 일정에 지정된 메모만 표시합니다. 메모 날짜는 추가/수정 시 바꿀 수 있습니다.</div>`:'<div class="pre">이 장비에 등록된 <b>전체 날짜 메모</b>를 표시합니다.</div>';
    mtitle.textContent=`${unit} 메모${date?` · ${date}`:''}`;
-   mbody.innerHTML=note+(items.length?items.map(m=>`<div class="shareditem-v15" data-v255-id="${esc(m.id||'')}"><div class="sharedmeta-v15 memo-meta-v219"><span class="memo-date-chip-v219">메모일 ${esc(effective(m))}</span><b>${esc(m.author||'')}</b><span>· 등록 ${esc(fmt(m.createdAt||''))}${m.updatedAt&&m.updatedAt!==m.createdAt?' · 수정됨':''}</span></div><div class="sharedtext-v15" data-v255-text>${esc(m.text||'')}</div>${m.canEdit?'<div class="inline-memo-actions-v112"><button data-v255-edit>수정</button><button class="danger" data-v255-del>삭제</button></div>':''}</div>`).join(''):'<div class="empty">등록된 메모가 없습니다.</div>')+`<div class="memo-date-field-v219"><label for="memoDateV255">메모 날짜</label><input type="date" id="memoDateV255" value="${esc(defaultDate)}"></div><input class="sharedinput-v15" id="memoAuthorV255" value="${esc(author)}" placeholder="작성자 이름"><textarea class="sharedinput-v15 sharedtextarea-v15" id="memoTextV255" placeholder="특이사항 / 전달사항 등을 입력하세요."></textarea><div style="text-align:right;margin-top:9px"><button class="btn primary" id="memoAddV255">메모 추가</button></div>`;
-   mbody.querySelectorAll('[data-v255-id]').forEach(card=>{const item=items.find(v=>String(v.id||'')===card.dataset.v255Id);if(!item)return;const eb=card.querySelector('[data-v255-edit]'),db=card.querySelector('[data-v255-del]');if(eb)eb.onclick=()=>{const tb=card.querySelector('[data-v255-text]'),acts=card.querySelector('.inline-memo-actions-v112'),md=effective(item)||defaultDate;tb.innerHTML=`<div class="memo-date-field-v219"><label>메모 날짜</label><input type="date" data-v255-edit-date value="${esc(md)}"></div><textarea class="sharedinput-v15 sharedtextarea-v15" data-v255-edit-text>${esc(item.text||'')}</textarea>`;acts.innerHTML='<button data-v255-save>저장</button><button data-v255-cancel>취소</button>';acts.querySelector('[data-v255-cancel]').onclick=()=>renderMemo(unit,date,items);acts.querySelector('[data-v255-save]').onclick=async()=>{const memoDate=tb.querySelector('[data-v255-edit-date]').value,text=tb.querySelector('[data-v255-edit-text]').value.trim();if(!memoDate)return psuAlert('메모 날짜를 선택하세요.');if(!text)return psuAlert('메모 내용을 입력하세요.');try{await run('updateSharedMemo',[item.id,text,owner,'',sess,memoDate]);clearMemoCache(unit);toastMsg('메모를 수정했습니다.');if(window.refreshMemoCountsV110)window.refreshMemoCountsV110();window.openSharedMemoV15(unit,date)}catch(e){psuAlert(e&&e.message?e.message:String(e))}}};if(db)db.onclick=async()=>{if(!await psuConfirm('이 메모를 삭제할까요?'))return;db.disabled=true;try{await run('deleteSharedMemo',[item.id,owner,'',sess]);clearMemoCache(unit);toastMsg('메모를 삭제했습니다.');if(window.refreshMemoCountsV110)window.refreshMemoCountsV110();window.openSharedMemoV15(unit,date)}catch(e){db.disabled=false;psuAlert(e&&e.message?e.message:String(e))}}});
-   const add=document.getElementById('memoAddV255');if(add)add.onclick=async()=>{const memoDate=document.getElementById('memoDateV255').value,a=document.getElementById('memoAuthorV255').value.trim(),t=document.getElementById('memoTextV255').value.trim();if(!memoDate)return psuAlert('메모 날짜를 선택하세요.');if(!a)return psuAlert('작성자 이름을 입력하세요.');if(!t)return psuAlert('메모 내용을 입력하세요.');add.disabled=true;try{localStorage.setItem('psuSharedMemoAuthor',a);await run('addSharedMemo',[unit,x.sn,a,t,owner,'',memoDate]);clearMemoCache(unit);toastMsg('메모를 추가했습니다.');if(window.refreshMemoCountsV110)window.refreshMemoCountsV110();window.openSharedMemoV15(unit,date)}catch(e){add.disabled=false;psuAlert(e&&e.message?e.message:String(e))}};
+   mbody.innerHTML=note+(items.length?items.map(m=>`<div class="shareditem-v15" data-v256-id="${esc(m.id||'')}"><div class="sharedmeta-v15 memo-meta-v219"><span class="memo-date-chip-v219">메모일 ${esc(effective(m))}</span><b>${esc(m.author||'')}</b><span>· 등록 ${esc(fmt(m.createdAt||''))}${m.updatedAt&&m.updatedAt!==m.createdAt?' · 수정됨':''}</span></div><div class="sharedtext-v15" data-v256-text>${esc(m.text||'')}</div>${m.canEdit?'<div class="inline-memo-actions-v112"><button data-v256-edit>수정</button><button class="danger" data-v256-del>삭제</button></div>':''}</div>`).join(''):'<div class="empty">등록된 메모가 없습니다.</div>')+`<div class="memo-date-field-v219"><label for="memoDateV256">메모 날짜</label><input type="date" id="memoDateV256" value="${esc(defaultDate)}"></div><input class="sharedinput-v15" id="memoAuthorV256" value="${esc(author)}" placeholder="작성자 이름"><textarea class="sharedinput-v15 sharedtextarea-v15" id="memoTextV256" placeholder="특이사항 / 전달사항 등을 입력하세요."></textarea><div style="text-align:right;margin-top:9px"><button class="btn primary" id="memoAddV256">메모 추가</button></div>`;
+   mbody.querySelectorAll('[data-v256-id]').forEach(card=>{const item=items.find(v=>String(v.id||'')===card.dataset.v256Id);if(!item)return;const eb=card.querySelector('[data-v256-edit]'),db=card.querySelector('[data-v256-del]');
+     if(eb)eb.onclick=()=>{const box=card.querySelector('[data-v256-text]'),acts=card.querySelector('.inline-memo-actions-v112'),md=effective(item)||defaultDate;box.innerHTML=`<div class="memo-date-field-v219"><label>메모 날짜</label><input type="date" data-v256-edit-date value="${esc(md)}"></div><textarea class="sharedinput-v15 sharedtextarea-v15" data-v256-edit-text>${esc(item.text||'')}</textarea>`;acts.innerHTML='<button data-v256-save>저장</button><button data-v256-cancel>취소</button>';acts.querySelector('[data-v256-cancel]').onclick=()=>render(unit,date,items);acts.querySelector('[data-v256-save]').onclick=async()=>{const memoDate=box.querySelector('[data-v256-edit-date]').value,text=box.querySelector('[data-v256-edit-text]').value.trim();if(!memoDate)return psuAlert('메모 날짜를 선택하세요.');if(!text)return psuAlert('메모 내용을 입력하세요.');try{const at=new Date().toISOString(),next=Object.assign({},item,{text:text,memoDate:memoDate,updatedAt:at,deleted:false});await fb().update('memos/'+item.id,{text:text,memoDate:memoDate,updatedAt:at,deleted:false});putLocal(item.id,next);toastMsg('메모를 수정했습니다.');window.refreshMemoCountsV110&&window.refreshMemoCountsV110();render(unit,date,(await itemsFor(unit,x.sn,date)));bumpLater()}catch(e){psuAlert(e&&e.message?e.message:String(e))}}};
+     if(db)db.onclick=async()=>{if(!await psuConfirm('이 메모를 삭제할까요?'))return;db.disabled=true;try{const at=new Date().toISOString(),next=Object.assign({},item,{deleted:true,deletedAt:at,updatedAt:at,text:''});await fb().update('memos/'+item.id,{deleted:true,deletedAt:at,updatedAt:at,text:''});putLocal(item.id,next);toastMsg('메모를 삭제했습니다.');window.refreshMemoCountsV110&&window.refreshMemoCountsV110();render(unit,date,(await itemsFor(unit,x.sn,date)));bumpLater()}catch(e){db.disabled=false;psuAlert(e&&e.message?e.message:String(e))}};
+   });
+   const add=document.getElementById('memoAddV256');if(add)add.onclick=async()=>{const memoDate=document.getElementById('memoDateV256').value,a=document.getElementById('memoAuthorV256').value.trim(),t=document.getElementById('memoTextV256').value.trim();if(!memoDate)return psuAlert('메모 날짜를 선택하세요.');if(!a)return psuAlert('작성자 이름을 입력하세요.');if(!t)return psuAlert('메모 내용을 입력하세요.');add.disabled=true;try{localStorage.setItem('psuSharedMemoAuthor',a);const user=await fb().auth(),id='web_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,9),at=new Date().toISOString(),item={id:id,unit:unit,sn:x.sn,author:a,text:t,memoDate:memoDate,createdAt:at,updatedAt:at,ownerHash:await sha(ownerToken()),createdUid:String(user&&user.uid||''),source:'web-direct-v256'};await fb().set('memos/'+id,item);putLocal(id,item);toastMsg('메모를 추가했습니다.');window.refreshMemoCountsV110&&window.refreshMemoCountsV110();render(unit,date,(await itemsFor(unit,x.sn,date)));bumpLater()}catch(e){add.disabled=false;psuAlert(e&&e.message?e.message:String(e))}};
  }
- window.openSharedMemoV15=async function(unit,date=''){
-   unit=String(unit||'').trim();date=String(date||'').trim();if(!unit)return;
-   const cached=readMemoCache(unit,date);mtitle.textContent=`${unit} 메모${date?` · ${date}`:''}`;modalback.classList.add('show');
-   if(cached)renderMemo(unit,date,cached);else mbody.innerHTML='<div class="empty">메모를 불러오는 중...</div>';
-   try{const x=info(unit),items=await directMemos(unit,x.sn,date);writeMemoCache(unit,date,items);if(modalback.classList.contains('show')&&String(mtitle.textContent||'').startsWith(unit+' 메모'))renderMemo(unit,date,items)}catch(e){if(!cached&&typeof oldMemoOpen==='function')return oldMemoOpen(unit,date);console.warn('v2.55 메모 최신 조회 실패',e)}
- };
- function privateOwnerKey(){const a=window.__webAuthInfoV136||{};return encodeURIComponent(String(a.displayName||a.username||'admin').trim()||'admin')}
- function privateKey(unit){return 'psuWebPrivateDisplayV255:'+privateOwnerKey()+':'+encodeURIComponent(String(unit||''))}
- function getPrivateCache(unit){try{return JSON.parse(localStorage.getItem(privateKey(unit))||'null')}catch(_e){return null}}
- function setPrivateCache(unit,d){try{if(d&&d.exists)localStorage.setItem(privateKey(unit),JSON.stringify({at:Date.now(),exists:true,note:d.note||{}}));else localStorage.removeItem(privateKey(unit))}catch(_e){}}
- function renderPrivate(unit,x,d){
-   const n=d&&d.note||{},updated=String(n.updatedAt||'');
-   mtitle.textContent=`${unit} 개인메모`;mbody.innerHTML=`<div class="private-note-info-v244"><b>${esc(unit)}</b>${x.sn?` · S/N ${esc(x.sn)}`:''}<br>개인메모입니다. 임영규는 관리자 프로그램·PC뷰어·웹뷰어에서 하나로 연동되고, 다른 관리자는 각 계정별로 분리됩니다.</div>${updated?`<div class="private-note-meta-v244">마지막 수정 ${esc(fmt(updated))}</div>`:''}<textarea class="private-note-text-v244" id="privateNoteTextV255" maxlength="12000" placeholder="개인메모 내용을 입력하세요.">${esc(n.text||'')}</textarea><div class="private-note-actions-v244">${d&&d.exists?'<button class="btn danger" id="privateNoteDeleteV255">삭제</button>':''}<button class="btn primary" id="privateNoteSaveV255">저장</button></div>`;
-   const tb=document.getElementById('privateNoteTextV255'),save=document.getElementById('privateNoteSaveV255'),del=document.getElementById('privateNoteDeleteV255');if(tb)tb.addEventListener('input',()=>tb.dataset.userEdited='1');
-   if(save)save.onclick=async()=>{const text=String(tb&&tb.value||'').trim();if(!text)return psuAlert('개인메모 내용을 입력하세요.');save.disabled=true;try{await run('saveWebPrivateNoteV244',[session(),unit,x.sn,text]);setPrivateCache(unit,{exists:true,note:{unit,sn:x.sn,text,updatedAt:new Date().toISOString()}});toastMsg('개인메모를 저장했습니다.');if(window.refreshPrivateNotesV244)window.refreshPrivateNotesV244(true);window.openPrivateNoteV244(unit)}catch(e){save.disabled=false;psuAlert(e&&e.message?e.message:String(e))}};
-   if(del)del.onclick=async()=>{if(!await psuConfirm('이 개인메모를 삭제할까요?'))return;del.disabled=true;try{await run('deleteWebPrivateNoteV244',[session(),unit]);setPrivateCache(unit,{exists:false});toastMsg('개인메모를 삭제했습니다.');if(window.refreshPrivateNotesV244)window.refreshPrivateNotesV244(true);window.openPrivateNoteV244(unit)}catch(e){del.disabled=false;psuAlert(e&&e.message?e.message:String(e))}};
- }
- window.openPrivateNoteV244=async function(unit){
-   unit=String(unit||'').trim();const role=String(window.__webAuthInfoV136&&window.__webAuthInfoV136.role||'');if(!['admin','master'].includes(role))return psuAlert('개인메모는 관리자 계정만 사용할 수 있습니다.');const t=session();if(!t)return psuAlert('관리자 로그인이 필요합니다.');const x=info(unit),cached=getPrivateCache(unit);
-   mtitle.textContent=`${unit} 개인메모`;modalback.classList.add('show');if(cached)renderPrivate(unit,x,cached);else mbody.innerHTML='<div class="empty">개인메모를 불러오는 중...</div>';
-   try{const d=await run('getWebPrivateNoteV244',[t,unit]);setPrivateCache(unit,d);const tb=document.getElementById('privateNoteTextV255');if(!tb||tb.dataset.userEdited!=='1')renderPrivate(unit,x,d)}catch(e){if(!cached&&typeof oldPrivateOpen==='function')return oldPrivateOpen(unit);console.warn('v2.55 개인메모 최신 조회 실패',e)}
- };
- const oldCountsV255=window.refreshMemoCountsV110;if(typeof oldCountsV255==='function')window.refreshMemoCountsV110=async function(){memoRawV255=null;memoRawAtV255=0;return oldCountsV255.apply(this,arguments)};
- setTimeout(()=>allMemosV255(true).catch(()=>{}),700);
+ window.openSharedMemoV15=async function(unit,date=''){unit=String(unit||'').trim();date=String(date||'').trim();if(!unit)return;mtitle.textContent=`${unit} 메모${date?` · ${date}`:''}`;modalback.classList.add('show');if(ready){try{return render(unit,date,await itemsFor(unit,info(unit).sn,date))}catch(_e){}}mbody.innerHTML='<div class="empty">메모를 불러오는 중...</div>';try{render(unit,date,await itemsFor(unit,info(unit).sn,date))}catch(e){mbody.innerHTML=`<div class="pre">${esc(e&&e.message?e.message:String(e))}</div>`}};
+ setTimeout(()=>startWatch(),250);
 })();
 </script>
 
