@@ -91,8 +91,8 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
 })();
 </script>
 
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.52";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
-<script>window.__PSU_WEB_TEST_BUILD="v2.52-name-first";</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.53";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script>window.__PSU_WEB_TEST_BUILD="v2.53-name-first-fast";</script>
 <div id="psuBootV247" aria-live="polite"><div class="boot-card-v247"><div class="boot-dot-v247"></div><div class="boot-title-v247">PSU 작업현황</div><div class="boot-sub-v247">최신 정보를 불러오는 중...</div></div></div>
 <script id="web-v247-first-paint-script">
 (function(){
@@ -789,20 +789,20 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
  function normalizeRosterV230(r){r=r&&r.roster?r.roster:r||{};return {T:arrRosterV230(r.T),D1:arrRosterV230(r.D1),D2:arrRosterV230(r.D2),modify:arrRosterV230(r.modify),viewOnlyAdmins:arrRosterV230(r.viewOnlyAdmins)}}
  async function loadRosterV230(force=false){
    if(teamRosterCacheV230&&!force)return teamRosterCacheV230;
-   if(window.__PSU_STATIC_GITHUB_V250){
-     const until=Date.now()+5200;
-     while(Date.now()<until){
-       try{
-         if(window.__fbDirectV187&&typeof window.__fbDirectV187.read==='function'){
-           const raw=await window.__fbDirectV187.read('teamRoster');
-           teamRosterCacheV230=normalizeRosterV230(raw||{});window.__psuTeamRosterCacheV230=teamRosterCacheV230;return teamRosterCacheV230;
-         }
-       }catch(_e){}
-       await new Promise(r=>setTimeout(r,80));
-     }
-     throw new Error('팀 구성 Firebase 연결 준비 시간 초과');
+   const CACHE='psuTeamRosterCacheV253';
+   if(window.__PSU_STATIC_GITHUB_V250&&!force){
+     try{const c=JSON.parse(localStorage.getItem(CACHE)||'null');if(c&&c.roster&&Date.now()-Number(c.at||0)<86400000){teamRosterCacheV230=normalizeRosterV230(c.roster);window.__psuTeamRosterCacheV230=teamRosterCacheV230;return teamRosterCacheV230}}catch(_e){}
    }
-   return await new Promise((resolve,reject)=>{google.script.run.withSuccessHandler(r=>{if(!r||r.ok===false)return reject(new Error(r&&r.message?r.message:'팀 구성을 불러오지 못했습니다.'));teamRosterCacheV230=normalizeRosterV230(r);window.__psuTeamRosterCacheV230=teamRosterCacheV230;resolve(teamRosterCacheV230)}).withFailureHandler(e=>reject(new Error(e&&e.message?e.message:String(e)))).getPsuTeamRosterV230()});
+   const saveCache=r=>{teamRosterCacheV230=normalizeRosterV230(r);window.__psuTeamRosterCacheV230=teamRosterCacheV230;try{localStorage.setItem(CACHE,JSON.stringify({at:Date.now(),roster:teamRosterCacheV230}))}catch(_e){}return teamRosterCacheV230};
+   const viaScript=()=>new Promise((resolve,reject)=>{google.script.run.withSuccessHandler(r=>{if(!r||r.ok===false)return reject(new Error(r&&r.message?r.message:'팀 구성을 불러오지 못했습니다.'));resolve(saveCache(r))}).withFailureHandler(e=>reject(new Error(e&&e.message?e.message:String(e)))).getPsuTeamRosterV230()});
+   if(window.__PSU_STATIC_GITHUB_V250){
+     const viaFirebase=async()=>{const until=Date.now()+1800;while(Date.now()<until){try{if(window.__fbDirectV187&&typeof window.__fbDirectV187.read==='function'){const raw=await window.__fbDirectV187.read('teamRoster');const r=normalizeRosterV230(raw||{});if(rosterPeopleV230(r,true).length)return saveCache(r)}}catch(_e){}await new Promise(r=>setTimeout(r,70))}throw new Error('Firebase 팀 구성 직접 조회 불가')};
+     try{return await Promise.any([viaFirebase(),viaScript()])}catch(_e){
+       try{const c=JSON.parse(localStorage.getItem(CACHE)||'null');if(c&&c.roster)return saveCache(c.roster)}catch(__e){}
+       throw new Error('팀 구성 명단을 불러오지 못했습니다.');
+     }
+   }
+   return await viaScript();
  }
  function rosterPeopleV230(r,includeView=false){r=normalizeRosterV230(r);const out=[],viewOnly=new Set(arrRosterV230(r.viewOnlyAdmins)),add=(list,company,label,team,allowView=false)=>arrRosterV230(list).forEach(name=>{if(!allowView&&viewOnly.has(name))return;if(!out.some(x=>x.name===name))out.push({name,company,label,team})});add(r.T,'temaat','티마트','T');add(r.D1,'teoist','더이스트 1팀','D1');add(r.D2,'teoist','더이스트 2팀','D2');add(r.modify,'reno','개조','modify');if(includeView)add(r.viewOnlyAdmins,'viewOnly','예외 관리자','viewOnly',true);return out}
  function personV230(r,name,includeView=true){return rosterPeopleV230(r,includeView).find(x=>x.name===String(name||'').trim())||null}
@@ -935,14 +935,15 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
  async function verifySavedSessionV131(reloadOnSuccess){
    let t=token();if(!t&&window.__psuAuthTokenRestoreV212)try{t=await window.__psuAuthTokenRestoreV212()}catch(_e){}
    const finishGeneral=async()=>{setMode(false,null,false);if(window.__psuBootV247)window.__psuBootV247.auth(false);if(window.__psuEnsureNameBeforeLoadV252)await window.__psuEnsureNameBeforeLoadV252();if(reloadOnSuccess)load(false)};
-   // v2.47: 최초 화면을 노출하기 전에 저장된 관리자 세션 판정을 끝낸다.
+   // v2.53: 저장된 관리자 토큰이 전혀 없는 일반 사용자는 관리자 복원 대기(최대 1.8초)를 건너뛴다.
+   if(!t){finishGeneral();return}
+   // v2.47: 저장된 관리자 세션 판정을 끝낸다.
    try{
      if(window.__firebaseFastWebRestoreV186){
        const fr=await window.__firebaseFastWebRestoreV186();
        if(fr&&fr.ok){if(fr.token&&window.__psuAuthTokenSaveV212)window.__psuAuthTokenSaveV212(fr.token);const keepView=!!adminInfoV131;setMode(true,fr,keepView);if(window.__psuBootV247)window.__psuBootV247.auth(true);if(reloadOnSuccess)load(false);return}
      }
    }catch(_e){}
-   if(!t){finishGeneral();return}
    google.script.run.withSuccessHandler(r=>{
      if(r&&r.admin){if(r.token&&window.__psuAuthTokenSaveV212)window.__psuAuthTokenSaveV212(r.token);const keepView=!!adminInfoV131;setMode(true,r,keepView);if(window.__psuBootV247)window.__psuBootV247.auth(true);if(reloadOnSuccess)load(false)}
      else{if(window.__psuAuthTokenClearV212)window.__psuAuthTokenClearV212();else localStorage.removeItem(TOKEN_KEY);finishGeneral()}
@@ -1098,29 +1099,30 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
      const input=document.getElementById('userNameInputV138'),save=document.getElementById('userNameSaveV138'),status=document.getElementById('userNameStatusV252');
      setTimeout(()=>{try{input&&input.focus()}catch(_e){}},30);
 
-     let readyPeople=[];
-     try{
-       const roster=await window.__psuLoadTeamRosterV230(true);
-       readyPeople=roster&&window.__psuRosterPeopleV230?window.__psuRosterPeopleV230(roster,false):[];
-     }catch(_e){}
+     let readyPeople=[],rosterDone=false;
+     if(status)status.textContent='이름을 입력해 주세요. 팀 구성 명단은 뒤에서 확인합니다.';
+     if(save){save.disabled=false;save.textContent='이름 저장'}
+     const rosterPromise=Promise.resolve().then(()=>window.__psuLoadTeamRosterV230(true)).then(roster=>{
+       readyPeople=roster&&window.__psuRosterPeopleV230?window.__psuRosterPeopleV230(roster,false):[];rosterDone=true;
+       if(status)status.textContent=readyPeople.length?'팀 구성 명단 확인 완료':'팀 구성 명단 확인이 지연되고 있습니다.';
+       return readyPeople;
+     }).catch(()=>{rosterDone=true;if(status)status.textContent='팀 구성 명단 확인이 지연되고 있습니다. 이름 저장은 가능합니다.';return []});
+     try{if(window.__psuWarmMainV253)window.__psuWarmMainV253()}catch(_e){}
      if(isAdminNow()){if(gate)gate.remove();return ''}
-     if(!readyPeople.length){
-       if(status)status.textContent='팀 구성 명단을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.';
-       if(save){save.disabled=true;save.textContent='이름 저장'}
-       return '';
-     }
-     if(status)status.textContent='이름을 입력한 뒤 저장해 주세요.';if(save){save.disabled=false;save.textContent='이름 저장'}
 
      return await new Promise(resolve=>{
-       const commit=()=>{
-         if(isAdminNow()){gate.remove();resolve('');return}
-         const v=String(input&&input.value||'').trim(),p=readyPeople.find(x=>x.name===v);
-         if(!p)return psuAlert('팀 구성에 등록된 본인 이름을 정확히 입력하세요.');
+       let committing=false;
+       const commit=async()=>{
+         if(committing)return;if(isAdminNow()){gate.remove();resolve('');return}
+         const v=String(input&&input.value||'').trim();if(!v)return psuAlert('이름을 입력하세요.');committing=true;if(save){save.disabled=true;save.textContent='확인 중...'}
+         if(!rosterDone){try{await Promise.race([rosterPromise,new Promise(r=>setTimeout(r,900))])}catch(_e){}}
+         const p=readyPeople.find(x=>x.name===v);
+         if(readyPeople.length&&!p){committing=false;if(save){save.disabled=false;save.textContent='이름 저장'};return psuAlert('팀 구성에 등록된 본인 이름을 정확히 입력하세요.')}
          if(window.__psuNameSaveV158)window.__psuNameSaveV158(v);else try{localStorage.setItem(NAME_KEY,v);localStorage.setItem('psuSharedMemoAuthor',v)}catch(_e){}
-         try{localStorage.setItem('psuMyLeaveCompanyV131',p.company)}catch(_e){}
+         if(p)try{localStorage.setItem('psuMyLeaveCompanyV131',p.company)}catch(_e){}
          window.__psuUserNameV138=v;gate.remove();if(window.__psuRefreshUserNameV251)window.__psuRefreshUserNameV251();if(window.__psuPresencePingV138)setTimeout(window.__psuPresencePingV138,20);resolve(v);
        };
-       save.onclick=commit;input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();if(save.disabled)return;commit()}};
+       save.onclick=commit;input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();commit()}};
      });
    })().finally(()=>{ensureNamePromiseV251=null});
    return ensureNamePromiseV251;
@@ -1774,9 +1776,15 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
  window.refreshProgressInfoV177=async function(){try{const raw=await read('progressInfo')||{},items=Object.values(raw).filter(Boolean),by={};items.forEach(x=>{const k=String(x.sourceUnit||x.unit||'').trim()+'|'+String(x.date||'').trim();by[k]=x});let changed=false;if(Array.isArray(state.scheduleEvents)&&state.scheduleEvents.length)state.scheduleEvents.forEach(e=>{if(!e)return;const k=String(e.sourceUnit||e.unit||'').trim()+'|'+String(e.date||'').trim(),x=by[k],next=x?String(x.note||'').trim():'',prev=String(e.note||'').trim();if(prev!==next){e.note=next;changed=true}});if(changed&&typeof render==='function'){const x=scrollX,y=scrollY;render();if(window.__webInitialAnchorLockV226&&typeof scrollToToday==='function')requestAnimationFrame(()=>requestAnimationFrame(()=>scrollToToday(false)));else requestAnimationFrame(()=>scrollTo(x,y))}}catch(e){console.warn('진행정보 Firebase 조회 실패',e)}};
 
  // 메인 데이터 직접 조회. 관리자/마스터는 전체, 일반 사용자는 기존 공개 범위와 동일하게 화면용으로 축약한다.
- function publicState(src){const s=JSON.parse(JSON.stringify(src||{})),es=fbValuesV189(s.scheduleEvents),by={};es.forEach(e=>{const u=String(e&&e.unit||'').trim();if(u)(by[u]||(by[u]=[])).push(e)});const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}),focus=progressFocusDateV246(),explicit=fbStringsV189(s.progressVisibleUnitsV445),initialized=s.progressListInitializedV558===true,progress=fbValuesV189(s.progress).filter(p=>initialized?explicit.includes(String(p&&p.unit||'')):false).map(x=>{const p=JSON.parse(JSON.stringify(x||{})),ee=by[String(p.unit||'')]||[];p.publicTodayWorkV157=ee.some(e=>e&&e.calendarVisible!==false&&String(e.date||'')===focus);p.publicProgressInfoV164=ee.filter(e=>String(e.date||'')>=today&&String(e.note||'').trim()).map(e=>({date:String(e.date||''),task:String(e.task||''),note:String(e.note||'')}));delete p.scheduleHistoryManual;return p});return {savedAt:String(s.savedAt||''),progress,progressVisibleUnitsV445:explicit,progressListInitializedV558:initialized,deletedProgressUnits:JSON.parse(JSON.stringify(s.deletedProgressUnits||{})),progressManualIncludeUnits:JSON.parse(JSON.stringify(s.progressManualIncludeUnits||{})),scheduleEvents:[]}}
- async function directLoad(silent){refresh.disabled=true;sync.textContent='데이터 확인 중...';try{await auth();let [m,sc,pi]=await Promise.all([read('mainState/current'),isAdmin()?read('scheduleV2/events'):Promise.resolve({}),read('progressInfo')]);let next=JSON.parse(JSON.stringify(m||{scheduleEvents:[],progress:[]}));next.progress=fbValuesV189(next.progress);next.progressVisibleUnitsV445=fbStringsV189(next.progressVisibleUnitsV445);if(next.progressListInitializedV558!==true){try{await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).ensureProgressListFirebaseV191());m=await read('mainState/current');next=JSON.parse(JSON.stringify(m||{}));next.progress=fbValuesV189(next.progress);next.progressVisibleUnitsV445=fbStringsV189(next.progressVisibleUnitsV445)}catch(_e){}}/* v2.00: 중앙목록 초기화 뒤에는 스케줄에서 목록을 재생성하지 않는다. */next.scheduleEvents=fbValuesV189(next.scheduleEvents);if(isAdmin()){next.scheduleEvents=Object.keys(sc||{}).map(k=>Object.assign({eventId:k},sc[k]||{})).filter(Boolean)}const by={};Object.values(pi||{}).forEach(x=>{if(x)by[String(x.sourceUnit||x.unit||'').trim()+'|'+String(x.date||'').trim()]=x});(next.scheduleEvents||[]).forEach(e=>{const x=by[String(e.sourceUnit||e.unit||'').trim()+'|'+String(e.date||'').trim()];e.note=x?String(x.note||''):''});state=isAdmin()?next:publicState(next);if(typeof window.__applyPendingOverlayV143==='function')window.__applyPendingOverlayV143(state);sync.innerHTML=`최신 확인 <b>${new Date().toLocaleTimeString()}</b>`;render();if(firstLoad){firstLoad=false;beginInitialTodayAnchorV196()}else if(typeof shouldInitialTodayAnchorV196==='function'&&shouldInitialTodayAnchorV196())scheduleInitialTodayAnchorV196();if(window.__psuBootV247)window.__psuBootV247.data();if(!silent)toastMsg('최신 데이터를 불러왔습니다.')}catch(e){sync.textContent='연결 오류';if(window.__psuBootV247)window.__psuBootV247.release();if(!silent)psuAlert(e&&e.message?e.message:String(e))}finally{refresh.disabled=false}}
+ function publicState(src){const s=JSON.parse(JSON.stringify(src||{})),es=fbValuesV189(s.scheduleEvents),by={};es.forEach(e=>{const u=String(e&&e.unit||'').trim();if(u)(by[u]||(by[u]=[])).push(e)});const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}),focus=progressFocusDateV246(),explicit=fbStringsV189(s.progressVisibleUnitsV445),initialized=s.progressListInitializedV558===true,progress=fbValuesV189(s.progress).filter(p=>initialized?explicit.includes(String(p&&p.unit||'')):false).map(x=>{const p=JSON.parse(JSON.stringify(x||{})),ee=by[String(p.unit||'')]||[];p.publicTodayWorkV157=ee.some(e=>e&&e.calendarVisible!==false&&String(e.date||'')===focus);p.publicProgressInfoV164=ee.filter(e=>String(e.date||'')>=today&&String(e.note||'').trim()).map(e=>({date:String(e.date||''),task:String(e.task||''),note:String(e.note||'')}));delete p.scheduleHistoryManual;return p});return {savedAt:String(s.savedAt||''),progress,progressVisibleUnitsV445:explicit,progressListInitializedV558:initialized,deletedProgressUnits:JSON.parse(JSON.stringify(s.deletedProgressUnits||{})),progressManualIncludeUnits:JSON.parse(JSON.stringify(s.progressManualIncludeUnits||{})),scheduleEvents:es.filter(e=>e&&e.calendarVisible!==false).map(e=>JSON.parse(JSON.stringify(e)))}}
+ let warmMainPromiseV253=null;
+ function warmMainV253(){if(isAdmin())return Promise.resolve(null);if(warmMainPromiseV253)return warmMainPromiseV253;warmMainPromiseV253=(async()=>{await auth();const [m,pi]=await Promise.all([read('mainState/current'),read('progressInfo')]);return {m,pi}})().catch(e=>{warmMainPromiseV253=null;throw e});return warmMainPromiseV253}
+ window.__psuWarmMainV253=warmMainV253;
+ async function directLoad(silent){refresh.disabled=true;sync.textContent='데이터 확인 중...';try{
+   if(!silent&&!isAdmin()){try{const c=JSON.parse(localStorage.getItem('psuWebDisplayCacheV253')||'null');if(c&&c.state&&Date.now()-Number(c.at||0)<1800000){state=c.state;if(typeof window.__applyPendingOverlayV143==='function')window.__applyPendingOverlayV143(state);sync.innerHTML=`저장된 화면 · <b>${new Date(Number(c.at||Date.now())).toLocaleTimeString()}</b>`;render();if(firstLoad){firstLoad=false;beginInitialTodayAnchorV196()}if(window.__psuBootV247)window.__psuBootV247.data()}}catch(_e){}}
+   await auth();let m,sc={},pi;const warmed=!isAdmin()&&warmMainPromiseV253?await warmMainPromiseV253:null;if(warmed){m=warmed.m;pi=warmed.pi;warmMainPromiseV253=null}else{[m,sc,pi]=await Promise.all([read('mainState/current'),isAdmin()?read('scheduleV2/events'):Promise.resolve({}),read('progressInfo')])}let next=JSON.parse(JSON.stringify(m||{scheduleEvents:[],progress:[]}));next.progress=fbValuesV189(next.progress);next.progressVisibleUnitsV445=fbStringsV189(next.progressVisibleUnitsV445);if(next.progressListInitializedV558!==true){try{await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).ensureProgressListFirebaseV191());m=await read('mainState/current');next=JSON.parse(JSON.stringify(m||{}));next.progress=fbValuesV189(next.progress);next.progressVisibleUnitsV445=fbStringsV189(next.progressVisibleUnitsV445)}catch(_e){}}/* v2.00: 중앙목록 초기화 뒤에는 스케줄에서 목록을 재생성하지 않는다. */next.scheduleEvents=fbValuesV189(next.scheduleEvents);if(isAdmin()){next.scheduleEvents=Object.keys(sc||{}).map(k=>Object.assign({eventId:k},sc[k]||{})).filter(Boolean)}const by={};Object.values(pi||{}).forEach(x=>{if(x)by[String(x.sourceUnit||x.unit||'').trim()+'|'+String(x.date||'').trim()]=x});(next.scheduleEvents||[]).forEach(e=>{const x=by[String(e.sourceUnit||e.unit||'').trim()+'|'+String(e.date||'').trim()];e.note=x?String(x.note||''):''});state=isAdmin()?next:publicState(next);if(typeof window.__applyPendingOverlayV143==='function')window.__applyPendingOverlayV143(state);sync.innerHTML=`최신 확인 <b>${new Date().toLocaleTimeString()}</b>`;render();if(!isAdmin())try{localStorage.setItem('psuWebDisplayCacheV253',JSON.stringify({at:Date.now(),state:state}))}catch(_e){}if(firstLoad){firstLoad=false;beginInitialTodayAnchorV196()}else if(typeof shouldInitialTodayAnchorV196==='function'&&shouldInitialTodayAnchorV196())scheduleInitialTodayAnchorV196();if(window.__psuBootV247)window.__psuBootV247.data();if(!silent)toastMsg('최신 데이터를 불러왔습니다.')}catch(e){sync.textContent='연결 오류';if(window.__psuBootV247)window.__psuBootV247.release();if(!silent)psuAlert(e&&e.message?e.message:String(e))}finally{refresh.disabled=false}}
  window.load=load=directLoad;
+ setTimeout(()=>{try{if(!isAdmin())warmMainV253()}catch(_e){}},0);
 
  // 마스터 직접 수정 도우미
  function manual(e,f,val){e.manualBase=e.manualBase||{};e.manualFields=Array.isArray(e.manualFields)?e.manualFields:[];if(!e.manualFields.includes(f))e.manualBase[f]=(e[f]??'');e[f]=val;const b=e.manualBase[f]??'';if(String(val??'')===String(b)){e.manualFields=e.manualFields.filter(x=>x!==f);delete e.manualBase[f]}else if(!e.manualFields.includes(f))e.manualFields.push(f);if(e.manualFields.length)e.manualEditedAt=new Date().toISOString();else{delete e.manualFields;delete e.manualBase;delete e.manualEditedAt}}
@@ -2003,4 +2011,13 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
 })();
 </script>
 
+
+<script id="web-v253-display-cache-script">
+(function(){
+ if(window.__webV253DisplayCacheInstalled)return;window.__webV253DisplayCacheInstalled=true;let t=0;
+ function save(){clearTimeout(t);t=setTimeout(()=>{try{const a=window.__webAuthInfoV136||null;if(a&&['admin','master'].includes(String(a.role||'')))return;if(!window.state||!Array.isArray(state.progress))return;localStorage.setItem('psuWebDisplayCacheV253',JSON.stringify({at:Date.now(),state:state}))}catch(_e){}},500)}
+ const r=window.render;if(typeof r==='function')window.render=render=function(){const x=r.apply(this,arguments);save();return x};
+ addEventListener('pagehide',()=>{try{clearTimeout(t);if(window.state)localStorage.setItem('psuWebDisplayCacheV253',JSON.stringify({at:Date.now(),state:state}))}catch(_e){}});
+})();
+</script>
 </body></html>
