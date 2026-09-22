@@ -91,8 +91,8 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
 })();
 </script>
 
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.70";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
-<script>window.__PSU_WEB_TEST_BUILD="v2.70-canonical-sync-low-traffic-github-assets-test";</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.70 - 중계서버 테스트용v1.4";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script>window.__PSU_WEB_TEST_BUILD="v2.70-relay-test-v1.4-github-assets";</script>
 <div id="psuBootV247" aria-live="polite"><div class="boot-card-v247"><div class="boot-dot-v247"></div><div class="boot-title-v247">PSU 작업현황</div><div class="boot-sub-v247">최신 정보를 불러오는 중...</div></div></div>
 <script id="web-v247-first-paint-script">
 (function(){
@@ -1498,7 +1498,7 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
  if(window.__webV174PcDownloadInstalled)return;window.__webV174PcDownloadInstalled=true;
  const env=()=>window.__psuClientEnvV174||{device:'PC',isPc:true,label:'PC'};
  const token=()=>{try{return typeof window.__webAuthTokenV136==='function'?window.__webAuthTokenV136():(localStorage.getItem('psuWebAdminSessionV131')||'')}catch(e){return ''}};
- const PC_VIEWER_GITHUB_URL_V271='https://raw.githubusercontent.com/swstats84-blip/TM-ES/main/SEC%20PSU%20%EC%9E%91%EC%97%85%20%ED%98%84%ED%99%A9.exe';
+ const PC_VIEWER_GITHUB_URL_V271='https://raw.githubusercontent.com/swstats84-blip/TM-ES/main/SEC_PSU_PC_Viewer.zip';
  function ensure(){
    const box=document.getElementById('webActionsV131');if(!box)return null;
    let b=document.getElementById('pcViewerDownloadBtnV174');
@@ -1512,11 +1512,11 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
    try{
      const url=PC_VIEWER_GITHUB_URL_V271+'?psu_dl='+Date.now(),r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`GitHub 다운로드 실패 (${r.status})`);
      const blob=await r.blob();if(!blob||blob.size<1024)throw new Error('PC뷰어 파일 데이터가 올바르지 않습니다.');
-     b.textContent='파일 저장 중...';objectUrl=URL.createObjectURL(blob);const a=document.createElement('a');a.href=objectUrl;a.download='SEC PSU 작업 현황.exe';document.body.appendChild(a);a.click();a.remove();
-     setTimeout(()=>{try{URL.revokeObjectURL(objectUrl)}catch(_e){}},10000);toastMsg('GitHub에서 PC뷰어 다운로드를 시작했습니다.');
+     b.textContent='파일 저장 중...';objectUrl=URL.createObjectURL(blob);const a=document.createElement('a');a.href=objectUrl;a.download='SEC_PSU_PC_Viewer.zip';document.body.appendChild(a);a.click();a.remove();
+     setTimeout(()=>{try{URL.revokeObjectURL(objectUrl)}catch(_e){}},10000);toastMsg('PC뷰어 ZIP 다운로드를 시작했습니다.');
    }catch(e){
      if(objectUrl)try{URL.revokeObjectURL(objectUrl)}catch(_e){}
-     try{const a=document.createElement('a');a.href=PC_VIEWER_GITHUB_URL_V271+'?psu_dl='+Date.now();a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();toastMsg('PC뷰어 GitHub 다운로드 페이지를 열었습니다.')}catch(_e){psuAlert(e&&e.message?e.message:String(e||'다운로드에 실패했습니다.'))}
+     try{const a=document.createElement('a');a.href=PC_VIEWER_GITHUB_URL_V271+'?psu_dl='+Date.now();a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();toastMsg('PC뷰어 ZIP 다운로드를 열었습니다.')}catch(_e){psuAlert(e&&e.message?e.message:String(e||'다운로드에 실패했습니다.'))}
    }finally{b.disabled=false;b.textContent=old}
  }
  const obs=new MutationObserver(sync);obs.observe(document.body,{attributes:true,attributeFilter:['class']});setTimeout(sync,0);setTimeout(sync,300);setInterval(sync,3000);
