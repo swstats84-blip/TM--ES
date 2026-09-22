@@ -91,8 +91,8 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
 })();
 </script>
 
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.70 - 중계테스트 1.3";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
-<script>window.__PSU_WEB_TEST_BUILD="v2.70-relay-readwrite-test-v1.3";</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.70";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script>window.__PSU_WEB_TEST_BUILD="v2.70-canonical-sync-low-traffic-github-assets-test";</script>
 <div id="psuBootV247" aria-live="polite"><div class="boot-card-v247"><div class="boot-dot-v247"></div><div class="boot-title-v247">PSU 작업현황</div><div class="boot-sub-v247">최신 정보를 불러오는 중...</div></div></div>
 <script id="web-v247-first-paint-script">
 (function(){
@@ -774,6 +774,19 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
    document.getElementById('weeklyCloseV132').onclick=closeWeeklyV132;ov.addEventListener('click',e=>{if(e.target===ov)closeWeeklyV132()});
    return ov;
  }
+ const WEEKLY_GITHUB_BASE_V271='https://raw.githubusercontent.com/swstats84-blip/TM--ES/main/';
+ function weeklyIsoV271(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+ function weeklyMondayV271(d){const x=new Date(d);x.setHours(12,0,0,0);const n=(x.getDay()+6)%7;x.setDate(x.getDate()-n);return x}
+ function weeklyInfoV271(slot){
+   const mon=weeklyMondayV271(new Date());if(slot==='next')mon.setDate(mon.getDate()+7);
+   const weekStart=weeklyIsoV271(mon),label=slot==='next'?'다음주':'이번주',name=`PSU_주간스케줄_${weekStart}.jpg`;
+   return {ok:true,found:true,slot,label,weekStart,name,mime:'image/jpeg',url:WEEKLY_GITHUB_BASE_V271+encodeURIComponent(name)};
+ }
+ async function weeklyExistsV271(info){
+   const u=info.url+(info.url.includes('?')?'&':'?')+'psu_check='+Date.now();
+   try{const r=await fetch(u,{method:'HEAD',cache:'no-store'});if(r.ok)return true;if(r.status===404)return false}catch(_e){}
+   return await new Promise(resolve=>{const im=new Image(),done=v=>{im.onload=null;im.onerror=null;resolve(v)};const t=setTimeout(()=>done(false),5000);im.onload=()=>{clearTimeout(t);done(true)};im.onerror=()=>{clearTimeout(t);done(false)};im.src=u});
+ }
  function installWeeklyImageV132(r){
    const vp=document.getElementById('weeklyViewportV132'),meta=document.getElementById('weeklyMetaV132');if(!vp)return;
    const label=r&&r.label?r.label:(r&&r.slot==='next'?'다음주':'이번주');
@@ -793,7 +806,8 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
    function fitWidth(){recomputeFits();apply(st.fitWidth);requestAnimationFrame(()=>{vp.scrollLeft=0;vp.scrollTop=0})}
    function fitAll(){recomputeFits();apply(st.fitAll);requestAnimationFrame(()=>{vp.scrollLeft=0;vp.scrollTop=0})}
    img.onload=()=>{st.nw=img.naturalWidth||1;st.nh=img.naturalHeight||1;recomputeFits();fitWidth()};
-   img.src=`data:${r.mime||'image/jpeg'};base64,${r.base64||''}`;
+   img.onerror=()=>{vp.innerHTML=`<div class="weekly-loading-v132">${esc(`GitHub에서 ${r.name||label+' 스케줄'} 이미지를 불러오지 못했습니다.`)}</div>`};
+   img.src=r.url?(r.url+(r.url.includes('?')?'&':'?')+'psu_img='+Date.now()):`data:${r.mime||'image/jpeg'};base64,${r.base64||''}`;
    document.getElementById('weeklyMinusV132').onclick=()=>apply(st.scale/1.25);document.getElementById('weeklyPlusV132').onclick=()=>apply(st.scale*1.25);document.getElementById('weeklyFitWidthV132').onclick=fitWidth;document.getElementById('weeklyFitAllV132').onclick=fitAll;document.getElementById('weeklyOriginalV132').onclick=()=>apply(1);
    img.ondblclick=e=>{e.preventDefault();recomputeFits();apply(Math.abs(st.scale-1)<.04?st.fitWidth:1,e.clientX,e.clientY)};
    vp.addEventListener('wheel',e=>{if(!e.ctrlKey)return;e.preventDefault();apply(st.scale*(e.deltaY<0?1.12:.89),e.clientX,e.clientY)},{passive:false});
@@ -804,22 +818,22 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
    vp.addEventListener('pointerup',endPointer);vp.addEventListener('pointercancel',endPointer);
    window.addEventListener('resize',()=>{if(weeklyStateV132===st)recomputeFits()},{once:true});
  }
- function openWeeklySlotV150(slot){
-   const label=slot==='next'?'다음주':'이번주';
-   buildWeeklyViewerV132(label);
-   google.script.run.withSuccessHandler(r=>{const vp=document.getElementById('weeklyViewportV132');if(!vp)return;if(!r||r.ok===false){vp.innerHTML=`<div class="weekly-loading-v132">${esc(r&&r.message?r.message:'스케줄을 불러오지 못했습니다.')}</div>`;return}if(!r.found){vp.innerHTML=`<div class="weekly-loading-v132">${esc(r.message||`등록된 ${label} 스케줄이 없습니다.`)}</div>`;return}installWeeklyImageV132(r)}).withFailureHandler(e=>{const vp=document.getElementById('weeklyViewportV132');if(vp)vp.innerHTML=`<div class="weekly-loading-v132">${esc(e&&e.message?e.message:String(e))}</div>`}).getWeeklyScheduleImageV131(slot);
+ async function openWeeklySlotV150(slot){
+   const info=weeklyInfoV271(slot),label=info.label;buildWeeklyViewerV132(label);
+   const vp=document.getElementById('weeklyViewportV132');if(!vp)return;
+   try{if(!await weeklyExistsV271(info)){vp.innerHTML=`<div class="weekly-loading-v132">등록된 ${esc(label)} 스케줄이 없습니다.<br><small>${esc(info.name)}</small></div>`;return}installWeeklyImageV132(info)}
+   catch(e){vp.innerHTML=`<div class="weekly-loading-v132">${esc(e&&e.message?e.message:String(e||'스케줄을 불러오지 못했습니다.'))}</div>`}
  }
- function openWeekly(){
-   mtitle.textContent='스케줄';mbody.innerHTML='<div class="empty">스케줄 정보를 확인하는 중...</div>';modalback.classList.add('show');
-   google.script.run.withSuccessHandler(r=>{
-     if(!r||r.ok===false){mbody.innerHTML=`<div class="empty">${esc(r&&r.message?r.message:'스케줄 정보를 불러오지 못했습니다.')}</div>`;return}
-     const cur=r.current||{found:false,weekStart:r.currentWeek||''},nxt=r.next||{found:false,weekStart:r.nextWeek||''};
+ async function openWeekly(){
+   mtitle.textContent='스케줄';mbody.innerHTML='<div class="empty">GitHub 스케줄 정보를 확인하는 중...</div>';modalback.classList.add('show');
+   try{
+     const cur=weeklyInfoV271('current'),nxt=weeklyInfoV271('next');
+     const found=await Promise.all([weeklyExistsV271(cur),weeklyExistsV271(nxt)]);cur.found=found[0];nxt.found=found[1];
      if(!nxt.found){closeM();openWeeklySlotV150('current');return}
      const curDisabled=cur.found?'':' disabled';
-     mbody.innerHTML=`<div class="admin-reg-note-v131">다음주 스케줄이 등록되어 있어 선택할 수 있습니다.</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="btn primary" id="weeklyCurrentPickV150"${curDisabled} style="padding:18px 8px"><b style="font-size:16px">이번주</b><br><span style="font-size:11px;font-weight:500">${esc(cur.weekStart||'')}</span>${cur.found?'':'<br><span style="font-size:10px">등록 없음</span>'}</button><button class="btn primary" id="weeklyNextPickV150" style="padding:18px 8px"><b style="font-size:16px">다음주</b><br><span style="font-size:11px;font-weight:500">${esc(nxt.weekStart||'')}</span></button></div>`;
-     const a=document.getElementById('weeklyCurrentPickV150'),b=document.getElementById('weeklyNextPickV150');
-     if(a)a.onclick=()=>{closeM();openWeeklySlotV150('current')};if(b)b.onclick=()=>{closeM();openWeeklySlotV150('next')};
-   }).withFailureHandler(e=>{mbody.innerHTML=`<div class="empty">${esc(e&&e.message?e.message:String(e))}</div>`}).getWeeklyScheduleStatusV150();
+     mbody.innerHTML=`<div class="admin-reg-note-v131">다음주 스케줄이 등록되어 있어 선택할 수 있습니다.</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="btn primary" id="weeklyCurrentPickV150"${curDisabled} style="padding:18px 8px"><b style="font-size:16px">이번주</b><br><span style="font-size:11px;font-weight:500">${esc(cur.weekStart)}</span>${cur.found?'':'<br><span style="font-size:10px">등록 없음</span>'}</button><button class="btn primary" id="weeklyNextPickV150" style="padding:18px 8px"><b style="font-size:16px">다음주</b><br><span style="font-size:11px;font-weight:500">${esc(nxt.weekStart)}</span></button></div>`;
+     const a=document.getElementById('weeklyCurrentPickV150'),b=document.getElementById('weeklyNextPickV150');if(a)a.onclick=()=>{closeM();openWeeklySlotV150('current')};if(b)b.onclick=()=>{closeM();openWeeklySlotV150('next')};
+   }catch(e){mbody.innerHTML=`<div class="empty">${esc(e&&e.message?e.message:String(e||'스케줄 정보를 불러오지 못했습니다.'))}</div>`}
  }
  function addHeaderButtons(){
    const h=document.querySelector('header'),refresh=document.getElementById('refresh');if(!h||document.getElementById('webActionsV131'))return;
@@ -1484,45 +1498,28 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
  if(window.__webV174PcDownloadInstalled)return;window.__webV174PcDownloadInstalled=true;
  const env=()=>window.__psuClientEnvV174||{device:'PC',isPc:true,label:'PC'};
  const token=()=>{try{return typeof window.__webAuthTokenV136==='function'?window.__webAuthTokenV136():(localStorage.getItem('psuWebAdminSessionV131')||'')}catch(e){return ''}};
+ const PC_VIEWER_GITHUB_URL_V271='https://raw.githubusercontent.com/swstats84-blip/TM-ES/main/SEC%20PSU%20%EC%9E%91%EC%97%85%20%ED%98%84%ED%99%A9.exe';
  function ensure(){
    const box=document.getElementById('webActionsV131');if(!box)return null;
    let b=document.getElementById('pcViewerDownloadBtnV174');
-   if(!b){
-     b=document.createElement('button');b.id='pcViewerDownloadBtnV174';b.className='mini-v131';b.textContent='PC뷰어 다운로드';b.hidden=true;
-     const anchor=document.getElementById('adminLoginBtnV131');anchor?box.insertBefore(b,anchor):box.appendChild(b);
-     b.onclick=download;
-   }
+   if(!b){b=document.createElement('button');b.id='pcViewerDownloadBtnV174';b.className='mini-v131';b.textContent='PC뷰어 다운로드';b.hidden=true;const anchor=document.getElementById('adminLoginBtnV131');anchor?box.insertBefore(b,anchor):box.appendChild(b);b.onclick=download}
    return b;
  }
- function sync(){
-   const b=ensure();if(!b)return;
-   const admin=!!(document.body.classList.contains('admin-mode')&&window.__webAuthInfoV136);
-   b.hidden=!(admin&&env().isPc);
- }
- function gsMeta(t){return new Promise((resolve,reject)=>{google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getPcViewerDownloadMetaV197(t)})}
- function gsChunk(t,ticket,offset,length){return new Promise((resolve,reject)=>{google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getPcViewerDownloadChunkV197(t,ticket,offset,length)})}
- function decodeChunk(b64){const bin=atob(String(b64||'')),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u}
+ function sync(){const b=ensure();if(!b)return;const admin=!!(document.body.classList.contains('admin-mode')&&window.__webAuthInfoV136);b.hidden=!(admin&&env().isPc)}
  async function download(){
-   const b=ensure();if(!b||b.disabled)return;if(!env().isPc)return;
-   const t=token();if(!t){sync();return psuAlert('관리자 로그인이 필요합니다.');}
-   const old=b.textContent;b.disabled=true;b.textContent='다운로드 준비 중...';let objectUrl='';
+   const b=ensure();if(!b||b.disabled||!env().isPc)return;const t=token();if(!t){sync();return psuAlert('관리자 로그인이 필요합니다.')}
+   const old=b.textContent;b.disabled=true;b.textContent='GitHub에서 다운로드 중...';let objectUrl='';
    try{
-     const meta=await gsMeta(t);if(!meta||meta.ok===false||!meta.size||!meta.ticket)throw new Error(meta&&meta.message?meta.message:'PC뷰어 다운로드 파일을 찾지 못했습니다.');
-     const parts=[];let offset=0,idx=0,total=Math.max(1,Number(meta.totalChunks)||Math.ceil(Number(meta.size)/Number(meta.chunkSize||1048576)));
-     while(offset<Number(meta.size)){
-       idx++;b.textContent=`다운로드 준비 ${Math.min(99,Math.round((idx-1)/total*100))}%`;
-       const r=await gsChunk(t,meta.ticket,offset,Number(meta.chunkSize)||1048576);if(!r||r.ok===false||!r.base64)throw new Error(r&&r.message?r.message:'파일 데이터를 받지 못했습니다.');
-       parts.push(decodeChunk(r.base64));const next=Number(r.nextOffset);if(!(next>offset))throw new Error('다운로드 진행값이 올바르지 않습니다.');offset=next;
-     }
-     b.textContent='파일 저장 중...';const blob=new Blob(parts,{type:'application/vnd.microsoft.portable-executable'});objectUrl=URL.createObjectURL(blob);
-     const a=document.createElement('a');a.href=objectUrl;a.download=meta.fileName||'SEC PSU 작업 현황.exe';document.body.appendChild(a);a.click();a.remove();
-     setTimeout(()=>{try{URL.revokeObjectURL(objectUrl)}catch(e){}},5000);toastMsg('PC뷰어 다운로드를 시작했습니다.');
-   }catch(e){if(objectUrl)try{URL.revokeObjectURL(objectUrl)}catch(_e){};psuAlert(e&&e.message?e.message:String(e||'다운로드 준비에 실패했습니다.'))}
-   finally{b.disabled=false;b.textContent=old}
+     const url=PC_VIEWER_GITHUB_URL_V271+'?psu_dl='+Date.now(),r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`GitHub 다운로드 실패 (${r.status})`);
+     const blob=await r.blob();if(!blob||blob.size<1024)throw new Error('PC뷰어 파일 데이터가 올바르지 않습니다.');
+     b.textContent='파일 저장 중...';objectUrl=URL.createObjectURL(blob);const a=document.createElement('a');a.href=objectUrl;a.download='SEC PSU 작업 현황.exe';document.body.appendChild(a);a.click();a.remove();
+     setTimeout(()=>{try{URL.revokeObjectURL(objectUrl)}catch(_e){}},10000);toastMsg('GitHub에서 PC뷰어 다운로드를 시작했습니다.');
+   }catch(e){
+     if(objectUrl)try{URL.revokeObjectURL(objectUrl)}catch(_e){}
+     try{const a=document.createElement('a');a.href=PC_VIEWER_GITHUB_URL_V271+'?psu_dl='+Date.now();a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();toastMsg('PC뷰어 GitHub 다운로드 페이지를 열었습니다.')}catch(_e){psuAlert(e&&e.message?e.message:String(e||'다운로드에 실패했습니다.'))}
+   }finally{b.disabled=false;b.textContent=old}
  }
-
- const obs=new MutationObserver(sync);obs.observe(document.body,{attributes:true,attributeFilter:['class']});
- setTimeout(sync,0);setTimeout(sync,300);setInterval(sync,3000);
+ const obs=new MutationObserver(sync);obs.observe(document.body,{attributes:true,attributeFilter:['class']});setTimeout(sync,0);setTimeout(sync,300);setInterval(sync,3000);
 })();
 </script>
 
@@ -1531,159 +1528,12 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-<style id="psu-relay-v100-style">
-#psuRelayBadgeV100{position:fixed;right:10px;bottom:10px;z-index:49000;display:none;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid #cbd5e1;background:rgba(255,255,255,.95);box-shadow:0 5px 18px rgba(15,23,42,.16);font:800 10px/1.1 "Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;color:#475569;cursor:pointer;user-select:none;backdrop-filter:blur(6px)}
-#psuRelayBadgeV100.show{display:flex}#psuRelayBadgeV100 .dot{width:8px;height:8px;border-radius:50%;background:#94a3b8}#psuRelayBadgeV100.ok{border-color:#9ad5ad;background:rgba(240,253,244,.96);color:#16733a}#psuRelayBadgeV100.ok .dot{background:#169447}#psuRelayBadgeV100.wait{border-color:#ecd28a;background:rgba(255,251,235,.96);color:#8a6208}#psuRelayBadgeV100.wait .dot{background:#d59b13}#psuRelayBadgeV100.bad{border-color:#d8dee8;background:rgba(248,250,252,.96);color:#64748b}#psuRelayBadgeV100.bad .dot{background:#94a3b8}
-@media(max-width:820px){#psuRelayBadgeV100{right:8px;bottom:8px;font-size:9px;padding:6px 8px}}
-
-#psuRelayGateV120{position:fixed;inset:0;z-index:65050;display:none;align-items:center;justify-content:center;padding:18px;background:#f5f7fb;color:#172033;font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif}
-#psuRelayGateV120.show{display:flex}.relay-gate-card-v120{width:min(560px,94vw);padding:27px 26px 24px;border:1px solid #dbe3ed;border-radius:16px;background:#fff;box-shadow:0 20px 60px rgba(15,23,42,.16);text-align:center}.relay-gate-dot-v120{width:27px;height:27px;margin:0 auto 14px;border:4px solid #dbe6f4;border-top-color:#315ea8;border-radius:50%;animation:psuRelaySpinV120 .8s linear infinite}.relay-gate-title-v120{font-size:19px;font-weight:900}.relay-gate-sub-v120{margin-top:9px;font-size:12px;line-height:1.55;color:#64748b}.relay-gate-state-v120{margin-top:14px;padding:10px 12px;border-radius:10px;background:#f8fafc;font-size:12px;font-weight:800;color:#8a6208}@keyframes psuRelaySpinV120{to{transform:rotate(360deg)}}
-</style>
-<script id="psu-relay-v120-script">
-(function(){
- if(window.__psuRelayV120Installed)return;window.__psuRelayV120Installed=true;window.__psuRelayV110Installed=true;window.__psuRelayV100Installed=true;
- const ACTIVE=/\/TM--(?:ES|EM)(?:\/|$)/i.test(location.pathname)||new URLSearchParams(location.search).get('relaytest')==='1';
- if(!ACTIVE)return;
- const STORE='psuRelayServerV100',ALLOWED=new Set(['mainState','scheduleV2','progressInfo','pending','memos','annualLeave','teamRoster','meta']);
- const R={url:'',base:'',key:'',source:'',online:false,checking:null,cache:null,ws:null,wsTimer:0,subs:new Set(),patched:false,lastError:'',lastAt:0,nativeDB:null,nativeRef:null,discovery:null,discoveryRef:null,discoveryCb:null,authUnsub:null,everOnline:false};
- window.__psuRelayOnlyV120=true;window.__psuRelayReadWriteV130=true;try{localStorage.removeItem(STORE)}catch(_e){}
- function supported(path){const p=String(path||'').replace(/^\/+|\/+$/g,'').split('/').filter(Boolean);return ALLOWED.has(p[0]||'')}
- function isDiscovery(path){return top(path)==='relayDiscovery'}
- window.__psuRelayIsSupportedV120=supported;
- function badge(){let b=document.getElementById('psuRelayBadgeV100');if(b)return b;b=document.createElement('button');b.type='button';b.id='psuRelayBadgeV100';b.className='show wait';b.innerHTML='<span class="dot"></span><span class="tx">중계 전용 · 확인중</span>';b.title='중계 전용 테스트: Firebase 업무 데이터 직접 읽기/쓰기는 차단됩니다.';b.onclick=configure;document.body.appendChild(b);return b}
- function gate(){let g=document.getElementById('psuRelayGateV120');if(g)return g;g=document.createElement('div');g.id='psuRelayGateV120';g.innerHTML='<div class="relay-gate-card-v120"><div class="relay-gate-dot-v120"></div><div class="relay-gate-title-v120">중계서버 연결 확인 중</div><div class="relay-gate-sub-v120">중계가 확인되기 전에는 Firebase 업무 데이터를 직접 읽거나 쓰지 않습니다.</div><div class="relay-gate-state-v120" id="psuRelayGateStateV120">서버 주소 확인 중...</div></div>';document.body.appendChild(g);return g}
- function gateShow(title,detail){const g=gate();g.classList.add('show');const t=g.querySelector('.relay-gate-title-v120'),s=g.querySelector('.relay-gate-state-v120');if(t)t.textContent=title||'중계서버 연결 대기';if(s)s.textContent=detail||'Firebase 직접 읽기/쓰기 차단 중';}
- function gateHide(){const g=document.getElementById('psuRelayGateV120');if(g)g.classList.remove('show')}
- function ui(kind,text){const b=badge();b.className='show '+kind;const t=b.querySelector('.tx');if(t)t.textContent=text;const src=R.source==='discovery'?'자동주소':R.source==='local'?'로컬':R.source==='manual'?'수동':'';b.title=(src?src+' · ':'')+'중계 전용 테스트 · Firebase 직접 읽기/쓰기 차단'}
- function normalize(raw,source){raw=String(raw||'').trim();if(!raw)return null;try{if(!/^https?:\/\//i.test(raw))raw='http://'+raw;const u=new URL(raw);const key=u.searchParams.get('key')||'';return {url:raw,base:u.origin,key,source:source||''}}catch(_e){return null}}
- function queryRelay(){try{return String(new URLSearchParams(location.search).get('relay')||'').trim()}catch(_e){return''}}
- function savedRelay(){try{return String(localStorage.getItem(STORE)||'').trim()}catch(_e){return''}}
- function candidateList(){const out=[];if(!R.discovery||R.discovery.enabled===false)return out;const n=normalize(R.discovery.currentUrl,'discovery');if(!n)return out;try{const u=new URL(n.url);if(u.protocol!=='https:'||!n.key)return out;const h=String(u.hostname||'').toLowerCase();if(h==='127.0.0.1'||h==='localhost'||/^192\.168\./.test(h)||/^10\./.test(h)||/^172\.(1[6-9]|2\d|3[01])\./.test(h))return out}catch(_e){return out}out.push(n);return out}
- function endpointFor(n,path,params){const u=new URL(path,n.base);if(n.key)u.searchParams.set('key',n.key);if(params)Object.keys(params).forEach(k=>{if(params[k]!==undefined&&params[k]!==null)u.searchParams.set(k,String(params[k]))});return u.toString()}
- function wsURL(){const u=new URL('/ws',R.base);u.protocol=u.protocol==='https:'?'wss:':'ws:';if(R.key)u.searchParams.set('key',R.key);return u.toString()}
- async function fetchJSONFor(n,path,params,timeout=1800){const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),timeout);try{const r=await fetch(endpointFor(n,path,params),{cache:'no-store',signal:ac.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(tm)}}
- function parts(path){return String(path||'').replace(/^\/+|\/+$/g,'').split('/').filter(Boolean)}
- function top(path){return parts(path)[0]||''}
- function getPath(obj,path){const ps=parts(path);let x=obj;for(const p of ps){if(x==null)return null;x=x[p]}return x===undefined?null:x}
- function clone(v){if(v===undefined)return null;try{return structuredClone(v)}catch(_e){try{return JSON.parse(JSON.stringify(v))}catch(_e2){return v}}}
- function snap(path){return {val:()=>clone(getPath(R.cache,path)),exists:()=>getPath(R.cache,path)!=null,key:parts(path).slice(-1)[0]||null,ref:null}}
- function setAt(root,ps,value){if(!ps.length)return value;if(root==null||typeof root!=='object'||Array.isArray(root))root={};const k=ps[0];if(ps.length===1){if(value===null||value===undefined)delete root[k];else root[k]=value;return root}root[k]=setAt(root[k],ps.slice(1),value);return root}
- function applyDelta(m){if(!R.cache||!m||m.type!=='firebase_delta')return;const node=String(m.node||''),rel=parts(m.path||'/');let ps=[node];if(node==='meta')ps.push('revisions');ps=ps.concat(rel);if(m.event==='patch'&&m.data&&typeof m.data==='object'&&!Array.isArray(m.data)){Object.keys(m.data).forEach(k=>{R.cache=setAt(R.cache,ps.concat(parts(k)),m.data[k])})}else R.cache=setAt(R.cache,ps,m.data);R.lastAt=Date.now();notifyNode(node)}
- function notifyNode(node){for(const s of [...R.subs]){if(!s.active||top(s.path)!==node)continue;try{s.cb(snap(s.path))}catch(e){console.warn('중계 listener callback 오류',e)}}}
- function useRelayForSubs(){for(const s of [...R.subs]){if(!s.active)continue;try{s.cb(snap(s.path))}catch(e){console.warn('중계 초기 callback 오류',e)}}}
- function closeWS(){clearTimeout(R.wsTimer);if(R.ws){const w=R.ws;R.ws=null;try{w.onclose=null;w.close()}catch(_e){}}}
- function blocked(msg){R.online=false;closeWS();ui('bad','중계 전용 · 연결대기');gateShow('중계서버 연결 대기',msg||'중계가 연결될 때까지 Firebase 직접 데이터 읽기를 차단합니다.')}
- function scheduleReconnect(delay=2500){clearTimeout(R.wsTimer);R.wsTimer=setTimeout(()=>ensure(false),delay)}
- function connectWS(){try{closeWS();const w=new WebSocket(wsURL());R.ws=w;w.onopen=()=>{R.online=true;R.everOnline=true;ui('ok','중계 ● 외부');gateHide();useRelayForSubs()};w.onmessage=e=>{try{const m=JSON.parse(e.data||'{}');if(m.type==='firebase_delta')applyDelta(m);else if(m.type==='connected'||m.type==='heartbeat')R.lastAt=Date.now()}catch(_e){}};w.onerror=()=>{};w.onclose=()=>{if(R.ws===w)R.ws=null;R.online=false;blocked('중계 WebSocket이 끊겼습니다. 자동 재연결 중...');scheduleReconnect()}}catch(_e){R.online=false;blocked('중계 WebSocket 연결 실패 · 자동 재시도 중...');scheduleReconnect()}}
- async function tryCandidate(n){const h=await fetchJSONFor(n,'/health',null,1200);if(!h||h.server!=='ok')throw new Error('health');if(h.firebaseOn!==true||Number(h.firebaseStreams||0)<8)throw new Error('Firebase 8/8 대기');const cache=await fetchJSONFor(n,'/snapshot',null,3200);if(!cache||typeof cache!=='object'||!cache.mainState||!cache.scheduleV2)throw new Error('중계 snapshot 미완료');R.url=n.url;R.base=n.base;R.key=n.key;R.source=n.source||'';R.cache=cache;R.online=true;R.everOnline=true;R.lastError='';ui('ok','중계 ● 외부');gateHide();useRelayForSubs();connectWS();return true}
- async function ensure(force){if(R.online&&R.cache&&R.source==='discovery'&&!force)return true;if(R.checking&&!force)return R.checking;R.checking=(async()=>{ui('wait','중계 전용 · 외부주소 확인중');gateShow('외부 중계주소 확인 중','Firebase relayDiscovery → 접근키 포함 외부주소 → 중계서버 8/8 → snapshot 순서로 확인합니다.');closeWS();const list=candidateList();if(!list.length){blocked('Firebase relayDiscovery의 접근키 포함 외부주소를 기다리는 중입니다.');scheduleReconnect(1800);return false}for(const n of list){try{if(await tryCandidate(n))return true}catch(e){R.lastError=String(e&&e.message||e)}}blocked('외부 중계서버에 연결할 수 없습니다. Firebase 직접 읽기/쓰기는 차단되어 있습니다.');scheduleReconnect(2500);return false})().finally(()=>{R.checking=null});return R.checking}
- async function firebaseUserToken(){
-   try{
-     let u=firebase.auth().currentUser;
-     if(!u){const c=await firebase.auth().signInAnonymously();u=c&&c.user}
-     if(!u)throw new Error('Firebase 사용자 인증 없음');
-     return await u.getIdToken(false)
-   }catch(e){throw new Error('중계용 사용자 인증 실패: '+String(e&&e.message||e))}
- }
- async function relayResponse(path,method='GET',payload,extraHeaders,timeout=7000){
-   if(!(await ensure(false)))throw new Error('중계서버 미연결');
-   const token=await firebaseUserToken(),n={base:R.base,key:R.key};
-   const u=endpointFor(n,'/firebase',{path:String(path||'')});
-   const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),timeout);
-   try{
-     const headers=Object.assign({'X-PSU-Firebase-Auth':token},extraHeaders||{});
-     let body;
-     if(payload!==undefined){headers['Content-Type']='application/json';body=JSON.stringify(payload)}
-     const resp=await fetch(u,{method,headers,body,cache:'no-store',signal:ac.signal});
-     const text=await resp.text();
-     let data=null;try{data=text?JSON.parse(text):null}catch(_e){data=text}
-     return {ok:resp.ok,status:resp.status,data,headers:resp.headers}
-   }finally{clearTimeout(tm)}
- }
- function updateLocal(path,value,isPatch){
-   if(!supported(path)||!R.cache)return;
-   const ps=parts(path);
-   if(isPatch&&value&&typeof value==='object'&&!Array.isArray(value)){
-     Object.keys(value).forEach(k=>{R.cache=setAt(R.cache,ps.concat(parts(k)),value[k])})
-   }else R.cache=setAt(R.cache,ps,value);
-   notifyNode(top(path));
- }
- async function read(path){
-   if(isDiscovery(path))throw new Error('relayDiscovery는 주소검색 전용 직접경로');
-   if(await ensure(false)){
-     if(supported(path))return clone(getPath(R.cache,path));
-     const rr=await relayResponse(path,'GET');if(!rr.ok)throw new Error('중계 읽기 HTTP '+rr.status);return clone(rr.data)
-   }
-   throw new Error('relay-test-only: 중계 미연결')
- }
- async function write(path,method,payload,headers){
-   if(isDiscovery(path))throw new Error('relayDiscovery 직접 쓰기 차단');
-   const rr=await relayResponse(path,method,payload,headers,9000);
-   if(!rr.ok){const e=new Error('중계 쓰기 HTTP '+rr.status);e.status=rr.status;throw e}
-   if(method==='DELETE')updateLocal(path,null,false);else if(method==='PATCH')updateLocal(path,payload,true);else if(method==='PUT')updateLocal(path,payload,false);
-   return rr
- }
- async function transaction(path,updater){
-   for(let attempt=0;attempt<6;attempt++){
-     const g=await relayResponse(path,'GET',undefined,{'X-Firebase-ETag':'true'},9000);
-     if(!g.ok)throw new Error('중계 transaction GET HTTP '+g.status);
-     const cur=clone(g.data),next=updater(cur);
-     if(next===undefined)return {committed:false,snapshot:snapValue(path,cur)};
-     const etag=g.headers.get('ETag')||g.headers.get('etag')||'';
-     const h={};if(etag)h['If-Match']=etag;
-     const p=await relayResponse(path,'PUT',next,h,9000);
-     if(p.status===412)continue;
-     if(!p.ok)throw new Error('중계 transaction PUT HTTP '+p.status);
-     updateLocal(path,next,false);
-     return {committed:true,snapshot:snapValue(path,next)}
-   }
-   throw new Error('중계 transaction 충돌 재시도 초과')
- }
- function snapValue(path,value){return {val:()=>clone(value),exists:()=>value!==null&&value!==undefined,key:parts(path).slice(-1)[0]||null,ref:null}}
- function startRemoteValueSub(s){
-   let last='__init__';
-   const tick=async()=>{if(!s.active)return;try{const v=await read(s.path),sig=JSON.stringify(v);if(sig!==last){last=sig;s.cb(snapValue(s.path,v))}}catch(e){if(typeof s.cancel==='function'&&last==='__init__')try{s.cancel(e)}catch(_e){}}};
-   tick();s.timer=setInterval(tick,5000)
- }
- function wrapRef(path,native){
-   if(isDiscovery(path))return native;
-   const handler={get(target,prop){
-     if(prop==='on')return function(ev,cb,cancel){
-       if(ev!=='value')throw new Error('중계 테스트는 value 구독만 지원합니다.');
-       const s={path:String(path||''),native:target,cb,cancel,active:true,timer:0};R.subs.add(s);
-       if(supported(path))ensure(false).then(ok=>{if(!s.active)return;if(ok){try{cb(snap(s.path))}catch(_e){}}else if(typeof cancel==='function'){try{cancel(new Error('중계 전용 테스트: 중계 미연결'))}catch(_e){}}});
-       else startRemoteValueSub(s);
-       return cb
-     };
-     if(prop==='off')return function(ev,cb){if(!ev||ev==='value'){for(const s of [...R.subs]){if(s.path===String(path||'')&&(!cb||s.cb===cb)){s.active=false;if(s.timer)clearInterval(s.timer);R.subs.delete(s)}}}return undefined};
-     if(prop==='once')return async function(ev){if(ev!=='value')throw new Error('중계 테스트는 value once만 지원합니다.');const v=await read(path);return snapValue(path,v)};
-     if(prop==='set')return async function(v){await write(path,'PUT',v);return null};
-     if(prop==='update')return async function(v){await write(path,'PATCH',v||{});return null};
-     if(prop==='remove')return async function(){await write(path,'DELETE');return null};
-     if(prop==='transaction')return async function(fn){return await transaction(path,fn)};
-     const v=target[prop];return typeof v==='function'?v.bind(target):v
-   }};
-   return new Proxy(native,handler)
- }
- function stopDiscoveryRef(){if(R.discoveryRef&&R.discoveryCb)try{R.discoveryRef.off('value',R.discoveryCb)}catch(_e){}R.discoveryRef=null;R.discoveryCb=null}
- function applyDiscovery(v){v=v&&typeof v==='object'?v:null;const prev=R.discovery&&R.discovery.currentUrl||'';R.discovery=v;const n=v&&v.enabled!==false?normalize(v.currentUrl,'discovery'):null;let valid=false;if(n){try{const u=new URL(n.url),h=String(u.hostname||'').toLowerCase();valid=u.protocol==='https:'&&!!n.key&&h!=='127.0.0.1'&&h!=='localhost'&&!/^192\.168\./.test(h)&&!/^10\./.test(h)&&!/^172\.(1[6-9]|2\d|3[01])\./.test(h)}catch(_e){}}if(!valid){blocked('Firebase relayDiscovery의 외부주소/접근키를 기다리는 중입니다.');return}if(v.currentUrl!==prev||!R.online||R.source!=='discovery'){R.online=false;R.cache=null;R.source='';closeWS();ensure(true)}}
- function attachDiscoveryRef(){if(!R.nativeRef)return;stopDiscoveryRef();const ref=R.nativeRef('relayDiscovery/current');const cb=s=>applyDiscovery(s&&s.val?s.val():null);R.discoveryRef=ref;R.discoveryCb=cb;try{ref.on('value',cb,()=>{blocked('relayDiscovery 주소를 읽을 수 없습니다. Rules v1.96을 확인하세요.')})}catch(_e){}}
- function startDiscoveryWatcher(){if(!window.firebase||!firebase.auth||!R.nativeRef)return;if(R.authUnsub)return;try{R.authUnsub=firebase.auth().onAuthStateChanged(u=>{stopDiscoveryRef();if(u)attachDiscoveryRef();else gateShow('Firebase 인증 확인 중','주소 확인용 최소 인증만 진행합니다. 대용량 데이터는 읽지 않습니다.')})}catch(_e){}}
- function patchDB(db){if(!db||db.__psuRelayV120Patched){startDiscoveryWatcher();return db}const orig=db.ref.bind(db);R.nativeDB=db;R.nativeRef=orig;try{Object.defineProperty(db,'__psuRelayV120Patched',{value:true})}catch(_e){db.__psuRelayV120Patched=true}try{Object.defineProperty(db,'__psuRelayV100Patched',{value:true})}catch(_e){}db.ref=function(path){const p=String(path==null?'':path).replace(/^\/+|\/+$/g,'');return wrapRef(p,orig(path))};R.patched=true;startDiscoveryWatcher();return db}
- async function configure(){const cur=R.discovery&&R.discovery.currentUrl?String(R.discovery.currentUrl):'아직 없음';const msg='외부 중계 강제 테스트 모드입니다.\n\n접속 주소는 Firebase relayDiscovery/current의 접근키 포함 외부주소만 사용합니다.\n127.0.0.1 / LAN / 수동 저장주소는 사용하지 않습니다.\n\n현재 자동주소:\n'+cur+'\n\n※ 중계 실패 시 Firebase 직접 읽기/쓰기로 넘어가지 않습니다.';if(typeof window.psuAlert==='function')window.psuAlert(msg,'중계 외부전용');else alert(msg)}
- window.__psuRelayPatchDbV100=patchDB;window.__psuRelayReadV100=read;window.__psuRelayEnsureV100=ensure;window.__psuRelayConfigureV100=configure;window.__psuRelayStateV100=R;
- window.__psuRelayPatchDbV110=patchDB;window.__psuRelayReadV110=read;window.__psuRelayEnsureV110=ensure;window.__psuRelayStateV110=R;
- window.__psuRelayPatchDbV120=patchDB;window.__psuRelayReadV120=read;window.__psuRelayEnsureV120=ensure;window.__psuRelayStateV120=R;
- document.addEventListener('DOMContentLoaded',()=>{badge();gate();ensure(false)});setTimeout(()=>{badge();gate();ensure(false);startDiscoveryWatcher()},30);setInterval(()=>{startDiscoveryWatcher();if(!R.online)ensure(false)},10000);
-})();
-</script>
 <script id="web-v176-firebase-realtime-script">
 (function(){
  if(window.__webV176FirebaseInstalled)return;window.__webV176FirebaseInstalled=true;
  const cfg={apiKey:'AIzaSyD95LEbX8fJt621FapB-oM2iY3zbWY70dE',authDomain:'tm-es-psu-6981d.firebaseapp.com',databaseURL:'https://tm-es-psu-6981d-default-rtdb.asia-southeast1.firebasedatabase.app',projectId:'tm-es-psu-6981d',storageBucket:'tm-es-psu-6981d.firebasestorage.app',messagingSenderId:'668350567112',appId:'1:668350567112:web:ee63dd3d4bde2e90908bfd'};
  try{
    if(!firebase.apps.length)firebase.initializeApp(cfg);
-   try{if(window.__psuRelayPatchDbV100)window.__psuRelayPatchDbV100(firebase.database())}catch(_e){}
    let revAttached=false;const attach=()=>{if(revAttached)return;revAttached=true;firebase.database().ref('meta/revisions').on('value',s=>{window.__psuRevisionSnapshotV270=s.val()||{}},()=>{})};
    firebase.auth().onAuthStateChanged(u=>{if(u){attach();return}if(localStorage.getItem('psuWebAdminSessionV131'))return;firebase.auth().signInAnonymously().then(attach).catch(e=>console.warn('Firebase 실시간 연결 실패',e))});
  }catch(e){console.warn('Firebase 초기화 실패',e)}
@@ -1781,7 +1631,7 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
  function cleanArr(v){return Array.isArray(v)?v.map(x=>String(x||'').trim()).filter(Boolean):typeof v==='string'?v.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean):[]}
  function fbValuesV189(v){if(Array.isArray(v))return v.filter(x=>x!==null&&x!==undefined);if(v&&typeof v==='object')return Object.keys(v).sort((a,b)=>{const na=Number(a),nb=Number(b);return Number.isFinite(na)&&Number.isFinite(nb)?na-nb:String(a).localeCompare(String(b))}).map(k=>v[k]).filter(x=>x!==null&&x!==undefined);return []}
  function fbStringsV189(v){if(typeof v==='string')return cleanArr(v);if(v&&typeof v==='object'&&!Array.isArray(v)){const ks=Object.keys(v),numeric=ks.every(k=>/^\d+$/.test(k));if(!numeric&&ks.some(k=>v[k]===true||v[k]===1))return ks.filter(k=>v[k]===true||v[k]===1).map(k=>String(k).trim()).filter(Boolean)}return fbValuesV189(v).map(x=>String(x||'').trim()).filter(Boolean)}
- async function read(path){await auth();if(window.__psuRelayReadV100){try{return await window.__psuRelayReadV100(path)}catch(e){if(window.__psuRelayOnlyV120&&window.__psuRelayIsSupportedV120&&window.__psuRelayIsSupportedV120(path))throw e}}const s=await firebase.database().ref(path).once('value');return s.val()}
+ async function read(path){await auth();const s=await firebase.database().ref(path).once('value');return s.val()}
  async function set(path,v){await auth();return firebase.database().ref(path).set(v)}
  async function update(path,v){await auth();return firebase.database().ref(path).update(v)}
  async function del(path){await auth();return firebase.database().ref(path).remove()}
@@ -2349,7 +2199,7 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
 <script id="web-v268-live-version-sync-script">
 (function(){
  if(window.__webV268LiveVersionInstalled)return;window.__webV268LiveVersionInstalled=true;
- const CURRENT='2.70',IS_TEST=/\/TM--(?:ES|EM)(?:\/|$)/i.test(location.pathname),PATH=IS_TEST?'appVersions/webTest':'appVersions/web',GUARD='psuWebReloadGuardV270';let watchRef=null,watchUid='';
+ const CURRENT='2.70',IS_TEST=/\/TM--ES(?:\/|$)/i.test(location.pathname),PATH=IS_TEST?'appVersions/webTest':'appVersions/web',GUARD='psuWebReloadGuardV270';let watchRef=null,watchUid='';
  const num=v=>{const m=String(v||'').match(/(\d+)\.(\d+)/);return m?(Number(m[1])*10000+Number(m[2])):-1};
  const readVersion=v=>String(v&&typeof v==='object'?(v.version||''):v||'').replace(/^웹\s*v?/i,'').trim();
  function guard(){try{return JSON.parse(sessionStorage.getItem(GUARD)||'{}')||{}}catch(_e){return {}}}
