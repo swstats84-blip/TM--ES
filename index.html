@@ -91,8 +91,8 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
 })();
 </script>
 
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.70 - 중계서버 테스트용v1.6";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
-<script>window.__PSU_WEB_TEST_BUILD="v2.70-relay-test-v1.6-github-schedule-direct-exe";</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.70 - GitHub 직접연동 테스트용v1.1";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script>window.__PSU_WEB_TEST_BUILD="v2.70-github-direct-test-v1.1";</script>
 <div id="psuBootV247" aria-live="polite"><div class="boot-card-v247"><div class="boot-dot-v247"></div><div class="boot-title-v247">PSU 작업현황</div><div class="boot-sub-v247">최신 정보를 불러오는 중...</div></div></div>
 <script id="web-v247-first-paint-script">
 (function(){
@@ -1513,13 +1513,14 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
      const url=PC_VIEWER_GITHUB_URL_V271+'?psu_dl='+Date.now(),r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`GitHub 다운로드 실패 (${r.status})`);
      const blob=await r.blob();if(!blob||blob.size<1024)throw new Error('PC뷰어 파일 데이터가 올바르지 않습니다.');
      b.textContent='파일 저장 중...';objectUrl=URL.createObjectURL(blob);const a=document.createElement('a');a.href=objectUrl;a.download='SEC PSU 작업 현황.exe';document.body.appendChild(a);a.click();a.remove();
-     setTimeout(()=>{try{URL.revokeObjectURL(objectUrl)}catch(_e){}},10000);toastMsg('GitHub에서 PC뷰어 다운로드를 시작했습니다.');
+     setTimeout(()=>{try{URL.revokeObjectURL(objectUrl)}catch(_e){}},10000);toastMsg('PC뷰어 실행파일 다운로드를 시작했습니다.');
    }catch(e){
      if(objectUrl)try{URL.revokeObjectURL(objectUrl)}catch(_e){}
-     try{const a=document.createElement('a');a.href=PC_VIEWER_GITHUB_URL_V271+'?psu_dl='+Date.now();a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();toastMsg('PC뷰어 ZIP 다운로드를 열었습니다.')}catch(_e){psuAlert(e&&e.message?e.message:String(e||'다운로드에 실패했습니다.'))}
+     try{window.open(PC_VIEWER_GITHUB_URL_V271,'_blank','noopener')}catch(_e){}
+     psuAlert((e&&e.message?e.message:String(e||'다운로드에 실패했습니다.'))+'\n\nGitHub 직접 다운로드 페이지를 새 창으로 열었습니다.');
    }finally{b.disabled=false;b.textContent=old}
  }
- const obs=new MutationObserver(sync);obs.observe(document.body,{attributes:true,attributeFilter:['class']});setTimeout(sync,0);setTimeout(sync,300);setInterval(sync,3000);
+ const mo=new MutationObserver(sync);mo.observe(document.body,{attributes:true,attributeFilter:['class']});setTimeout(sync,300);setInterval(sync,3000);
 })();
 </script>
 
