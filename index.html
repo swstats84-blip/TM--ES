@@ -91,8 +91,8 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
 })();
 </script>
 
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.70 - 중계테스트 1.2.2";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
-<script>window.__PSU_WEB_TEST_BUILD="v2.70-relay-only-test-v1.2.1";</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.70 - 중계테스트 1.3";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script>window.__PSU_WEB_TEST_BUILD="v2.70-relay-readwrite-test-v1.3";</script>
 <div id="psuBootV247" aria-live="polite"><div class="boot-card-v247"><div class="boot-dot-v247"></div><div class="boot-title-v247">PSU 작업현황</div><div class="boot-sub-v247">최신 정보를 불러오는 중...</div></div></div>
 <script id="web-v247-first-paint-script">
 (function(){
@@ -1546,14 +1546,15 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
  if(!ACTIVE)return;
  const STORE='psuRelayServerV100',ALLOWED=new Set(['mainState','scheduleV2','progressInfo','pending','memos','annualLeave','teamRoster','meta']);
  const R={url:'',base:'',key:'',source:'',online:false,checking:null,cache:null,ws:null,wsTimer:0,subs:new Set(),patched:false,lastError:'',lastAt:0,nativeDB:null,nativeRef:null,discovery:null,discoveryRef:null,discoveryCb:null,authUnsub:null,everOnline:false};
- window.__psuRelayOnlyV120=true;try{localStorage.removeItem(STORE)}catch(_e){}
+ window.__psuRelayOnlyV120=true;window.__psuRelayReadWriteV130=true;try{localStorage.removeItem(STORE)}catch(_e){}
  function supported(path){const p=String(path||'').replace(/^\/+|\/+$/g,'').split('/').filter(Boolean);return ALLOWED.has(p[0]||'')}
+ function isDiscovery(path){return top(path)==='relayDiscovery'}
  window.__psuRelayIsSupportedV120=supported;
- function badge(){let b=document.getElementById('psuRelayBadgeV100');if(b)return b;b=document.createElement('button');b.type='button';b.id='psuRelayBadgeV100';b.className='show wait';b.innerHTML='<span class="dot"></span><span class="tx">중계 전용 · 확인중</span>';b.title='중계 전용 테스트: Firebase 대용량 직접 읽기는 차단됩니다.';b.onclick=configure;document.body.appendChild(b);return b}
- function gate(){let g=document.getElementById('psuRelayGateV120');if(g)return g;g=document.createElement('div');g.id='psuRelayGateV120';g.innerHTML='<div class="relay-gate-card-v120"><div class="relay-gate-dot-v120"></div><div class="relay-gate-title-v120">중계서버 연결 확인 중</div><div class="relay-gate-sub-v120">중계가 확인되기 전에는 Firebase의 일정/진행현황 데이터를 직접 불러오지 않습니다.</div><div class="relay-gate-state-v120" id="psuRelayGateStateV120">서버 주소 확인 중...</div></div>';document.body.appendChild(g);return g}
- function gateShow(title,detail){const g=gate();g.classList.add('show');const t=g.querySelector('.relay-gate-title-v120'),s=g.querySelector('.relay-gate-state-v120');if(t)t.textContent=title||'중계서버 연결 대기';if(s)s.textContent=detail||'Firebase 직접 데이터 읽기 차단 중';}
+ function badge(){let b=document.getElementById('psuRelayBadgeV100');if(b)return b;b=document.createElement('button');b.type='button';b.id='psuRelayBadgeV100';b.className='show wait';b.innerHTML='<span class="dot"></span><span class="tx">중계 전용 · 확인중</span>';b.title='중계 전용 테스트: Firebase 업무 데이터 직접 읽기/쓰기는 차단됩니다.';b.onclick=configure;document.body.appendChild(b);return b}
+ function gate(){let g=document.getElementById('psuRelayGateV120');if(g)return g;g=document.createElement('div');g.id='psuRelayGateV120';g.innerHTML='<div class="relay-gate-card-v120"><div class="relay-gate-dot-v120"></div><div class="relay-gate-title-v120">중계서버 연결 확인 중</div><div class="relay-gate-sub-v120">중계가 확인되기 전에는 Firebase 업무 데이터를 직접 읽거나 쓰지 않습니다.</div><div class="relay-gate-state-v120" id="psuRelayGateStateV120">서버 주소 확인 중...</div></div>';document.body.appendChild(g);return g}
+ function gateShow(title,detail){const g=gate();g.classList.add('show');const t=g.querySelector('.relay-gate-title-v120'),s=g.querySelector('.relay-gate-state-v120');if(t)t.textContent=title||'중계서버 연결 대기';if(s)s.textContent=detail||'Firebase 직접 읽기/쓰기 차단 중';}
  function gateHide(){const g=document.getElementById('psuRelayGateV120');if(g)g.classList.remove('show')}
- function ui(kind,text){const b=badge();b.className='show '+kind;const t=b.querySelector('.tx');if(t)t.textContent=text;const src=R.source==='discovery'?'자동주소':R.source==='local'?'로컬':R.source==='manual'?'수동':'';b.title=(src?src+' · ':'')+'중계 전용 테스트 · Firebase 대용량 직접 읽기 차단'}
+ function ui(kind,text){const b=badge();b.className='show '+kind;const t=b.querySelector('.tx');if(t)t.textContent=text;const src=R.source==='discovery'?'자동주소':R.source==='local'?'로컬':R.source==='manual'?'수동':'';b.title=(src?src+' · ':'')+'중계 전용 테스트 · Firebase 직접 읽기/쓰기 차단'}
  function normalize(raw,source){raw=String(raw||'').trim();if(!raw)return null;try{if(!/^https?:\/\//i.test(raw))raw='http://'+raw;const u=new URL(raw);const key=u.searchParams.get('key')||'';return {url:raw,base:u.origin,key,source:source||''}}catch(_e){return null}}
  function queryRelay(){try{return String(new URLSearchParams(location.search).get('relay')||'').trim()}catch(_e){return''}}
  function savedRelay(){try{return String(localStorage.getItem(STORE)||'').trim()}catch(_e){return''}}
@@ -1575,15 +1576,101 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
  function scheduleReconnect(delay=2500){clearTimeout(R.wsTimer);R.wsTimer=setTimeout(()=>ensure(false),delay)}
  function connectWS(){try{closeWS();const w=new WebSocket(wsURL());R.ws=w;w.onopen=()=>{R.online=true;R.everOnline=true;ui('ok','중계 ● 외부');gateHide();useRelayForSubs()};w.onmessage=e=>{try{const m=JSON.parse(e.data||'{}');if(m.type==='firebase_delta')applyDelta(m);else if(m.type==='connected'||m.type==='heartbeat')R.lastAt=Date.now()}catch(_e){}};w.onerror=()=>{};w.onclose=()=>{if(R.ws===w)R.ws=null;R.online=false;blocked('중계 WebSocket이 끊겼습니다. 자동 재연결 중...');scheduleReconnect()}}catch(_e){R.online=false;blocked('중계 WebSocket 연결 실패 · 자동 재시도 중...');scheduleReconnect()}}
  async function tryCandidate(n){const h=await fetchJSONFor(n,'/health',null,1200);if(!h||h.server!=='ok')throw new Error('health');if(h.firebaseOn!==true||Number(h.firebaseStreams||0)<8)throw new Error('Firebase 8/8 대기');const cache=await fetchJSONFor(n,'/snapshot',null,3200);if(!cache||typeof cache!=='object'||!cache.mainState||!cache.scheduleV2)throw new Error('중계 snapshot 미완료');R.url=n.url;R.base=n.base;R.key=n.key;R.source=n.source||'';R.cache=cache;R.online=true;R.everOnline=true;R.lastError='';ui('ok','중계 ● 외부');gateHide();useRelayForSubs();connectWS();return true}
- async function ensure(force){if(R.online&&R.cache&&R.source==='discovery'&&!force)return true;if(R.checking&&!force)return R.checking;R.checking=(async()=>{ui('wait','중계 전용 · 외부주소 확인중');gateShow('외부 중계주소 확인 중','Firebase relayDiscovery → 접근키 포함 외부주소 → 중계서버 8/8 → snapshot 순서로 확인합니다.');closeWS();const list=candidateList();if(!list.length){blocked('Firebase relayDiscovery의 접근키 포함 외부주소를 기다리는 중입니다.');scheduleReconnect(1800);return false}for(const n of list){try{if(await tryCandidate(n))return true}catch(e){R.lastError=String(e&&e.message||e)}}blocked('외부 중계서버에 연결할 수 없습니다. Firebase 직접 데이터 읽기는 차단되어 있습니다.');scheduleReconnect(2500);return false})().finally(()=>{R.checking=null});return R.checking}
- async function read(path){if(!supported(path))throw new Error('relay-unsupported');if(await ensure(false))return clone(getPath(R.cache,path));throw new Error('relay-test-only: 중계 미연결')}
- function wrapRef(path,native){if(!supported(path))return native;const handler={get(target,prop){if(prop==='on')return function(ev,cb,cancel){if(ev!=='value')return target.on(ev,cb,cancel);const s={path:String(path||''),native:target,cb,cancel,active:true};R.subs.add(s);ensure(false).then(ok=>{if(!s.active)return;if(ok){try{cb(snap(s.path))}catch(_e){}}else if(typeof cancel==='function'){try{cancel(new Error('중계 전용 테스트: 중계 미연결'))}catch(_e){}}});return cb};if(prop==='off')return function(ev,cb){if(!ev||ev==='value'){for(const s of [...R.subs]){if(s.path===String(path||'')&&(!cb||s.cb===cb)){s.active=false;R.subs.delete(s)}}}return undefined};const v=target[prop];return typeof v==='function'?v.bind(target):v}};return new Proxy(native,handler)}
+ async function ensure(force){if(R.online&&R.cache&&R.source==='discovery'&&!force)return true;if(R.checking&&!force)return R.checking;R.checking=(async()=>{ui('wait','중계 전용 · 외부주소 확인중');gateShow('외부 중계주소 확인 중','Firebase relayDiscovery → 접근키 포함 외부주소 → 중계서버 8/8 → snapshot 순서로 확인합니다.');closeWS();const list=candidateList();if(!list.length){blocked('Firebase relayDiscovery의 접근키 포함 외부주소를 기다리는 중입니다.');scheduleReconnect(1800);return false}for(const n of list){try{if(await tryCandidate(n))return true}catch(e){R.lastError=String(e&&e.message||e)}}blocked('외부 중계서버에 연결할 수 없습니다. Firebase 직접 읽기/쓰기는 차단되어 있습니다.');scheduleReconnect(2500);return false})().finally(()=>{R.checking=null});return R.checking}
+ async function firebaseUserToken(){
+   try{
+     let u=firebase.auth().currentUser;
+     if(!u){const c=await firebase.auth().signInAnonymously();u=c&&c.user}
+     if(!u)throw new Error('Firebase 사용자 인증 없음');
+     return await u.getIdToken(false)
+   }catch(e){throw new Error('중계용 사용자 인증 실패: '+String(e&&e.message||e))}
+ }
+ async function relayResponse(path,method='GET',payload,extraHeaders,timeout=7000){
+   if(!(await ensure(false)))throw new Error('중계서버 미연결');
+   const token=await firebaseUserToken(),n={base:R.base,key:R.key};
+   const u=endpointFor(n,'/firebase',{path:String(path||'')});
+   const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),timeout);
+   try{
+     const headers=Object.assign({'X-PSU-Firebase-Auth':token},extraHeaders||{});
+     let body;
+     if(payload!==undefined){headers['Content-Type']='application/json';body=JSON.stringify(payload)}
+     const resp=await fetch(u,{method,headers,body,cache:'no-store',signal:ac.signal});
+     const text=await resp.text();
+     let data=null;try{data=text?JSON.parse(text):null}catch(_e){data=text}
+     return {ok:resp.ok,status:resp.status,data,headers:resp.headers}
+   }finally{clearTimeout(tm)}
+ }
+ function updateLocal(path,value,isPatch){
+   if(!supported(path)||!R.cache)return;
+   const ps=parts(path);
+   if(isPatch&&value&&typeof value==='object'&&!Array.isArray(value)){
+     Object.keys(value).forEach(k=>{R.cache=setAt(R.cache,ps.concat(parts(k)),value[k])})
+   }else R.cache=setAt(R.cache,ps,value);
+   notifyNode(top(path));
+ }
+ async function read(path){
+   if(isDiscovery(path))throw new Error('relayDiscovery는 주소검색 전용 직접경로');
+   if(await ensure(false)){
+     if(supported(path))return clone(getPath(R.cache,path));
+     const rr=await relayResponse(path,'GET');if(!rr.ok)throw new Error('중계 읽기 HTTP '+rr.status);return clone(rr.data)
+   }
+   throw new Error('relay-test-only: 중계 미연결')
+ }
+ async function write(path,method,payload,headers){
+   if(isDiscovery(path))throw new Error('relayDiscovery 직접 쓰기 차단');
+   const rr=await relayResponse(path,method,payload,headers,9000);
+   if(!rr.ok){const e=new Error('중계 쓰기 HTTP '+rr.status);e.status=rr.status;throw e}
+   if(method==='DELETE')updateLocal(path,null,false);else if(method==='PATCH')updateLocal(path,payload,true);else if(method==='PUT')updateLocal(path,payload,false);
+   return rr
+ }
+ async function transaction(path,updater){
+   for(let attempt=0;attempt<6;attempt++){
+     const g=await relayResponse(path,'GET',undefined,{'X-Firebase-ETag':'true'},9000);
+     if(!g.ok)throw new Error('중계 transaction GET HTTP '+g.status);
+     const cur=clone(g.data),next=updater(cur);
+     if(next===undefined)return {committed:false,snapshot:snapValue(path,cur)};
+     const etag=g.headers.get('ETag')||g.headers.get('etag')||'';
+     const h={};if(etag)h['If-Match']=etag;
+     const p=await relayResponse(path,'PUT',next,h,9000);
+     if(p.status===412)continue;
+     if(!p.ok)throw new Error('중계 transaction PUT HTTP '+p.status);
+     updateLocal(path,next,false);
+     return {committed:true,snapshot:snapValue(path,next)}
+   }
+   throw new Error('중계 transaction 충돌 재시도 초과')
+ }
+ function snapValue(path,value){return {val:()=>clone(value),exists:()=>value!==null&&value!==undefined,key:parts(path).slice(-1)[0]||null,ref:null}}
+ function startRemoteValueSub(s){
+   let last='__init__';
+   const tick=async()=>{if(!s.active)return;try{const v=await read(s.path),sig=JSON.stringify(v);if(sig!==last){last=sig;s.cb(snapValue(s.path,v))}}catch(e){if(typeof s.cancel==='function'&&last==='__init__')try{s.cancel(e)}catch(_e){}}};
+   tick();s.timer=setInterval(tick,5000)
+ }
+ function wrapRef(path,native){
+   if(isDiscovery(path))return native;
+   const handler={get(target,prop){
+     if(prop==='on')return function(ev,cb,cancel){
+       if(ev!=='value')throw new Error('중계 테스트는 value 구독만 지원합니다.');
+       const s={path:String(path||''),native:target,cb,cancel,active:true,timer:0};R.subs.add(s);
+       if(supported(path))ensure(false).then(ok=>{if(!s.active)return;if(ok){try{cb(snap(s.path))}catch(_e){}}else if(typeof cancel==='function'){try{cancel(new Error('중계 전용 테스트: 중계 미연결'))}catch(_e){}}});
+       else startRemoteValueSub(s);
+       return cb
+     };
+     if(prop==='off')return function(ev,cb){if(!ev||ev==='value'){for(const s of [...R.subs]){if(s.path===String(path||'')&&(!cb||s.cb===cb)){s.active=false;if(s.timer)clearInterval(s.timer);R.subs.delete(s)}}}return undefined};
+     if(prop==='once')return async function(ev){if(ev!=='value')throw new Error('중계 테스트는 value once만 지원합니다.');const v=await read(path);return snapValue(path,v)};
+     if(prop==='set')return async function(v){await write(path,'PUT',v);return null};
+     if(prop==='update')return async function(v){await write(path,'PATCH',v||{});return null};
+     if(prop==='remove')return async function(){await write(path,'DELETE');return null};
+     if(prop==='transaction')return async function(fn){return await transaction(path,fn)};
+     const v=target[prop];return typeof v==='function'?v.bind(target):v
+   }};
+   return new Proxy(native,handler)
+ }
  function stopDiscoveryRef(){if(R.discoveryRef&&R.discoveryCb)try{R.discoveryRef.off('value',R.discoveryCb)}catch(_e){}R.discoveryRef=null;R.discoveryCb=null}
  function applyDiscovery(v){v=v&&typeof v==='object'?v:null;const prev=R.discovery&&R.discovery.currentUrl||'';R.discovery=v;const n=v&&v.enabled!==false?normalize(v.currentUrl,'discovery'):null;let valid=false;if(n){try{const u=new URL(n.url),h=String(u.hostname||'').toLowerCase();valid=u.protocol==='https:'&&!!n.key&&h!=='127.0.0.1'&&h!=='localhost'&&!/^192\.168\./.test(h)&&!/^10\./.test(h)&&!/^172\.(1[6-9]|2\d|3[01])\./.test(h)}catch(_e){}}if(!valid){blocked('Firebase relayDiscovery의 외부주소/접근키를 기다리는 중입니다.');return}if(v.currentUrl!==prev||!R.online||R.source!=='discovery'){R.online=false;R.cache=null;R.source='';closeWS();ensure(true)}}
  function attachDiscoveryRef(){if(!R.nativeRef)return;stopDiscoveryRef();const ref=R.nativeRef('relayDiscovery/current');const cb=s=>applyDiscovery(s&&s.val?s.val():null);R.discoveryRef=ref;R.discoveryCb=cb;try{ref.on('value',cb,()=>{blocked('relayDiscovery 주소를 읽을 수 없습니다. Rules v1.96을 확인하세요.')})}catch(_e){}}
  function startDiscoveryWatcher(){if(!window.firebase||!firebase.auth||!R.nativeRef)return;if(R.authUnsub)return;try{R.authUnsub=firebase.auth().onAuthStateChanged(u=>{stopDiscoveryRef();if(u)attachDiscoveryRef();else gateShow('Firebase 인증 확인 중','주소 확인용 최소 인증만 진행합니다. 대용량 데이터는 읽지 않습니다.')})}catch(_e){}}
  function patchDB(db){if(!db||db.__psuRelayV120Patched){startDiscoveryWatcher();return db}const orig=db.ref.bind(db);R.nativeDB=db;R.nativeRef=orig;try{Object.defineProperty(db,'__psuRelayV120Patched',{value:true})}catch(_e){db.__psuRelayV120Patched=true}try{Object.defineProperty(db,'__psuRelayV100Patched',{value:true})}catch(_e){}db.ref=function(path){const p=String(path==null?'':path).replace(/^\/+|\/+$/g,'');return wrapRef(p,orig(path))};R.patched=true;startDiscoveryWatcher();return db}
- async function configure(){const cur=R.discovery&&R.discovery.currentUrl?String(R.discovery.currentUrl):'아직 없음';const msg='외부 중계 강제 테스트 모드입니다.\n\n접속 주소는 Firebase relayDiscovery/current의 접근키 포함 외부주소만 사용합니다.\n127.0.0.1 / LAN / 수동 저장주소는 사용하지 않습니다.\n\n현재 자동주소:\n'+cur+'\n\n※ 중계 실패 시 Firebase 대용량 데이터로 넘어가지 않습니다.';if(typeof window.psuAlert==='function')window.psuAlert(msg,'중계 외부전용');else alert(msg)}
+ async function configure(){const cur=R.discovery&&R.discovery.currentUrl?String(R.discovery.currentUrl):'아직 없음';const msg='외부 중계 강제 테스트 모드입니다.\n\n접속 주소는 Firebase relayDiscovery/current의 접근키 포함 외부주소만 사용합니다.\n127.0.0.1 / LAN / 수동 저장주소는 사용하지 않습니다.\n\n현재 자동주소:\n'+cur+'\n\n※ 중계 실패 시 Firebase 직접 읽기/쓰기로 넘어가지 않습니다.';if(typeof window.psuAlert==='function')window.psuAlert(msg,'중계 외부전용');else alert(msg)}
  window.__psuRelayPatchDbV100=patchDB;window.__psuRelayReadV100=read;window.__psuRelayEnsureV100=ensure;window.__psuRelayConfigureV100=configure;window.__psuRelayStateV100=R;
  window.__psuRelayPatchDbV110=patchDB;window.__psuRelayReadV110=read;window.__psuRelayEnsureV110=ensure;window.__psuRelayStateV110=R;
  window.__psuRelayPatchDbV120=patchDB;window.__psuRelayReadV120=read;window.__psuRelayEnsureV120=ensure;window.__psuRelayStateV120=R;
