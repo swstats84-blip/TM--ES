@@ -92,7 +92,7 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
 </script>
 
 <script id="web-v197-version-source">const WEB_VERSION_V197="웹 v2.70";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
-<script>window.__PSU_WEB_TEST_BUILD="v2.70-relay-priority-test-v1.0";</script>
+<script>window.__PSU_WEB_TEST_BUILD="v2.70-relay-priority-test-v1.0.1";</script>
 <div id="psuBootV247" aria-live="polite"><div class="boot-card-v247"><div class="boot-dot-v247"></div><div class="boot-title-v247">PSU 작업현황</div><div class="boot-sub-v247">최신 정보를 불러오는 중...</div></div></div>
 <script id="web-v247-first-paint-script">
 (function(){
@@ -1539,7 +1539,7 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
 <script id="psu-relay-v100-script">
 (function(){
  if(window.__psuRelayV100Installed)return;window.__psuRelayV100Installed=true;
- const ACTIVE=/\/TM--EM(?:\/|$)/i.test(location.pathname)||new URLSearchParams(location.search).get('relaytest')==='1';
+ const ACTIVE=/\/TM--(?:ES|EM)(?:\/|$)/i.test(location.pathname)||new URLSearchParams(location.search).get('relaytest')==='1';
  if(!ACTIVE)return;
  const STORE='psuRelayServerV100',ALLOWED=new Set(['mainState','scheduleV2','progressInfo','pending','memos','annualLeave','teamRoster','meta']);
  const R={url:'',base:'',key:'',online:false,checking:null,cache:null,ws:null,wsTimer:0,subs:new Set(),patched:false,lastError:'',lastAt:0,nativeDB:null,nativeRef:null};
