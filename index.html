@@ -1498,7 +1498,7 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
  if(window.__webV174PcDownloadInstalled)return;window.__webV174PcDownloadInstalled=true;
  const env=()=>window.__psuClientEnvV174||{device:'PC',isPc:true,label:'PC'};
  const token=()=>{try{return typeof window.__webAuthTokenV136==='function'?window.__webAuthTokenV136():(localStorage.getItem('psuWebAdminSessionV131')||'')}catch(e){return ''}};
- const MB=1024*1024,TURBO_CHUNK=4*MB,TURBO_PARALLEL=4,FALLBACK_PARALLEL=8;
+ const PC_VIEWER_GITHUB_URL_V271='https://raw.githubusercontent.com/swstats84-blip/TM-ES/main/SEC_PSU_PC_Viewer.zip';
  function ensure(){
    const box=document.getElementById('webActionsV131');if(!box)return null;
    let b=document.getElementById('pcViewerDownloadBtnV174');
@@ -1506,79 +1506,17 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
    return b;
  }
  function sync(){const b=ensure();if(!b)return;const admin=!!(document.body.classList.contains('admin-mode')&&window.__webAuthInfoV136);b.hidden=!(admin&&env().isPc)}
- function gsMeta(t){return new Promise((resolve,reject)=>{try{google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getPcViewerDownloadMetaV197(t)}catch(e){reject(e)}})}
- function gsChunk(t,ticket,offset,length){return new Promise((resolve,reject)=>{try{google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getPcViewerDownloadChunkV197(t,ticket,offset,length)}catch(e){reject(e)}})}
- function decodeChunk(b64){const bin=atob(String(b64||'')),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u}
- const sleep=ms=>new Promise(r=>setTimeout(r,ms));
- async function getChunk(t,ticket,offset,length,retries=2){
-   let last=null;
-   for(let attempt=0;attempt<=retries;attempt++){
-     try{
-       const r=await gsChunk(t,ticket,offset,length);
-       if(!r||r.ok===false||!r.base64)throw new Error(r&&r.message?r.message:'파일 데이터를 받지 못했습니다.');
-       const bytes=decodeChunk(r.base64),next=Number(r.nextOffset);
-       if(!bytes.length||!(next>offset))throw new Error('다운로드 조각 정보가 올바르지 않습니다.');
-       if(next-offset!==bytes.length)throw new Error('다운로드 조각 크기가 일치하지 않습니다.');
-       return {offset,bytes,next};
-     }catch(e){
-       last=e;if(attempt<retries)await sleep(220*(attempt+1));
-     }
-   }
-   throw last||new Error('다운로드 조각을 받지 못했습니다.');
- }
  async function download(){
    const b=ensure();if(!b||b.disabled||!env().isPc)return;const t=token();if(!t){sync();return psuAlert('관리자 로그인이 필요합니다.')}
-   const old=b.textContent;b.disabled=true;b.textContent='다운로드 준비 중...';let objectUrl='';
+   const old=b.textContent;b.disabled=true;b.textContent='GitHub에서 다운로드 중...';let objectUrl='';
    try{
-     const meta=await gsMeta(t);if(!meta||meta.ok===false||!meta.size||!meta.ticket)throw new Error(meta&&meta.message?meta.message:'PC뷰어 다운로드 파일을 찾지 못했습니다.');
-     const size=Number(meta.size),ticket=meta.ticket,safeChunk=Math.max(256*1024,Number(meta.chunkSize)||MB),parts=new Map();let doneBytes=0;
-     const progress=label=>{const pct=Math.min(99,Math.max(0,Math.floor(doneBytes/size*100)));b.textContent=`${label} ${pct}%`};
-
-     // First request doubles as a capability probe. Try 4 MiB once; fall back automatically.
-     let first,chunkSize,parallel;
-     progress('고속 다운로드');
-     try{
-       first=await getChunk(t,ticket,0,Math.min(TURBO_CHUNK,size),1);
-       const actual=first.bytes.length;
-       if(actual>=Math.min(TURBO_CHUNK,size)){
-         chunkSize=TURBO_CHUNK;parallel=TURBO_PARALLEL;
-       }else{
-         chunkSize=actual||safeChunk;parallel=FALLBACK_PARALLEL;
-       }
-     }catch(_turboErr){
-       first=await getChunk(t,ticket,0,Math.min(safeChunk,size),2);
-       chunkSize=first.bytes.length||safeChunk;parallel=FALLBACK_PARALLEL;
-     }
-     parts.set(0,first.bytes);doneBytes=first.bytes.length;progress('고속 다운로드');
-
-     const offsets=[];
-     for(let off=first.next;off<size;off+=chunkSize)offsets.push(off);
-     let cursor=0;
-     async function worker(){
-       while(true){
-         const i=cursor++;if(i>=offsets.length)return;
-         const off=offsets[i],len=Math.min(chunkSize,size-off);
-         const x=await getChunk(t,ticket,off,len,2);
-         if(x.bytes.length!==len&&x.next<size)throw new Error('서버가 예상보다 작은 조각을 반환했습니다. 다시 시도해 주세요.');
-         parts.set(off,x.bytes);doneBytes+=x.bytes.length;progress('고속 다운로드');
-       }
-     }
-     await Promise.all(Array.from({length:Math.min(parallel,offsets.length||1)},()=>worker()));
-
-     const ordered=[...parts.entries()].sort((a,b)=>a[0]-b[0]);
-     let total=0;for(const [off,bytes] of ordered){if(off!==total)throw new Error('다운로드 조각 순서가 맞지 않습니다.');total+=bytes.length}
-     if(total!==size)throw new Error(`다운로드 크기 확인 실패 (${total}/${size})`);
-
-     b.textContent='파일 저장 중...';
-     const blob=new Blob(ordered.map(x=>x[1]),{type:'application/vnd.microsoft.portable-executable'});
-     objectUrl=URL.createObjectURL(blob);
-     const a=document.createElement('a');a.href=objectUrl;a.download=meta.fileName||'SEC PSU 작업 현황.exe';document.body.appendChild(a);a.click();a.remove();
-     setTimeout(()=>{try{URL.revokeObjectURL(objectUrl)}catch(_e){}},10000);
-     const mode=chunkSize>=TURBO_CHUNK?'4MB 고속 모드':`${Math.round(chunkSize/1024)}KB 병렬 모드`;
-     toastMsg(`PC뷰어 다운로드를 시작했습니다. · ${mode}`);
+     const url=PC_VIEWER_GITHUB_URL_V271+'?psu_dl='+Date.now(),r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`GitHub 다운로드 실패 (${r.status})`);
+     const blob=await r.blob();if(!blob||blob.size<1024)throw new Error('PC뷰어 파일 데이터가 올바르지 않습니다.');
+     b.textContent='파일 저장 중...';objectUrl=URL.createObjectURL(blob);const a=document.createElement('a');a.href=objectUrl;a.download='SEC_PSU_PC_Viewer.zip';document.body.appendChild(a);a.click();a.remove();
+     setTimeout(()=>{try{URL.revokeObjectURL(objectUrl)}catch(_e){}},10000);toastMsg('PC뷰어 ZIP 다운로드를 시작했습니다.');
    }catch(e){
      if(objectUrl)try{URL.revokeObjectURL(objectUrl)}catch(_e){}
-     psuAlert(e&&e.message?e.message:String(e||'다운로드에 실패했습니다.'));
+     try{const a=document.createElement('a');a.href=PC_VIEWER_GITHUB_URL_V271+'?psu_dl='+Date.now();a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();toastMsg('PC뷰어 ZIP 다운로드를 열었습니다.')}catch(_e){psuAlert(e&&e.message?e.message:String(e||'다운로드에 실패했습니다.'))}
    }finally{b.disabled=false;b.textContent=old}
  }
  const obs=new MutationObserver(sync);obs.observe(document.body,{attributes:true,attributeFilter:['class']});setTimeout(sync,0);setTimeout(sync,300);setInterval(sync,3000);
