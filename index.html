@@ -109,7 +109,7 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
   html,body,#mobileList,.mobile-list,.dategroup{overflow-anchor:none!important;}
 }
 </style>
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.17";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.18";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
 <script id="web-v317-shared-escape">window.__webEscAttrV317=function(v){return String(v??'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})};</script>
 <script>window.__PSU_WEB_TEST_BUILD="v3.05-immediate-ready-reveal";</script>
 <script id="web-v299-boot-perf-mode-hint">
@@ -2683,14 +2683,16 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
  function ensureGuide(){
    let back=document.getElementById('homeGuideBackV284');if(back)return back;
    back=document.createElement('div');back.id='homeGuideBackV284';back.setAttribute('aria-hidden','true');
-   back.innerHTML='<div id="homeGuideCardV284" role="dialog" aria-modal="true" aria-label="아이폰 홈 화면 등록 안내"><div id="homeGuideHeadV284"><b>아이폰 홈 화면 등록 방법</b><button id="homeGuideCloseV284" type="button" aria-label="닫기">×</button></div><div id="homeGuideBodyV284"><div class="ios-guide-v317"><div class="ios-guide-step-v317"><b>1</b><span>Safari에서 PSU 작업현황 페이지를 엽니다.</span></div><div class="ios-guide-step-v317"><b>2</b><span>Safari 아래쪽의 <strong>공유</strong> 버튼(□↑)을 누릅니다.</span></div><div class="ios-guide-step-v317"><b>3</b><span>메뉴에서 <strong>홈 화면에 추가</strong>를 선택합니다.</span></div><div class="ios-guide-step-v317"><b>4</b><span>오른쪽 위 <strong>추가</strong>를 누르면 PSU 아이콘이 홈 화면에 생성됩니다.</span></div></div></div><div id="homeGuideFootV284">아이폰은 브라우저 보안 정책상 마지막 “추가” 동작은 사용자가 직접 눌러야 합니다.</div></div>';
+   back.innerHTML='<div id="homeGuideCardV284" role="dialog" aria-modal="true" aria-label="아이폰 홈 화면 등록 안내"><div id="homeGuideHeadV284"><b>아이폰 홈 화면 등록 방법</b><button id="homeGuideCloseV284" type="button" aria-label="닫기">×</button></div><div id="homeGuideBodyV284"><img id="homeGuideImgV284" alt="아이폰 홈 화면 등록 방법 안내"></div><div id="homeGuideFootV284">아이폰 사용자가 보는 기존 홈 화면 등록 안내 이미지입니다.</div></div>';
    document.body.appendChild(back);
    const close=()=>{back.classList.remove('show');back.setAttribute('aria-hidden','true')};
    document.getElementById('homeGuideCloseV284').onclick=close;back.onclick=e=>{if(e.target===back)close()};
    return back;
  }
  function openIOSGuide(){
-   const back=ensureGuide();back.classList.add('show');back.setAttribute('aria-hidden','false');
+   const back=ensureGuide(),img=document.getElementById('homeGuideImgV284');
+   if(img&&!img.src)img.src='https://raw.githubusercontent.com/swstats84-blip/TM-ES/main/%EC%95%84%EC%9D%B4%ED%8F%B0%ED%99%88%ED%99%94%EB%A9%B4%EB%93%B1%EB%A1%9D%EB%B0%A9%EB%B2%95.png';
+   back.classList.add('show');back.setAttribute('aria-hidden','false');
  }
  window.__openIOSHomeGuideV317=openIOSGuide;
  function externalTarget(){
@@ -2945,23 +2947,27 @@ body:not(.psu-schedule-badges-ready-v315) #mobileList{visibility:hidden!importan
 })();
 </script>
 
-<style id="web-v317-top-layout-style">
+<style id="web-v318-top-layout-style">
 #refresh[hidden]{display:none!important}
 @media(max-width:820px){
   header{align-items:center}
-  #homeInstallBtnV284,#iphonePreviewBtnV317{order:2;margin-left:0;font-size:11px;padding:6px 8px}
-  .web-actions-v131{order:3;width:100%;margin-left:0;display:flex;justify-content:flex-start!important;gap:5px;flex-wrap:wrap}
+  #homeInstallBtnV284{order:2;margin-left:auto;font-size:11px;padding:6px 8px}#iphonePreviewBtnV317{order:2;margin-left:0;font-size:11px;padding:6px 8px}
+  .web-actions-v131{order:3;width:100%;margin-left:0;display:flex;justify-content:flex-end!important;gap:5px;flex-wrap:wrap}
   .web-actions-v131 .mini-v131{font-size:10.5px;padding:6px 8px}
-  .web-actions-v131 .web-extra-v317{margin-top:1px}
 }
 </style>
-<script id="web-v317-top-layout-script">
+<script id="web-v318-top-layout-script">
 (function(){
- 'use strict';if(window.__webV317TopLayoutInstalled)return;window.__webV317TopLayoutInstalled=true;
- const core=['weeklyBtnV131','sharedLadderBtnV316','myLeaveBtnV131','adminLoginBtnV131'];
- const extras=['adminApprovalBtnV149','activityLogBtnV138','personalNotepadBtnV262','pcViewerDownloadBtnV174'];
- function arrange(){const box=document.getElementById('webActionsV131');if(!box)return;const kids=[...box.children],by=new Map(kids.map(x=>[x.id,x]));const wanted=[];core.forEach(id=>{if(by.has(id))wanted.push(by.get(id))});extras.forEach(id=>{if(by.has(id)){const x=by.get(id);x.classList.add('web-extra-v317');wanted.push(x)}});kids.forEach(x=>{if(!wanted.includes(x)){x.classList.add('web-extra-v317');wanted.push(x)}});if(wanted.length===kids.length&&wanted.every((x,i)=>x===kids[i]))return;wanted.forEach(x=>box.appendChild(x))}
- const mo=new MutationObserver(arrange);mo.observe(document.body,{childList:true,subtree:true});arrange();setTimeout(arrange,120);setTimeout(arrange,600);window.__arrangeWebTopV317=arrange;
+ 'use strict';if(window.__webV318TopLayoutInstalled)return;window.__webV318TopLayoutInstalled=true;
+ function mode(){const info=window.__webAuthInfoV136||{},role=String(info.role||'');if(document.body.classList.contains('master-mode')||role==='master')return'master';if(document.body.classList.contains('admin-mode')||role==='admin')return'admin';return'general'}
+ function arrange(){const box=document.getElementById('webActionsV131');if(!box)return;const m=mode(),kids=[...box.children],by=new Map(kids.map(x=>[x.id,x]));
+   const leave=by.get('myLeaveBtnV131');if(leave)leave.hidden=(m==='master');
+   const order=m==='master'?['weeklyBtnV131','sharedLadderBtnV316','adminApprovalBtnV149','activityLogBtnV138','personalNotepadBtnV262','adminLoginBtnV131']:
+              m==='admin'?['weeklyBtnV131','sharedLadderBtnV316','myLeaveBtnV131','personalNotepadBtnV262','adminLoginBtnV131']:
+              ['weeklyBtnV131','sharedLadderBtnV316','myLeaveBtnV131','adminLoginBtnV131'];
+   const wanted=[];order.forEach(id=>{const x=by.get(id);if(x)wanted.push(x)});kids.forEach(x=>{if(!wanted.includes(x))wanted.push(x)});wanted.forEach(x=>box.appendChild(x));
+ }
+ const mo=new MutationObserver(arrange);mo.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});arrange();setTimeout(arrange,120);setTimeout(arrange,600);setTimeout(arrange,1400);window.__arrangeWebTopV318=arrange;
 })();
 </script>
 </body></html>
