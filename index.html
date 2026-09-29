@@ -109,7 +109,7 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
   html,body,#mobileList,.mobile-list,.dategroup{overflow-anchor:none!important;}
 }
 </style>
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.41";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.42";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
 <script id="web-v317-shared-escape">window.__webEscAttrV317=function(v){return String(v??'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})};</script>
 <script>window.__PSU_WEB_TEST_BUILD="v3.05-immediate-ready-reveal";</script>
 <script id="web-v299-boot-perf-mode-hint">
@@ -984,7 +984,25 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
 
  let teamRosterCacheV230=null;
  function arrRosterV230(v){return Array.isArray(v)?[...new Set(v.map(x=>String(x||'').trim()).filter(Boolean))]:[]}
- function normalizeRosterV230(r){r=r&&r.roster?r.roster:r||{};const defaults=[{id:'T',name:'T',color:'#e54855'},{id:'D1',name:'D1',color:'#326fda'},{id:'D2',name:'D2',color:'#20a4b8'}],raw=Array.isArray(r.workTeams)?r.workTeams:(r.workTeams&&typeof r.workTeams==='object'?Object.keys(r.workTeams).sort((a,b)=>Number(a)-Number(b)).map(k=>r.workTeams[k]):[]),seen={};const wt0=raw.map(x=>{const id=String(x&&x.id||'').trim().toUpperCase(),name=String(x&&x.name||'').trim(),color=String(x&&x.color||'').trim().toLowerCase();if(!id||!name||seen[id])return null;seen[id]=true;return {id,name,color:/^#[0-9a-f]{6}$/i.test(color)?color:'#64748b'}}).filter(Boolean),configured=r.workTeamsConfigured===true,wt=configured?wt0:(wt0.length?wt0:defaults),legacy={T:arrRosterV230(r.T),D1:arrRosterV230(r.D1),D2:arrRosterV230(r.D2)},rawMembers=r.workTeamMembers&&typeof r.workTeamMembers==='object'?r.workTeamMembers:{},members={};wt.forEach(t=>{members[t.id]=arrRosterV230(Object.prototype.hasOwnProperty.call(rawMembers,t.id)?rawMembers[t.id]:(legacy[t.id]||[]))});const st=r.scheduleOnlyTeam&&typeof r.scheduleOnlyTeam==='object'?r.scheduleOnlyTeam:{};return {T:legacy.T,D1:legacy.D1,D2:legacy.D2,modify:arrRosterV230(r.modify),viewOnlyAdmins:arrRosterV230(r.viewOnlyAdmins),workTeams:wt,workTeamsConfigured:configured,workTeamMembers:members,scheduleOnlyTeam:{enabled:st.enabled!==false,name:String(st.name||'개조').trim()||'개조',location:String(st.location||'외부Fab').trim()||'외부Fab',work:String(st.work||'개조(Modify)').trim()||'개조(Modify)',type:String(st.type||'-').trim()||'-',sn:String(st.sn||'-').trim()||'-',unit:String(st.unit||'-').trim()||'-'}}}
+ function normalizeRosterV230(r){
+   r=r&&r.roster?r.roster:r||{};
+   const defaults=[{id:'T',name:'T',color:'#e54855'},{id:'D1',name:'D1',color:'#326fda'},{id:'D2',name:'D2',color:'#20a4b8'}],seen={};
+   const raw=Array.isArray(r.workTeams)?r.workTeams:(r.workTeams&&typeof r.workTeams==='object'?Object.keys(r.workTeams).sort((a,b)=>Number(a)-Number(b)).map(k=>r.workTeams[k]):[]);
+   const wt0=raw.map(x=>{const id=String(x&&x.id||'').trim().toUpperCase(),name=String(x&&x.name||'').trim(),color=String(x&&x.color||'').trim().toLowerCase();if(!id||!name||seen[id])return null;seen[id]=true;return {id,name,color:/^#[0-9a-f]{6}$/i.test(color)?color:'#64748b'}}).filter(Boolean);
+   // v3.42: 운영팀은 최소 1개 정책. configured=true인데 빈 배열인 과도기 데이터도 기본팀으로 복구한다.
+   const wt=wt0.length?wt0:defaults,configured=r.workTeamsConfigured===true,legacy={T:arrRosterV230(r.T),D1:arrRosterV230(r.D1),D2:arrRosterV230(r.D2)},rawMembers=r.workTeamMembers&&typeof r.workTeamMembers==='object'?r.workTeamMembers:{},members={};
+   wt.forEach(t=>{members[t.id]=arrRosterV230(Object.prototype.hasOwnProperty.call(rawMembers,t.id)?rawMembers[t.id]:(legacy[t.id]||[]))});
+   const st0=r.scheduleOnlyTeam&&typeof r.scheduleOnlyTeam==='object'?r.scheduleOnlyTeam:{},st={enabled:st0.enabled!==false,name:String(st0.name||'개조').trim()||'개조',location:String(st0.location||'외부Fab').trim()||'외부Fab',work:String(st0.work||'개조(Modify)').trim()||'개조(Modify)',type:String(st0.type||'-').trim()||'-',sn:String(st0.sn||'-').trim()||'-',unit:String(st0.unit||'-').trim()||'-'};
+   const rawExtra=Array.isArray(r.additionalTeams)?r.additionalTeams:(r.additionalTeams&&typeof r.additionalTeams==='object'?Object.keys(r.additionalTeams).sort((a,b)=>Number(a)-Number(b)).map(k=>r.additionalTeams[k]):[]),extraSeen={};
+   let additionalTeams=rawExtra.map(x=>{const id=String(x&&x.id||'').trim().toUpperCase();if(!id||extraSeen[id])return null;extraSeen[id]=true;return {id,enabled:x&&x.enabled!==false,name:String(x&&x.name||id).trim()||id,location:String(x&&x.location||'-').trim()||'-',work:String(x&&x.work||'-').trim()||'-',type:String(x&&x.type||'-').trim()||'-',sn:String(x&&x.sn||'-').trim()||'-',unit:String(x&&x.unit||'-').trim()||'-'}}).filter(Boolean);
+   const extraConfigured=r.additionalTeamsConfigured===true;
+   if(!additionalTeams.length&&!extraConfigured)additionalTeams=[{id:'MODIFY',...st}];
+   const rem=r.additionalTeamMembers&&typeof r.additionalTeamMembers==='object'?r.additionalTeamMembers:{},additionalTeamMembers={};
+   additionalTeams.forEach((t,i)=>{additionalTeamMembers[t.id]=arrRosterV230(Object.prototype.hasOwnProperty.call(rem,t.id)?rem[t.id]:(i===0?r.modify:[]))});
+   const modify=[];additionalTeams.forEach(t=>additionalTeamMembers[t.id].forEach(n=>{if(!modify.includes(n))modify.push(n)}));
+   const first=additionalTeams[0]||st;
+   return {T:legacy.T,D1:legacy.D1,D2:legacy.D2,modify,viewOnlyAdmins:arrRosterV230(r.viewOnlyAdmins),workTeams:wt,workTeamsConfigured:configured,workTeamMembers:members,additionalTeams,additionalTeamsConfigured:extraConfigured,additionalTeamMembers,scheduleOnlyTeam:{enabled:first.enabled!==false,name:String(first.name||st.name),location:String(first.location||st.location),work:String(first.work||st.work),type:String(first.type||st.type),sn:String(first.sn||st.sn),unit:String(first.unit||st.unit)}}
+ }
  async function loadRosterV230(force=false){
    if(teamRosterCacheV230&&!force)return teamRosterCacheV230;
    const CACHE='psuTeamRosterCacheV253';
@@ -1002,7 +1020,7 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
    }
    return await viaScript();
  }
- function rosterPeopleV230(r,includeView=false){r=normalizeRosterV230(r);const out=[],viewOnly=new Set(arrRosterV230(r.viewOnlyAdmins)),add=(list,company,label,team,allowView=false)=>arrRosterV230(list).forEach(name=>{if(!allowView&&viewOnly.has(name))return;if(!out.some(x=>x.name===name))out.push({name,company,label,team})});(r.workTeams||[]).forEach(t=>{const legacyCompany=t.id==='T'?'temaat':((t.id==='D1'||t.id==='D2')?'teoist':'workTeam');add(r.workTeamMembers&&r.workTeamMembers[t.id],legacyCompany,t.name,t.id)});add(r.modify,'reno',r.scheduleOnlyTeam&&r.scheduleOnlyTeam.name||'개조','modify');if(includeView)add(r.viewOnlyAdmins,'viewOnly','예외 관리자','viewOnly',true);return out}
+ function rosterPeopleV230(r,includeView=false){r=normalizeRosterV230(r);const out=[],viewOnly=new Set(arrRosterV230(r.viewOnlyAdmins)),add=(list,company,label,team,allowView=false)=>arrRosterV230(list).forEach(name=>{if(!allowView&&viewOnly.has(name))return;if(!out.some(x=>x.name===name))out.push({name,company,label,team})});(r.workTeams||[]).forEach(t=>{const company=t.id==='T'?'temaat':((t.id==='D1'||t.id==='D2')?'teoist':'workTeam');add(r.workTeamMembers&&r.workTeamMembers[t.id],company,t.name,t.id)});(r.additionalTeams||[]).forEach(t=>add(r.additionalTeamMembers&&r.additionalTeamMembers[t.id],'reno',t.name,t.id));if(includeView)add(r.viewOnlyAdmins,'viewOnly','예외 관리자','viewOnly',true);return out}
  function personV230(r,name,includeView=true){return rosterPeopleV230(r,includeView).find(x=>x.name===String(name||'').trim())||null}
  window.__psuLoadTeamRosterV230=loadRosterV230;window.__psuRosterPeopleV230=rosterPeopleV230;window.__psuPersonV230=personV230;
  function showRegister(){
