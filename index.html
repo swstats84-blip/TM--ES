@@ -109,7 +109,7 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
   html,body,#mobileList,.mobile-list,.dategroup{overflow-anchor:none!important;}
 }
 </style>
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.55";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.56";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
 <script id="web-v317-shared-escape">window.__webEscAttrV317=function(v){return String(v??'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})};</script>
 <script>window.__PSU_WEB_TEST_BUILD="v3.05-immediate-ready-reveal";</script>
 <script id="web-v299-boot-perf-mode-hint">
@@ -579,6 +579,11 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
  const oldCal=renderCalendar;renderCalendar=function(){oldCal();decorateDesktop();setTimeout(()=>refreshLeave(false),0)};
  const oldMob=renderMobile;renderMobile=function(){oldMob();decorateMobile();setTimeout(()=>refreshLeave(false),0)};
  decorateDesktop();decorateMobile();setTimeout(()=>refreshLeave(true),350);window.refreshLeave=refreshLeave;
+  // v3.56: 관리자/PC 등 외부 클라이언트의 연차 변경도 배지에 즉시 반영한다.
+  let leaveRevRefV356=null,leaveRevHandlerV356=null,leaveRevReadyV356=false,leaveRevValueV356='';
+  function detachLeaveRevV356(){if(leaveRevRefV356&&leaveRevHandlerV356)try{leaveRevRefV356.off('value',leaveRevHandlerV356)}catch(_e){}leaveRevRefV356=null;leaveRevHandlerV356=null;leaveRevReadyV356=false;leaveRevValueV356=''}
+  function attachLeaveRevV356(){if(leaveRevRefV356||!window.__psuDbRefV355||!window.firebase||!firebase.auth||!firebase.auth().currentUser)return;leaveRevRefV356=window.__psuDbRefV355('meta/revisions/annualLeave');leaveRevHandlerV356=snap=>{const v=String(snap&&snap.val?snap.val()||'':'');if(!leaveRevReadyV356){leaveRevReadyV356=true;leaveRevValueV356=v;return}if(v===leaveRevValueV356)return;leaveRevValueV356=v;lastRangeKey='';lastLoadedAt=0;setTimeout(()=>refreshLeave(true),30)};leaveRevRefV356.on('value',leaveRevHandlerV356,e=>{console.warn('연차 revision 실시간 구독 실패',e);detachLeaveRevV356();setTimeout(attachLeaveRevV356,2500)})}
+  try{firebase.auth().onAuthStateChanged(u=>{detachLeaveRevV356();if(u)setTimeout(attachLeaveRevV356,80)})}catch(_e){}setTimeout(attachLeaveRevV356,700);
  setTimeout(()=>{const ver=document.getElementById('version');if(ver)ver.textContent=WEB_VERSION_V197+' · 메모·연차 입력 가능'},80);
 })();
 </script>
