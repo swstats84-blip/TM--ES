@@ -109,7 +109,7 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
   html,body,#mobileList,.mobile-list,.dategroup{overflow-anchor:none!important;}
 }
 </style>
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.57";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.58";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
 <script id="web-v317-shared-escape">window.__webEscAttrV317=function(v){return String(v??'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})};</script>
 <script>window.__PSU_WEB_TEST_BUILD="v3.05-immediate-ready-reveal";</script>
 <script id="web-v299-boot-perf-mode-hint">
@@ -554,14 +554,14 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
 <script id="v115-shared-leave-script">
 (function(){
  if(window.__v115SharedLeaveInstalled)return;window.__v115SharedLeaveInstalled=true;
- const cache={};let loading=false,lastRangeKey='',lastLoadedAt=0;
+ const cache={};let loading=false,pendingForce=false,lastRangeKey='',lastLoadedAt=0;
  function arr(v){if(Array.isArray(v))return v.map(x=>String(x||'').trim()).filter(Boolean);if(typeof v==='string')return v.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean);return []}
  function parse(v){const out=[];String(v||'').split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).forEach(x=>{if(!out.includes(x))out.push(x)});return out}
  function uniq(v){const out=[];arr(v).forEach(x=>{if(!out.includes(x))out.push(x)});return out}
  function group(ds){if(Object.prototype.hasOwnProperty.call(cache,ds)){const g=cache[ds]||{};return {teoist:arr(g.teoist),temaat:arr(g.temaat),reno:arr(g.reno),workTeams:g.workTeams&&typeof g.workTeams==='object'?g.workTeams:{},additionalTeams:g.additionalTeams&&typeof g.additionalTeams==='object'?g.additionalTeams:{}}}return {teoist:[],temaat:arr((state.annualLeaveByDate||{})[ds]),reno:arr((state.renovationLeaveByDate||{})[ds])}}
  function names(ds){const g=group(ds),dyn=Object.values(g.workTeams||{}).flatMap(arr),add=Object.values(g.additionalTeams||{}).flatMap(arr),work=uniq(g.teoist.concat(g.temaat,dyn)),role=String(window.__webAuthInfoV136&&window.__webAuthInfoV136.role||'');return role==='admin'?work:uniq(work.concat(g.reno,add))}
  function range(){const visible=[...document.querySelectorAll('#calendar .day[data-date]')].map(x=>String(x.dataset.date||'')).filter(Boolean).sort();if(visible.length)return [visible[0],visible[visible.length-1]];const first=new Date(viewDate.getFullYear(),viewDate.getMonth(),1);let start=new Date(first);while(start.getDay()!==1)start.setDate(start.getDate()-1);return [iso(start),iso(addDays(start,39))]}
- async function refreshLeave(force=false){if(loading)return;const [start,end]=range(),key=start+'|'+end;if(!force&&key===lastRangeKey&&Date.now()-lastLoadedAt<12000)return;loading=true;try{const fb=window.__fbDirectV187;if(!fb)return;const raw=await fb.readRange('annualLeave',start,end)||{};Object.keys(cache).forEach(k=>delete cache[k]);Object.keys(raw).forEach(ds=>{if(ds<start||ds>end)return;const g=raw[ds]||{};cache[ds]={teoist:arr(g.teoist),temaat:arr(g.temaat),reno:arr(g.reno),workTeams:g.workTeams&&typeof g.workTeams==='object'?g.workTeams:{},additionalTeams:g.additionalTeams&&typeof g.additionalTeams==='object'?g.additionalTeams:{}}});lastRangeKey=key;lastLoadedAt=Date.now();decorateDesktop();decorateMobile()}catch(err){console.warn('연차 Firebase 불러오기 오류',err)}finally{loading=false}}
+ async function refreshLeave(force=false){if(loading){if(force)pendingForce=true;return}const [start,end]=range(),key=start+'|'+end;if(!force&&key===lastRangeKey&&Date.now()-lastLoadedAt<12000)return;loading=true;try{const fb=window.__fbDirectV187;if(!fb)return;const raw=await fb.readRange('annualLeave',start,end)||{};Object.keys(cache).forEach(k=>delete cache[k]);Object.keys(raw).forEach(ds=>{if(ds<start||ds>end)return;const g=raw[ds]||{};cache[ds]={teoist:arr(g.teoist),temaat:arr(g.temaat),reno:arr(g.reno),workTeams:g.workTeams&&typeof g.workTeams==='object'?g.workTeams:{},additionalTeams:g.additionalTeams&&typeof g.additionalTeams==='object'?g.additionalTeams:{}}});lastRangeKey=key;lastLoadedAt=Date.now();decorateDesktop();decorateMobile()}catch(err){console.warn('연차 Firebase 불러오기 오류',err)}finally{loading=false;if(pendingForce){pendingForce=false;setTimeout(()=>refreshLeave(true),0)}}}
  function addBadge(head,ds){if(!head)return;head.querySelectorAll('.annual-leave-badge-v114,.annual-leave-badge-v115').forEach(x=>x.remove());const n=names(ds),b=document.createElement('button');b.type='button';b.className='annual-leave-badge-v115'+(n.length?'':' empty');b.textContent=n.length?`연차 ${n.length}명`:'연차 +';b.title=n.length?'연차자 보기/수정':'연차 입력';b.onclick=e=>{e.preventDefault();e.stopPropagation();openEditor(ds)};head.appendChild(b)}
  function decorateDesktop(){document.querySelectorAll('#calendar .day[data-date]').forEach(day=>addBadge(day.querySelector('.date'),day.dataset.date))}
  function ensureLeaveOnlyMobile(){const [s,e]=monthWeekRangeV328();Object.keys(cache).sort().forEach(ds=>{const n=names(ds);if(!n.length)return;const d=fromISO(ds);if(d<s||d>e||d.getDay()===0||d.getDay()===6)return;if(mobileList.querySelector(`.dategroup[data-date="${ds}"]`))return;const empty=mobileList.querySelector(':scope > .empty');if(empty)empty.remove();const wn=['일','월','화','수','목','금','토'][d.getDay()],g=document.createElement('div');g.className='dategroup leave-only-v115';g.dataset.date=ds;g.innerHTML=`<h3>${d.getMonth()+1}/${d.getDate()} <span class="weekday">${wn}요일</span></h3><div class="mnone">등록된 일정이 없습니다.</div>`;mobileList.appendChild(g)});[...mobileList.querySelectorAll('.dategroup[data-date]')].sort((a,b)=>a.dataset.date.localeCompare(b.dataset.date)).forEach(x=>mobileList.appendChild(x))}
@@ -582,7 +582,7 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
   // v3.56: 관리자/PC 등 외부 클라이언트의 연차 변경도 배지에 즉시 반영한다.
   let leaveRevRefV356=null,leaveRevHandlerV356=null,leaveRevReadyV356=false,leaveRevValueV356='';
   function detachLeaveRevV356(){if(leaveRevRefV356&&leaveRevHandlerV356)try{leaveRevRefV356.off('value',leaveRevHandlerV356)}catch(_e){}leaveRevRefV356=null;leaveRevHandlerV356=null;leaveRevReadyV356=false;leaveRevValueV356=''}
-  function attachLeaveRevV356(){if(leaveRevRefV356||!window.__psuDbRefV355||!window.firebase||!firebase.auth||!firebase.auth().currentUser)return;leaveRevRefV356=window.__psuDbRefV355('meta/revisions/annualLeave');leaveRevHandlerV356=snap=>{const v=String(snap&&snap.val?snap.val()||'':'');if(!leaveRevReadyV356){leaveRevReadyV356=true;leaveRevValueV356=v;return}if(v===leaveRevValueV356)return;leaveRevValueV356=v;lastRangeKey='';lastLoadedAt=0;setTimeout(()=>refreshLeave(true),30)};leaveRevRefV356.on('value',leaveRevHandlerV356,e=>{console.warn('연차 revision 실시간 구독 실패',e);detachLeaveRevV356();setTimeout(attachLeaveRevV356,2500)})}
+  function attachLeaveRevV356(){if(leaveRevRefV356||!window.__psuDbRefV355||!window.firebase||!firebase.auth||!firebase.auth().currentUser)return;leaveRevRefV356=window.__psuDbRefV355('meta/revisions/annualLeave');leaveRevHandlerV356=snap=>{const v=String(snap&&snap.val?snap.val()||'':'');if(!leaveRevReadyV356){leaveRevReadyV356=true;leaveRevValueV356=v;return}if(v===leaveRevValueV356)return;leaveRevValueV356=v;lastRangeKey='';lastLoadedAt=0;try{if(typeof window.__invalidateMasterLeaveV358==='function')window.__invalidateMasterLeaveV358()}catch(_e){}if(loading)pendingForce=true;setTimeout(()=>refreshLeave(true),30)};leaveRevRefV356.on('value',leaveRevHandlerV356,e=>{console.warn('연차 revision 실시간 구독 실패',e);detachLeaveRevV356();setTimeout(attachLeaveRevV356,2500)})}
   try{firebase.auth().onAuthStateChanged(u=>{detachLeaveRevV356();if(u)setTimeout(attachLeaveRevV356,80)})}catch(_e){}setTimeout(attachLeaveRevV356,700);
  setTimeout(()=>{const ver=document.getElementById('version');if(ver)ver.textContent=WEB_VERSION_V197+' · 메모·연차 입력 가능'},80);
 })();
@@ -3110,7 +3110,7 @@ body.master-landscape-v324-on #masterLandscapeV324{display:block}
  if(window.__webV324MasterLandscapeInstalled)return;window.__webV324MasterLandscapeInstalled=true;
  const MIN_W=560,MAX_MOBILE_W=1000,MAX_MOBILE_H=650;
  let root=null,months=null,active=false,minMonth=null,maxMonth=null,scrollRaf=0,refreshRaf=0,initializing=false;
- const leaveCache=Object.create(null),leaveLoaded=new Set(),leaveLoading=new Set();
+ const leaveCache=Object.create(null),leaveLoaded=new Set(),leaveLoading=new Set();let leaveGenerationV358=0;
  function firstOf(d){return new Date(d.getFullYear(),d.getMonth(),1,12,0,0,0)}
  function shiftMonth(d,n){return new Date(d.getFullYear(),d.getMonth()+n,1,12,0,0,0)}
  function key(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
@@ -3144,8 +3144,11 @@ body.master-landscape-v324-on #masterLandscapeV324{display:block}
  }
  async function loadLeaveMonth(d){
    const mk=key(d);if(leaveLoaded.has(mk)||leaveLoading.has(mk))return;const fb=window.__fbDirectV187;if(!fb||typeof fb.readRange!=='function'){setTimeout(()=>active&&loadLeaveMonth(d),500);return}
-   leaveLoading.add(mk);try{const start=mk+'-01',raw=await fb.readRange('annualLeave',start,monthEndIso(d))||{};Object.keys(raw).forEach(ds=>{leaveCache[ds]=raw[ds]||{}});leaveLoaded.add(mk);updateLeaveBadges(mk)}catch(_e){}finally{leaveLoading.delete(mk)}
+   const gen=leaveGenerationV358;leaveLoading.add(mk);try{const start=mk+'-01',raw=await fb.readRange('annualLeave',start,monthEndIso(d))||{};if(gen!==leaveGenerationV358)return;Object.keys(raw).forEach(ds=>{leaveCache[ds]=raw[ds]||{}});leaveLoaded.add(mk);updateLeaveBadges(mk)}catch(_e){}finally{leaveLoading.delete(mk);if(gen!==leaveGenerationV358&&active)setTimeout(()=>loadLeaveMonth(d),0)}
  }
+ function invalidateMasterLeaveV358(){leaveGenerationV358++;Object.keys(leaveCache).forEach(k=>delete leaveCache[k]);leaveLoaded.clear();if(!active||!root)return;const monthKeys=[...root.querySelectorAll('.master-land-month-v324[data-month]')].map(x=>x.dataset.month).filter(Boolean);monthKeys.forEach(mk=>{const [y,m]=mk.split('-').map(Number);if(y&&m)loadLeaveMonth(new Date(y,m-1,1,12))});}
+ window.__invalidateMasterLeaveV358=invalidateMasterLeaveV358;
+
  function sortedEvents(ds){
    const list=typeof activeEvents==='function'?activeEvents():(state.scheduleEvents||[]);return list.filter(e=>e&&String(e.date||'')===ds&&(typeof matchEvent!=='function'||matchEvent(e))).sort((a,b)=>(vendorOrderV167(a)-vendorOrderV167(b))||(AREA_ORDER[areaOf(a)]||9)-(AREA_ORDER[areaOf(b)]||9)||String(a.unit||'').localeCompare(String(b.unit||''),'ko'));
  }
