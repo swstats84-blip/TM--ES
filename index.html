@@ -72,7 +72,7 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
 (function(){
   // Apps Script 안에서 직접 열렸다면 Google이 제공하는 google.script.run을 그대로 사용합니다.
   if(window.google&&google.script&&google.script.run)return;
-  const ENDPOINT='https://script.google.com/macros/s/AKfycbz77XFEuudXc_QKWTGKn28R1kI768AJHOjC2sHPXClri0nzM8Kf1kJSPNtugKvoXGGvsg/exec';
+  const ENDPOINT='https://script.google.com/macros/s/AKfycbz77XFEuudXc_QKWTGKn28R1kI768AJHOjC2sHPXClri0nzM8Kf1kJSPNtugKvoXGGvsg/dev';
   const pending=new Map();let seq=0;
   function cleanup(x){try{clearTimeout(x.timer)}catch(e){}try{x.frame&&x.frame.remove()}catch(e){}}
   function failEntry(id,msg){const x=pending.get(id);if(!x)return;pending.delete(id);cleanup(x);if(typeof x.fail==='function')try{x.fail(new Error(msg||'서버 통신에 실패했습니다.'))}catch(e){}}
