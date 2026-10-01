@@ -109,7 +109,7 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
   html,body,#mobileList,.mobile-list,.dategroup{overflow-anchor:none!important;}
 }
 </style>
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.59";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.60";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
 <script id="web-v317-shared-escape">window.__webEscAttrV317=function(v){return String(v??'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})};</script>
 <script>window.__PSU_WEB_TEST_BUILD="v3.05-immediate-ready-reveal";</script>
 <script id="web-v299-boot-perf-mode-hint">
@@ -2072,6 +2072,63 @@ body.user-name-locked-v345{overflow:hidden!important;background:#f5f7fb!importan
 })();
 </script>
 
+
+<script id="web-v360-relay-hybrid-transport-script">
+(function(){
+ if(window.__webV360RelayHybridInstalled)return;window.__webV360RelayHybridInstalled=true;
+ const direct=window.__fbFirebaseDirectV355;if(!direct)return;
+ const tops=new Set(['mainState','scheduleV2','progressInfo','pending','memos','annualLeave','teamCatalog','sharedLocations']);
+ const state={ready:false,base:'',key:'',discovery:null,watch:null,subs:new Set(),retry:0,healthBusy:false};
+ const cacheKey='psuRelayCandidateV360';
+ const cleanPath=p=>String(p||'').replace(/^\/+|\/+$/g,'');
+ const top=p=>cleanPath(p).split('/')[0]||'';
+ const eligible=p=>tops.has(top(p));
+ function parseCandidate(raw){try{const u=new URL(String(raw||''));if(location.protocol==='https:'&&u.protocol!=='https:')return null;const key=u.searchParams.get('key')||'';u.search='';u.hash='';u.pathname='';return {base:u.toString().replace(/\/$/,''),key}}catch(_e){return null}}
+ function candidateOf(d){if(!d||d.enabled!==true||String(d.status||'').toLowerCase()!=='ready'||Number(d.leaseUntil||0)<=Date.now())return null;const list=[];if(location.protocol!=='https:'||/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)){list.push(d.localUrl,d.lanUrl)}list.push(d.currentUrl);for(const x of list){const c=parseCandidate(x);if(c){c.leaseUntil=Number(d.leaseUntil||0);return c}}return null}
+ function saveCandidate(c){try{if(!c||!c.base)return;localStorage.setItem(cacheKey,JSON.stringify({base:c.base,key:c.key||'',leaseUntil:Number(c.leaseUntil||0)}))}catch(_e){}}
+ function loadCandidate(){try{const x=JSON.parse(localStorage.getItem(cacheKey)||'null');if(!x||!x.base||Number(x.leaseUntil||0)<=Date.now())return null;const c=parseCandidate(String(x.base)+(x.key?'?key='+encodeURIComponent(String(x.key)):''));if(c)c.leaseUntil=Number(x.leaseUntil||0);return c}catch(_e){return null}}
+ function relayURL(endpoint,path,query){const q=new URLSearchParams();if(state.key)q.set('key',state.key);if(path!==undefined)q.set('path',cleanPath(path));if(query)Object.entries(query).forEach(([k,v])=>{if(v!==undefined&&v!==null&&v!=='')q.set(k,String(v))});return state.base+endpoint+(q.toString()?'?'+q.toString():'')}
+ function sseURL(path){const q=new URLSearchParams();if(state.key)q.set('key',state.key);return state.base+'/firebase-sse/'+cleanPath(path).split('/').map(encodeURIComponent).join('/')+'.json'+(q.toString()?'?'+q.toString():'')}
+ function notify(){[...state.subs].forEach(s=>{try{s.rebind()}catch(_e){}})}
+ function setReady(c,ok){const nb=ok&&c?c.base:'',nk=ok&&c?c.key:'';const changed=state.ready!==!!ok||state.base!==nb||state.key!==nk;state.ready=!!ok;state.base=nb;state.key=nk;if(changed)notify()}
+ function timeoutFetch(url,opt={},ms=650){const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),ms);return fetch(url,Object.assign({},opt,{signal:ctl.signal,cache:'no-store'})).finally(()=>clearTimeout(t))}
+ async function healthCandidate(c){if(!c)return false;const q=new URLSearchParams();if(c.key)q.set('key',c.key);const r=await timeoutFetch(c.base+'/health'+(q.toString()?'?'+q.toString():''),{},650);if(!r.ok)throw new Error('relay health '+r.status);const h=await r.json();if(h&&h.server==='ok'&&h.relayReady===true){setReady(c,true);saveCandidate(c);return true}throw new Error('relay not ready')}
+ async function checkHealth(){if(state.healthBusy)return;state.healthBusy=true;try{const c=candidateOf(state.discovery);if(!c){setReady(null,false);return}await healthCandidate(c)}catch(_e){setReady(null,false)}finally{state.healthBusy=false}}
+ function scheduleHealth(ms=1200){clearTimeout(state.retry);state.retry=setTimeout(()=>checkHealth().finally(()=>{if(!state.ready&&candidateOf(state.discovery))scheduleHealth(3500)}),ms)}
+ function startWatch(){if(state.watch||!window.firebase||!firebase.database)return;const r=firebase.database().ref('relayDiscovery/current');state.watch=r;r.on('value',s=>{state.discovery=s.val()||null;const c=candidateOf(state.discovery);if(!c){setReady(null,false);return}checkHealth()},()=>{state.discovery=null;setReady(null,false);scheduleHealth(3500)});setInterval(()=>{if(state.ready){const c=candidateOf(state.discovery);if(!c)setReady(null,false)}else if(candidateOf(state.discovery))checkHealth()},8000)}
+ function markFailed(){if(state.ready)setReady(null,false);scheduleHealth(1200)}
+ async function relayRead(path,query){if(!state.ready||!eligible(path))throw new Error('relay unavailable');try{const u=await direct.auth(),tok=u&&u.getIdToken?await u.getIdToken(false):'';const headers={};if(tok)headers['X-PSU-Firebase-Auth']=tok;const r=await timeoutFetch(relayURL('/firebase',path,query),{headers},700);if(!r.ok)throw new Error('relay HTTP '+r.status);return await r.json()}catch(e){markFailed();throw e}}
+ function snap(key,val){return {key:key==null?null:String(key),val:()=>val,exists:()=>val!==null&&val!==undefined,forEach(fn){if(!val||typeof val!=='object')return false;for(const k of Object.keys(val)){if(fn(snap(k,val[k]))===true)return true}return false},child(k){const v=val&&typeof val==='object'?val[k]:null;return snap(k,v)}}}
+ function asObj(v){return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}
+ function sig(v){try{return JSON.stringify(v)}catch(_e){return String(v)}}
+ function relaySubscription(path,event,cb,errCb,dref){let es=null,directBound=false,prev=undefined,stopped=false;
+   const directHandler=s=>cb(s), directErr=e=>{if(errCb)errCb(e)};
+   function offDirect(){if(directBound){try{dref.off(event,directHandler)}catch(_e){}directBound=false}}
+   function closeRelay(){if(es){try{es.close()}catch(_e){}es=null}}
+   function bindDirect(){closeRelay();if(directBound||stopped)return;prev=undefined;dref.on(event,directHandler,directErr);directBound=true}
+   function emitFull(v){if(event==='value'){cb(snap(cleanPath(path).split('/').pop()||null,v));prev=v;return}const cur=asObj(v),old=prev===undefined?{}:asObj(prev),cks=Object.keys(cur),oks=Object.keys(old);if(event==='child_added')cks.filter(k=>!(k in old)).forEach(k=>cb(snap(k,cur[k])));else if(event==='child_changed')cks.filter(k=>k in old&&sig(cur[k])!==sig(old[k])).forEach(k=>cb(snap(k,cur[k])));else if(event==='child_removed')oks.filter(k=>!(k in cur)).forEach(k=>cb(snap(k,old[k])));prev=v}
+   function bindRelay(){offDirect();closeRelay();if(stopped||!state.ready)return bindDirect();prev=undefined;try{const cur=new EventSource(sseURL(path));es=cur;cur.addEventListener('put',e=>{if(es!==cur)return;try{const m=JSON.parse(e.data||'{}');emitFull(m.data)}catch(x){console.warn('중계 실시간 데이터 처리 실패',x)}});cur.onerror=()=>{if(es!==cur)return;closeRelay();markFailed();bindDirect()}}catch(_e){markFailed();bindDirect()}}
+   const sub={rebind(){if(stopped)return;if(state.ready)bindRelay();else bindDirect()},stop(){stopped=true;closeRelay();offDirect()}};state.subs.add(sub);sub.rebind();return sub}
+ function wrapRef(path){path=cleanPath(path);const dref=direct.ref(path),subs=[];const w={
+   get key(){return dref.key},
+   child(k){return wrapRef(path+'/'+String(k||''))},
+   async once(ev){if(ev==='value'&&eligible(path)&&state.ready){try{return snap(path.split('/').pop()||null,await relayRead(path))}catch(_e){}}return dref.once(ev)},
+   on(ev,cb,errCb){if(eligible(path)&&['value','child_added','child_changed','child_removed'].includes(ev)){const s=relaySubscription(path,ev,cb,errCb,dref);subs.push({ev,cb,s});return cb}return dref.on(ev,cb,errCb)},
+   off(ev,cb){for(let i=subs.length-1;i>=0;i--){const x=subs[i];if((!ev||x.ev===ev)&&(!cb||x.cb===cb)){x.s.stop();state.subs.delete(x.s);subs.splice(i,1)}}try{dref.off(ev,cb)}catch(_e){}},
+   set:v=>dref.set(v),update:v=>dref.update(v),remove:()=>dref.remove(),transaction:(...a)=>dref.transaction(...a),push:(...a)=>dref.push(...a),
+   orderByChild:(...a)=>dref.orderByChild(...a),orderByKey:(...a)=>dref.orderByKey(...a),orderByValue:(...a)=>dref.orderByValue(...a),startAt:(...a)=>dref.startAt(...a),endAt:(...a)=>dref.endAt(...a),equalTo:(...a)=>dref.equalTo(...a),limitToFirst:(...a)=>dref.limitToFirst(...a),limitToLast:(...a)=>dref.limitToLast(...a)
+ };return w}
+ const hybrid={mode:'firebase-hybrid-read',auth:(...a)=>direct.auth(...a),bump:(...a)=>direct.bump(...a),bumpScheduleDeltaV286:(...a)=>direct.bumpScheduleDeltaV286(...a),
+   read:async path=>{if(eligible(path)&&state.ready)try{return await relayRead(path)}catch(_e){}return direct.read(path)},
+   readRange:async(path,start,end)=>{if(eligible(path)&&state.ready)try{return await relayRead(path,{orderBy:'"$key"',startAt:start!==undefined&&start!==null&&String(start)!==''?JSON.stringify(String(start)):'',endAt:end!==undefined&&end!==null&&String(end)!==''?JSON.stringify(String(end)):''})}catch(_e){}return direct.readRange(path,start,end)},
+   readFresh:async path=>{if(eligible(path)&&state.ready)try{return await relayRead(path)}catch(_e){}return direct.readFresh(path)},
+   set:(...a)=>direct.set(...a),update:(...a)=>direct.update(...a),del:(...a)=>direct.del(...a),b64key:(...a)=>direct.b64key(...a),isAdmin:(...a)=>direct.isAdmin(...a),isMaster:(...a)=>direct.isMaster(...a),ref:path=>eligible(path)?wrapRef(path):direct.ref(path)
+ };
+ window.__psuDataTransportV360=hybrid;window.__psuDataTransportV357=hybrid;window.__psuDataTransportV355=hybrid;window.__fbDirectV187=hybrid;window.__psuRelayStateV360=state;window.__psuRelayCheckV360=checkHealth;
+ const cached=loadCandidate();if(cached)healthCandidate(cached).catch(()=>{});
+ direct.auth().then(startWatch).catch(()=>setTimeout(startWatch,800));
+})();
+</script>
 
 <script id="web-v191-progresslist-activity-realtime-script">
 (function(){
