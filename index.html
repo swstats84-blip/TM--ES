@@ -109,7 +109,7 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
   html,body,#mobileList,.mobile-list,.dategroup{overflow-anchor:none!important;}
 }
 </style>
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.56";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.57";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
 <script id="web-v317-shared-escape">window.__webEscAttrV317=function(v){return String(v??'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})};</script>
 <script>window.__PSU_WEB_TEST_BUILD="v3.05-immediate-ready-reveal";</script>
 <script id="web-v299-boot-perf-mode-hint">
@@ -1020,7 +1020,7 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
    const roleHintV347=String(window.__webAuthInfoV136&&window.__webAuthInfoV136.role||'');
    const privilegedV347=roleHintV347==='admin'||roleHintV347==='master'||document.body.classList.contains('master-mode')||document.body.classList.contains('admin-mode');
    if(teamRosterCacheV230&&!force&&!privilegedV347)return teamRosterCacheV230;
-   const CACHE='psuTeamRosterCacheV253',DBURL='https://tm-es-psu-6981d-default-rtdb.asia-southeast1.firebasedatabase.app';
+   const CACHE='psuTeamRosterCacheV253';
    if(window.__PSU_STATIC_GITHUB_V250&&!force&&!privilegedV347){try{const c=JSON.parse(localStorage.getItem(CACHE)||'null');if(c&&c.roster&&Date.now()-Number(c.at||0)<86400000){teamRosterCacheV230=normalizeRosterV230(c.roster);window.__psuTeamRosterCacheV230=teamRosterCacheV230;return teamRosterCacheV230}}catch(_e){}}
    const saveCache=(raw,source='unknown')=>{teamRosterCacheV230=normalizeRosterV230(raw);window.__psuTeamRosterCacheV230=teamRosterCacheV230;window.__psuRosterSourceV347=source;try{localStorage.setItem(CACHE,JSON.stringify({at:Date.now(),source,roster:teamRosterCacheV230}))}catch(_e){}return teamRosterCacheV230};
    const rawOf=x=>x&&x.roster?x.roster:(x||{}),stamp=x=>{const t=Date.parse(String(rawOf(x).updatedAt||''));return Number.isFinite(t)?t:0},score=x=>{const r=normalizeRosterV230(rawOf(x)),wm=r.workTeamMembers||{},am=r.additionalTeamMembers||{};return (r.workTeams||[]).length*1000+(r.additionalTeams||[]).length*100+Object.values(wm).reduce((n,v)=>n+arrRosterV230(v).length,0)+Object.values(am).reduce((n,v)=>n+arrRosterV230(v).length,0)};
@@ -1028,7 +1028,7 @@ body.general-mode .tabs,body.general-mode .calendar-wrap,body.general-mode .mobi
    const viaScriptRaw=()=>withTimeout(new Promise((resolve,reject)=>{try{if(!window.google||!google.script||!google.script.run)return reject(new Error('Apps Script 연결이 없습니다.'));google.script.run.withSuccessHandler(r=>{if(!r||r.ok===false)return reject(new Error(r&&r.message?r.message:'팀 구성을 불러오지 못했습니다.'));resolve(rawOf(r))}).withFailureHandler(e=>reject(new Error(e&&e.message?e.message:String(e)))).getPsuTeamRosterV230()}catch(e){reject(e)}}),7000,'Apps Script 팀 구성');
    const adminSession=async()=>{if(typeof window.__ensureAdminFirebaseV264!=='function')throw new Error('관리자 Firebase 인증 모듈이 없습니다.');const u=await withTimeout(window.__ensureAdminFirebaseV264(),7000,'관리자 Firebase 인증');if(!u||u.isAnonymous)throw new Error('관리자 Firebase 인증이 완료되지 않았습니다.');const prof=(await withTimeout(window.__psuDbRefV355('authUsers/'+u.uid).once('value'),5000,'관리자 권한 확인')).val()||{},role=String(prof.role||roleHintV347);if(String(prof.status||'')!=='approved'||!['admin','master'].includes(role))throw new Error('승인된 관리자 Firebase 세션이 아닙니다.');return u};
    const viaSdkRaw=async u=>{const snap=await withTimeout(window.__psuDbRefV355('teamRoster').once('value'),6500,'Firebase SDK teamRoster');return snap.val()||{}};
-   const viaRestRaw=async u=>{const token=await withTimeout(u.getIdToken(true),6500,'Firebase 토큰 갱신'),url=DBURL+'/teamRoster.json?auth='+encodeURIComponent(token)+'&_='+Date.now(),res=await withTimeout(fetch(url,{cache:'no-store',headers:{'Cache-Control':'no-cache'}}),7000,'Firebase REST teamRoster');if(!res.ok)throw new Error('Firebase REST HTTP '+res.status);return await res.json()||{}};
+   const viaRestRaw=async u=>{const fb=window.__psuDataTransportV357||window.__psuDataTransportV355||window.__fbDirectV187;if(!fb||typeof fb.readFresh!=='function')throw new Error('Firebase transport readFresh가 없습니다.');return await withTimeout(fb.readFresh('teamRoster'),7000,'Firebase transport teamRoster')||{}};
    if(privilegedV347){
      const candidates=[];let u=null;try{u=await adminSession()}catch(e){console.warn('팀 구성 관리자 인증 실패',e)}
      if(u){const rs=await Promise.allSettled([viaRestRaw(u),viaSdkRaw(u)]);if(rs[0].status==='fulfilled')candidates.push({source:'firebase-rest',raw:rs[0].value});else console.warn('Firebase REST teamRoster 실패',rs[0].reason);if(rs[1].status==='fulfilled')candidates.push({source:'firebase-sdk',raw:rs[1].value});else console.warn('Firebase SDK teamRoster 실패',rs[1].reason)}
@@ -2042,6 +2042,7 @@ body.user-name-locked-v345{overflow:hidden!important;background:#f5f7fb!importan
 <script id="web-v187-firebase-direct-data-script">
 (function(){
  if(window.__webV187DirectInstalled)return;window.__webV187DirectInstalled=true;
+ // v3.57: 2차 통신 정리. 운영 데이터의 강제 최신 REST 조회도 transport facade(readFresh) 안으로 이동.
  const nowRev=()=>String(Date.now())+'-'+Math.random().toString(36).slice(2,10);
  const isAdmin=()=>!!(window.__webAuthInfoV136&&window.__webAuthInfoV136.role);
  const isMaster=()=>!!(window.__webAuthInfoV136&&window.__webAuthInfoV136.role==='master');
@@ -2059,10 +2060,11 @@ body.user-name-locked-v345{overflow:hidden!important;background:#f5f7fb!importan
  async function nextProgressChildKeyV316(){await auth();const snap=await window.__psuDbRefV355('mainState/current/progress').orderByKey().limitToLast(1).once('value');let max=-1;snap.forEach(ch=>{const n=Number(ch.key);if(Number.isInteger(n)&&n>=0)max=Math.max(max,n)});return String(max+1)}
  async function read(path){await auth();const s=await window.__psuDbRefV355(path).once('value');return s.val()}
  async function readRange(path,start,end){await auth();let q=window.__psuDbRefV355(path).orderByKey();if(start!==undefined&&start!==null&&String(start)!=='')q=q.startAt(String(start));if(end!==undefined&&end!==null&&String(end)!=='')q=q.endAt(String(end));const s=await q.once('value');return s.val()}
+ async function readFresh(path){const u=await auth(),db=String(firebase.app().options&&firebase.app().options.databaseURL||'').replace(/\/+$/,'');if(!db)return read(path);const token=await u.getIdToken(true),cleanPath=String(path||'').replace(/^\/+|\/+$/g,''),url=db+'/'+cleanPath+'.json?auth='+encodeURIComponent(token)+'&_='+Date.now(),res=await fetch(url,{cache:'no-store',headers:{'Cache-Control':'no-cache'}});if(!res.ok)throw new Error('Firebase REST HTTP '+res.status);return await res.json()}
  async function set(path,v){await auth();return window.__psuDbRefV355(path).set(v)}
  async function update(path,v){await auth();return window.__psuDbRefV355(path).update(v)}
  async function del(path){await auth();return window.__psuDbRefV355(path).remove()}
- const firebaseDirectV355={auth,bump,bumpScheduleDeltaV286,read,readRange,set,update,del,b64key,isAdmin,isMaster,ref:path=>firebase.database().ref(path)};window.__fbFirebaseDirectV355=firebaseDirectV355;window.__psuDataTransportV355={mode:'firebase-direct',auth:(...a)=>firebaseDirectV355.auth(...a),bump:(...a)=>firebaseDirectV355.bump(...a),bumpScheduleDeltaV286:(...a)=>firebaseDirectV355.bumpScheduleDeltaV286(...a),read:(...a)=>firebaseDirectV355.read(...a),readRange:(...a)=>firebaseDirectV355.readRange(...a),set:(...a)=>firebaseDirectV355.set(...a),update:(...a)=>firebaseDirectV355.update(...a),del:(...a)=>firebaseDirectV355.del(...a),b64key:(...a)=>firebaseDirectV355.b64key(...a),isAdmin:(...a)=>firebaseDirectV355.isAdmin(...a),isMaster:(...a)=>firebaseDirectV355.isMaster(...a),ref:path=>firebaseDirectV355.ref(path)};window.__fbDirectV187=window.__psuDataTransportV355;
+ const firebaseDirectV355={auth,bump,bumpScheduleDeltaV286,read,readRange,readFresh,set,update,del,b64key,isAdmin,isMaster,ref:path=>firebase.database().ref(path)};window.__fbFirebaseDirectV355=firebaseDirectV355;const transportV357={mode:'firebase-direct',auth:(...a)=>firebaseDirectV355.auth(...a),bump:(...a)=>firebaseDirectV355.bump(...a),bumpScheduleDeltaV286:(...a)=>firebaseDirectV355.bumpScheduleDeltaV286(...a),read:(...a)=>firebaseDirectV355.read(...a),readRange:(...a)=>firebaseDirectV355.readRange(...a),readFresh:(...a)=>firebaseDirectV355.readFresh(...a),set:(...a)=>firebaseDirectV355.set(...a),update:(...a)=>firebaseDirectV355.update(...a),del:(...a)=>firebaseDirectV355.del(...a),b64key:(...a)=>firebaseDirectV355.b64key(...a),isAdmin:(...a)=>firebaseDirectV355.isAdmin(...a),isMaster:(...a)=>firebaseDirectV355.isMaster(...a),ref:path=>firebaseDirectV355.ref(path)};window.__psuDataTransportV357=transportV357;window.__psuDataTransportV355=transportV357;window.__fbDirectV187=transportV357;
  // v2.71: 조회/구독은 각 canonical listener가 단독 소유한다. 이 블록은 공통 Firebase CRUD helper와 마스터 쓰기만 제공한다.
 
  // 마스터 직접 수정 도우미
