@@ -1,14 +1,14 @@
 (function(){
  'use strict';
- if(window.__webV366HardRouteInstalled)return;window.__webV366HardRouteInstalled=true;
+ if(window.__webV367HardRouteInstalled)return;window.__webV367HardRouteInstalled=true;
  const direct=window.__fbFirebaseDirectV355;
- if(!direct||!window.firebase||!firebase.database||!firebase.auth){console.warn('v3.66 transport: Firebase direct facade 준비 전');return;}
+ if(!direct||!window.firebase||!firebase.database||!firebase.auth){console.warn('v3.67 transport: Firebase direct facade 준비 전');return;}
  const DB=String(firebase.app().options&&firebase.app().options.databaseURL||'').replace(/\/+$/,'');
  const CLIENT_KEY='psuRelayClientIdV365';
  let CLIENT_ID='';
  try{CLIENT_ID=String(sessionStorage.getItem(CLIENT_KEY)||'');if(!CLIENT_ID){CLIENT_ID='web-'+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem(CLIENT_KEY,CLIENT_ID)}}catch(_e){CLIENT_ID='web-'+Date.now().toString(36)}
- let mode='WAIT',relayURL='',leaseUntil=0,serverVersion='',generation=0,hybrid=null,leaseTimer=0,statusES=null,statusReconnect=0,statusBusy=false,authRebindTimer=0;
- let control={currentUrl:'',enabled:false,status:'',heartbeatAt:0,leaseUntil:0,serverVersion:''};
+ let mode='WAIT',relayURL='',serverVersion='',generation=0,hybrid=null,aliveES=null,aliveWatch=0,recoveryTimer=0,recoveryBusy=false,authRebindTimer=0,cachedRelayURL='',lastDiscoveryAt=0;
+ const ALIVE_TIMEOUT_MS=6500,RECOVERY_MS=2000,REDISCOVERY_MS=60000;
  const logicalListeners=new Set(),relayStreams=new Map();
  const clean=p=>String(p||'').replace(/^\/+|\/+$/g,''),clone=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v)),obj=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
  function sdkGate(online){try{const db=firebase.database();if(online&&db&&db.goOnline)db.goOnline();else if(db&&db.goOffline)db.goOffline()}catch(_e){}}
@@ -17,20 +17,18 @@
  async function user(){return await direct.auth()}
  async function token(force=false){const u=await user();return await u.getIdToken(!!force)}
  function externalRelayURL(v){try{v=String(v||'').replace(/\/+$/,'');if(!v)return'';const u=new URL(v);if(u.protocol!=='https:'||!u.hostname)return'';return v}catch(_e){return''}}
- function status(){return {mode,relayReady:mode==='RELAY',relayURL,directActive:mode==='DIRECT',leaseUntil,serverVersion,generation,label:mode==='RELAY'?'중계 ON':mode==='DIRECT'?'중계 OFF · FB Direct':'중계 상태 확인 중'}}
+ function status(){return {mode,relayReady:mode==='RELAY',relayURL,directActive:mode==='DIRECT',leaseUntil:0,serverVersion,generation,label:mode==='RELAY'?'중계 ON':mode==='DIRECT'?'중계 OFF · FB Direct':'중계 상태 확인 중'}}
  function emit(){window.dispatchEvent(new CustomEvent('psu-transport-mode',{detail:status()}))}
- function armLease(){clearTimeout(leaseTimer);leaseTimer=0;if(mode!=='RELAY'||!leaseUntil)return;const ms=Math.max(20,leaseUntil-Date.now()+30);leaseTimer=setTimeout(()=>{if(mode==='RELAY'&&leaseUntil<=Date.now())switchMode('DIRECT','',0,serverVersion)},ms)}
- function switchMode(next,url='',lease=0,sv=''){
+ function closeAlive(){clearInterval(aliveWatch);aliveWatch=0;if(aliveES){try{aliveES.close()}catch(_e){}aliveES=null}}
+ function switchMode(next,url='',sv=''){
    next=String(next||'WAIT').toUpperCase();if(!['WAIT','RELAY','DIRECT'].includes(next))next='WAIT';
    url=next==='RELAY'?externalRelayURL(url):'';if(next==='RELAY'&&!url)next='DIRECT';
    const changed=mode!==next||relayURL!==url;
-   leaseUntil=Number(lease||0);serverVersion=String(sv||'');
-   if(!changed){sdkGate(mode==='DIRECT');armLease();emit();return}
+   serverVersion=String(sv||serverVersion||'');
+   if(!changed){sdkGate(mode==='DIRECT');emit();return}
    for(const s of relayStreams.values())s.close(false);relayStreams.clear();for(const l of logicalListeners)l.detach();
-   mode=next;relayURL=url;generation++;if(hybrid)hybrid.mode=mode.toLowerCase();sdkGate(mode==='DIRECT');armLease();for(const l of logicalListeners)l.bind();emit();
+   mode=next;relayURL=url;generation++;if(hybrid)hybrid.mode=mode.toLowerCase();sdkGate(mode==='DIRECT');for(const l of logicalListeners)l.bind();emit();
  }
- function evaluateControl(){const u=externalRelayURL(control.currentUrl),lease=Number(control.leaseUntil||0),on=control.enabled===true&&String(control.status||'').toLowerCase()==='ready'&&lease>Date.now()&&!!u;switchMode(on?'RELAY':'DIRECT',on?u:'',lease,String(control.serverVersion||''))}
- function applyControl(kind,path,data){path=clean(path);if(!path){if(kind==='put')control=obj(data)?Object.assign({currentUrl:'',enabled:false,status:'',heartbeatAt:0,leaseUntil:0,serverVersion:''},data):{currentUrl:'',enabled:false,status:'',heartbeatAt:0,leaseUntil:0,serverVersion:''};else if(obj(data))Object.assign(control,data);evaluateControl();return}const ps=path.split('/');if(ps.length===1){const k=ps[0];if(data===null)delete control[k];else control[k]=data;evaluateControl()}}
  function qs(q){q=q||{};const x=new URLSearchParams();if(q.orderBy!==undefined)x.set('orderBy',JSON.stringify(q.orderBy));if(q.startAtSet)x.set('startAt',JSON.stringify(q.startAt));if(q.endAtSet)x.set('endAt',JSON.stringify(q.endAt));if(q.equalToSet)x.set('equalTo',JSON.stringify(q.equalTo));if(q.limitFirst!==undefined)x.set('limitToFirst',String(q.limitFirst));if(q.limitLast!==undefined)x.set('limitToLast',String(q.limitLast));return x}
  async function rawFirebaseREST(path,q={},opt={}){const sp=qs(q);sp.set('auth',await token(!!opt.forceToken));const r=await fetch(DB+'/'+clean(path)+'.json?'+sp.toString(),{method:opt.method||'GET',body:opt.body===undefined?undefined:JSON.stringify(opt.body),cache:'no-store',headers:Object.assign({'Cache-Control':'no-cache'},opt.body===undefined?{}:{'Content-Type':'application/json'},opt.headers||{})});const text=await r.text();let data=null;try{data=text.trim()?JSON.parse(text):null}catch(_e){data=text}return {res:r,data,text}}
  async function relayREST(path,q={},opt={}){if(mode!=='RELAY'||!relayURL)throw new Error('Relay 경로가 활성화되지 않았습니다.');const sp=qs(q);sp.set('auth',await token(!!opt.forceToken));sp.set('clientId',CLIENT_ID);sp.set('clientType','web');if((opt.method==='PUT'||opt.method==='PATCH'||opt.method==='POST'||opt.method==='DELETE')&&!opt.headers?.['If-Match'])sp.set('print','silent');const r=await fetch(relayURL+'/firebase/'+clean(path)+'.json?'+sp.toString(),{method:opt.method||'GET',body:opt.body===undefined?undefined:JSON.stringify(opt.body),cache:'no-store',headers:Object.assign({'Cache-Control':'no-cache','X-PSU-Client-ID':CLIENT_ID,'X-PSU-Client-Type':'web'},opt.body===undefined?{}:{'Content-Type':'application/json'},opt.headers||{})});const text=await r.text();let data=null;try{data=text.trim()?JSON.parse(text):null}catch(_e){data=text}return {res:r,data,text}}
@@ -73,12 +71,17 @@
    push(v){const key=firebase.database().ref(this.path).push().key,r=new HRef([this.path,key].filter(Boolean).join('/'));if(arguments.length)return r.set(v).then(()=>r);return r}
    async transaction(fn){if(mode==='WAIT')throw new Error('중계서버 상태 확인 중입니다.');if(mode==='DIRECT')return directQuery(this.path,{}).transaction(fn);for(let i=0;i<10;i++){const g=await relayREST(this.path,{}, {method:'GET',headers:{'X-Firebase-ETag':'true'},forceToken:i>0});if(!g.res.ok)throw new Error('Relay transaction GET '+g.res.status);const cur=g.data,etag=g.res.headers.get('ETag')||g.res.headers.get('etag'),next=fn(clone(cur));if(next===undefined)return {committed:false,snapshot:new Snap(cur,this.key)};const p=await relayREST(this.path,{}, {method:'PUT',body:next,headers:{'If-Match':etag||'*'},forceToken:i>0});if(p.res.status===412)continue;if(!p.res.ok)throw new Error('Relay transaction PUT '+p.res.status);return {committed:true,snapshot:new Snap(next,this.key)}}throw new Error('transaction retry exceeded')}
  }
- async function fetchControl(force=false){const x=await rawFirebaseREST('relayDiscovery/current',{}, {method:'GET',forceToken:force});if(!x.res.ok)throw new Error('relay status HTTP '+x.res.status);control=obj(x.data)?Object.assign({currentUrl:'',enabled:false,status:'',heartbeatAt:0,leaseUntil:0,serverVersion:''},x.data):{currentUrl:'',enabled:false,status:'',heartbeatAt:0,leaseUntil:0,serverVersion:''};evaluateControl()}
- function closeStatus(){clearTimeout(statusReconnect);statusReconnect=0;if(statusES){try{statusES.close()}catch(_e){}statusES=null}}
- async function connectStatus(force=false){if(statusBusy)return;statusBusy=true;closeStatus();try{await fetchControl(force);const sp=new URLSearchParams();sp.set('auth',await token(force));const es=new EventSource(DB+'/relayDiscovery/current.json?'+sp.toString());statusES=es;const ev=(kind,e)=>{if(statusES!==es)return;try{const m=JSON.parse(e.data||'{}');applyControl(kind,String(m.path||'/'),m.data)}catch(_e){}};es.addEventListener('put',e=>ev('put',e));es.addEventListener('patch',e=>ev('patch',e));es.addEventListener('auth_revoked',()=>{if(statusES!==es)return;closeStatus();statusReconnect=setTimeout(()=>connectStatus(true),500)});es.onerror=()=>{if(statusES!==es)return;if(es.readyState===EventSource.CLOSED){closeStatus();statusReconnect=setTimeout(()=>connectStatus(true),900)}}}catch(_e){if(mode==='WAIT')switchMode('DIRECT','',0,serverVersion);statusReconnect=setTimeout(()=>connectStatus(true),1500)}finally{statusBusy=false}}
+ async function fetchRelayURL(force=false){const x=await rawFirebaseREST('relayDiscovery/current/currentUrl',{}, {method:'GET',forceToken:force});if(!x.res.ok)throw new Error('relay discovery HTTP '+x.res.status);const u=externalRelayURL(typeof x.data==='string'?x.data:'');lastDiscoveryAt=Date.now();if(u)cachedRelayURL=u;return u}
+ async function probeRelayHealth(url){url=externalRelayURL(url);if(!url)return {ok:false,version:''};try{const r=await fetch(url+'/health',{method:'GET',cache:'no-store',headers:{'Cache-Control':'no-cache','X-PSU-Client-ID':CLIENT_ID,'X-PSU-Client-Type':'web'}});if(!r.ok)return {ok:false,version:''};const x=await r.json();return {ok:x&&x.serverOnline===true&&x.relayAvailable===true&&x.usable===true,version:String(x&&x.version||'')}}catch(_e){return {ok:false,version:''}}}
+ function scheduleRecovery(delay=RECOVERY_MS,forceDiscovery=false){clearTimeout(recoveryTimer);recoveryTimer=setTimeout(()=>recoveryTick(forceDiscovery),Math.max(0,delay))}
+ function failRelay(forceDiscovery=true){if(mode==='RELAY'){closeAlive();switchMode('DIRECT','',serverVersion)}scheduleRecovery(0,forceDiscovery)}
+ function startAlive(){closeAlive();if(mode!=='RELAY'||!relayURL)return;const url=relayURL,gen=generation;let last=Date.now();const sp=new URLSearchParams();sp.set('clientId',CLIENT_ID);sp.set('clientType','web');const es=new EventSource(url+'/alive?'+sp.toString());aliveES=es;es.onopen=()=>{if(aliveES===es&&generation===gen)last=Date.now()};es.onmessage=()=>{if(aliveES===es&&generation===gen)last=Date.now()};es.onerror=()=>{if(aliveES!==es||generation!==gen)return;if(es.readyState===EventSource.CLOSED)failRelay(true)};aliveWatch=setInterval(()=>{if(aliveES!==es||generation!==gen)return;if(Date.now()-last>ALIVE_TIMEOUT_MS)failRelay(true)},1000)}
+ async function enterRelay(url,sv){url=externalRelayURL(url);if(!url)return false;cachedRelayURL=url;switchMode('RELAY',url,sv);startAlive();return true}
+ async function recoveryTick(forceDiscovery=false){if(mode!=='DIRECT'||recoveryBusy)return;recoveryBusy=true;try{if(forceDiscovery||!cachedRelayURL||!lastDiscoveryAt||Date.now()-lastDiscoveryAt>=REDISCOVERY_MS){try{await fetchRelayURL(false)}catch(_e){lastDiscoveryAt=Date.now()}}if(cachedRelayURL){const h=await probeRelayHealth(cachedRelayURL);if(h.ok){await enterRelay(cachedRelayURL,h.version);return}}}finally{recoveryBusy=false}if(mode==='DIRECT')scheduleRecovery(RECOVERY_MS,false)}
+ async function bootstrapRoute(){let discovered='';try{discovered=await fetchRelayURL(false)}catch(_e){}if(discovered){const h=await probeRelayHealth(discovered);if(h.ok){await enterRelay(discovered,h.version);return}}switchMode('DIRECT','',serverVersion);scheduleRecovery(RECOVERY_MS,false)}
  function rebindRelayForAuth(){if(mode!=='RELAY')return;for(const s of relayStreams.values())s.close(false);relayStreams.clear();for(const l of logicalListeners){l.detach();l.bind()}}
  hybrid={mode:'wait',auth:(...a)=>direct.auth(...a),bump:(...a)=>direct.bump(...a),bumpScheduleDeltaV286:(...a)=>direct.bumpScheduleDeltaV286(...a),read:(...a)=>direct.read(...a),readRange:(...a)=>direct.readRange(...a),readFresh:async p=>(await rest(p,{}, {method:'GET'})).data,set:(...a)=>direct.set(...a),update:(...a)=>direct.update(...a),del:(...a)=>direct.del(...a),b64key:(...a)=>direct.b64key(...a),isAdmin:(...a)=>direct.isAdmin(...a),isMaster:(...a)=>direct.isMaster(...a),ref:p=>new HRef(p)};
- window.__psuDataTransportV357=hybrid;window.__psuDataTransportV355=hybrid;window.__fbDirectV187=hybrid;window.__psuHybridTransportV366={status,reconnectStatus:()=>connectStatus(true)};window.__psuHybridTransportV365=window.__psuHybridTransportV366;
- try{firebase.auth().onIdTokenChanged(()=>{closeStatus();clearTimeout(statusReconnect);statusReconnect=setTimeout(()=>connectStatus(false),80);clearTimeout(authRebindTimer);authRebindTimer=setTimeout(rebindRelayForAuth,120)})}catch(_e){}
- connectStatus(false);emit();
+ window.__psuDataTransportV357=hybrid;window.__psuDataTransportV355=hybrid;window.__fbDirectV187=hybrid;window.__psuHybridTransportV367={status,reconnectStatus:()=>scheduleRecovery(0,true)};window.__psuHybridTransportV366=window.__psuHybridTransportV367;window.__psuHybridTransportV365=window.__psuHybridTransportV367;
+ try{firebase.auth().onIdTokenChanged(()=>{clearTimeout(authRebindTimer);authRebindTimer=setTimeout(rebindRelayForAuth,120);if(mode==='DIRECT')scheduleRecovery(80,!cachedRelayURL)})}catch(_e){}
+ bootstrapRoute();emit();
 })();
