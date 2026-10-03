@@ -1,14 +1,14 @@
 (function(){
  'use strict';
- if(window.__webV360HybridInstalled)return;window.__webV360HybridInstalled=true;
+ if(window.__webV361HybridInstalled)return;window.__webV361HybridInstalled=true;
  const direct=window.__fbFirebaseDirectV355;
- if(!direct||!window.firebase||!firebase.database){console.warn('v3.60 transport: Firebase direct facade 준비 전');return;}
+ if(!direct||!window.firebase||!firebase.database){console.warn('v3.61 transport: Firebase direct facade 준비 전');return;}
  const DB=String(firebase.app().options&&firebase.app().options.databaseURL||'').replace(/\/+$/,'');
  const DEFAULT_RELAY='https://swstats84.mooo.com';
- const RELAY_KEY='psuRelayLastUrlV360',CLIENT_KEY='psuRelayClientIdV360';
+ const RELAY_KEY='psuRelayLastUrlV361',CLIENT_KEY='psuRelayClientIdV361';
  let CLIENT_ID='';
  try{CLIENT_ID=String(sessionStorage.getItem(CLIENT_KEY)||'');if(!CLIENT_ID){CLIENT_ID='web-'+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem(CLIENT_KEY,CLIENT_ID)}}catch(_e){CLIENT_ID='web-'+Date.now().toString(36)}
- let relayReady=false,directEnabled=false,mode='OFFLINE',relayURL='',generation=0,probeBusy=false,lastDiscoveryAt=0,hybrid=null;
+ let relayReady=true,mode='RELAY',relayURL=DEFAULT_RELAY,generation=0,probeBusy=false,hybrid=null;
  const logicalListeners=new Set(),relayStreams=new Map();
  const clean=p=>String(p||'').replace(/^\/+|\/+$/g,''),clone=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v)),obj=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
  function sdkGate(v){try{const db=firebase.database();if(v&&db&&db.goOnline)db.goOnline();else if(db&&db.goOffline)db.goOffline()}catch(_e){}}
@@ -18,26 +18,21 @@
  function qs(q){const x=new URLSearchParams();if(q.orderBy!==undefined)x.set('orderBy',JSON.stringify(q.orderBy));if(q.startAtSet)x.set('startAt',JSON.stringify(q.startAt));if(q.endAtSet)x.set('endAt',JSON.stringify(q.endAt));if(q.equalToSet)x.set('equalTo',JSON.stringify(q.equalTo));if(q.limitFirst!==undefined)x.set('limitToFirst',String(q.limitFirst));if(q.limitLast!==undefined)x.set('limitToLast',String(q.limitLast));return x}
  async function rawFirebaseREST(path,q={},opt={}){const sp=qs(q);sp.set('auth',await token(!!opt.forceToken));const r=await fetch(DB+'/'+clean(path)+'.json?'+sp.toString(),{method:opt.method||'GET',body:opt.body===undefined?undefined:JSON.stringify(opt.body),cache:'no-store',headers:Object.assign({'Cache-Control':'no-cache'},opt.body===undefined?{}:{'Content-Type':'application/json'},opt.headers||{})});const text=await r.text();let data=null;try{data=text.trim()?JSON.parse(text):null}catch(_e){data=text}return {res:r,data,text}}
  async function relayREST(path,q={},opt={}){if(!relayReady||mode!=='RELAY'||!relayURL)throw Object.assign(new Error('중계서버 미연결'),{relayTransport:true});const sp=qs(q);sp.set('auth',await token(!!opt.forceToken));sp.set('clientId',CLIENT_ID);sp.set('clientType','web');const r=await fetch(relayURL+'/firebase/'+clean(path)+'.json?'+sp.toString(),{method:opt.method||'GET',body:opt.body===undefined?undefined:JSON.stringify(opt.body),cache:'no-store',headers:Object.assign({'Cache-Control':'no-cache','X-PSU-Client-ID':CLIENT_ID,'X-PSU-Client-Type':'web'},opt.body===undefined?{}:{'Content-Type':'application/json'},opt.headers||{})});const text=await r.text();let data=null;try{data=text.trim()?JSON.parse(text):null}catch(_e){data=text}if(r.status>=500)throw Object.assign(new Error('Relay HTTP '+r.status),{relayTransport:true,status:r.status});return {res:r,data,text}}
- function route(){return relayReady?'RELAY':(directEnabled?'DIRECT':'OFFLINE')}
- function status(){return {mode,relayReady,relayURL,directEnabled,directActive:!relayReady&&directEnabled,generation,label:relayReady?'중계 READY':(directEnabled?'중계 OFF · FB ON':'중계 OFF · FB OFF')}}
+ function route(){return relayReady?'RELAY':'DIRECT'}
+ function status(){return {mode,relayReady,relayURL,directEnabled:!relayReady,directActive:!relayReady,generation,label:relayReady?'중계 READY':'Firebase Direct'}}
  function emit(){window.dispatchEvent(new CustomEvent('psu-transport-mode',{detail:status()}))}
  function switchMode(next,url=''){
-   next=String(next||'').toUpperCase();if(!['RELAY','DIRECT','OFFLINE'].includes(next))next=route();
-   if(next==='RELAY'){directEnabled=false;url=String(url||relayURL||'').replace(/\/+$/,'')}else url='';
-   if(next==='DIRECT'&&!directEnabled)next='OFFLINE';
+   next=String(next||'').toUpperCase()==='RELAY'?'RELAY':'DIRECT';url=next==='RELAY'?String(url||relayURL||DEFAULT_RELAY).replace(/\/+$/,''):'';
    if(mode===next&&relayURL===url){sdkGate(mode==='DIRECT');return}
-   for(const s of relayStreams.values())s.close(false);relayStreams.clear();for(const l of logicalListeners)l.detach();
-   mode=next;relayURL=url;if(mode==='RELAY'&&relayURL){try{localStorage.setItem(RELAY_KEY,relayURL)}catch(_e){}}generation++;if(hybrid)hybrid.mode=mode.toLowerCase();sdkGate(mode==='DIRECT');for(const l of logicalListeners)l.bind();emit();
+   for(const st of relayStreams.values())st.close(false);relayStreams.clear();for(const l of logicalListeners)l.detach();
+   mode=next;relayReady=next==='RELAY';relayURL=url;if(mode==='RELAY'&&relayURL){try{localStorage.setItem(RELAY_KEY,relayURL)}catch(_e){}}generation++;if(hybrid)hybrid.mode=mode.toLowerCase();sdkGate(mode==='DIRECT');for(const l of logicalListeners)l.bind();emit();
  }
- function setRelayState(ready,url=''){
-   ready=!!ready;const prevReady=relayReady,prevDirect=directEnabled;relayReady=ready;
-   if(ready){directEnabled=false;switchMode('RELAY',url||relayURL)}else if(mode==='RELAY'||prevReady){switchMode(directEnabled?'DIRECT':'OFFLINE','')}
-   if(prevReady===relayReady&&prevDirect===directEnabled&&mode===route())emit();
- }
+ function setRelayState(ready,url=''){switchMode(ready?'RELAY':'DIRECT',ready?(url||relayURL||DEFAULT_RELAY):'')}
+ async function directREST(path,q={},opt={}){const x=await rawFirebaseREST(path,q,opt);if(!x.res.ok)throw new Error('Firebase HTTP '+x.res.status+': '+x.text);return x}
  async function rest(path,q={},opt={}){
-   if(mode==='OFFLINE')throw new Error('중계서버 미연결 · Client Firebase OFF');
-   if(mode==='DIRECT'){const x=await rawFirebaseREST(path,q,opt);if(!x.res.ok)throw new Error('Firebase HTTP '+x.res.status+': '+x.text);return x}
-   try{const x=await relayREST(path,q,opt);if(!x.res.ok)throw Object.assign(new Error('Relay HTTP '+x.res.status+': '+x.text),{status:x.res.status});return x}catch(e){if(e&&e.relayTransport)setRelayState(false,'');throw e}
+   if(mode==='DIRECT')return directREST(path,q,opt);
+   try{const x=await relayREST(path,q,opt);if(!x.res.ok)throw Object.assign(new Error('Relay HTTP '+x.res.status+': '+x.text),{status:x.res.status});return x}
+   catch(e){if(e&&e.relayTransport){setRelayState(false,'');return directREST(path,q,opt)}throw e}
  }
  class Snap{constructor(v,key=''){this._v=clone(v);this.key=key||null}val(){return clone(this._v)}exists(){return this._v!==null&&this._v!==undefined}forEach(fn){if(!obj(this._v)&&!Array.isArray(this._v))return false;for(const k of Object.keys(this._v||{})){if(fn(new Snap(this._v[k],k))===true)return true}return false}child(k){return new Snap(this._v&&typeof this._v==='object'?this._v[k]:null,String(k))}}
  function directQuery(path,q){let r=firebase.database().ref(clean(path));if(q.orderBy==='$key')r=r.orderByKey();else if(q.orderBy!==undefined)r=r.orderByChild(q.orderBy);if(q.startAtSet)r=r.startAt(q.startAt);if(q.endAtSet)r=r.endAt(q.endAt);if(q.equalToSet)r=r.equalTo(q.equalTo);if(q.limitFirst!==undefined)r=r.limitToFirst(q.limitFirst);if(q.limitLast!==undefined)r=r.limitToLast(q.limitLast);return r}
@@ -51,7 +46,7 @@
    del(l){this.listeners.delete(l);if(!this.listeners.size)this.close(true)}
    initial(l){if(l.event==='value')l.cb(new Snap(this.model,l.ref.key));else if(l.event==='child_added')for(const k of Object.keys(childMap(this.model)))l.cb(new Snap(this.model[k],k))}
    dispatch(before,after,initial){for(const l of [...this.listeners]){try{if(l.event==='value'){l.cb(new Snap(after,l.ref.key));continue}const a=childMap(before),b=childMap(after);if(initial){if(l.event==='child_added')for(const k of Object.keys(b))l.cb(new Snap(b[k],k));continue}if(l.event==='child_added'){for(const k of Object.keys(b))if(!(k in a))l.cb(new Snap(b[k],k))}else if(l.event==='child_removed'){for(const k of Object.keys(a))if(!(k in b))l.cb(new Snap(a[k],k))}else if(l.event==='child_changed'){for(const k of Object.keys(b))if(k in a&&JSON.stringify(a[k])!==JSON.stringify(b[k]))l.cb(new Snap(b[k],k))}}catch(e){if(l.err)l.err(e)}}}
-   async open(){if(this.es||this.opening||mode!=='RELAY'||!relayReady||!relayURL||!this.listeners.size)return;this.opening=true;try{const sp=qs(this.q);sp.set('auth',await token());sp.set('clientId',CLIENT_ID);sp.set('clientType','web');if(mode!=='RELAY'||!relayReady||!this.listeners.size)return;const es=new EventSource(relayURL+'/firebase/'+this.path+'.json?'+sp.toString());this.es=es;const ev=(kind,e)=>{if(this.es!==es)return;try{const m=JSON.parse(e.data||'{}'),before=clone(this.model),first=this.model===undefined;this.model=apply(this.model,String(m.path||'/'),kind,m.data);this.dispatch(before,this.model,first)}catch(x){for(const l of this.listeners)if(l.err)l.err(x)}};es.addEventListener('put',e=>ev('put',e));es.addEventListener('patch',e=>ev('patch',e));es.onerror=()=>{};}finally{this.opening=false}}
+   async open(){if(this.es||this.opening||mode!=='RELAY'||!relayReady||!relayURL||!this.listeners.size)return;this.opening=true;try{const sp=qs(this.q);sp.set('auth',await token());sp.set('clientId',CLIENT_ID);sp.set('clientType','web');if(mode!=='RELAY'||!relayReady||!this.listeners.size)return;const es=new EventSource(relayURL+'/firebase/'+this.path+'.json?'+sp.toString());this.es=es;const ev=(kind,e)=>{if(this.es!==es)return;try{const m=JSON.parse(e.data||'{}'),before=clone(this.model),first=this.model===undefined;this.model=apply(this.model,String(m.path||'/'),kind,m.data);this.dispatch(before,this.model,first)}catch(x){for(const l of this.listeners)if(l.err)l.err(x)}};es.addEventListener('put',e=>ev('put',e));es.addEventListener('patch',e=>ev('patch',e));es.onerror=()=>{if(this.es!==es)return;try{es.close()}catch(_e){}this.es=null;queueMicrotask(()=>setRelayState(false,''));};}finally{this.opening=false}}
    close(remove){if(this.es){try{this.es.close()}catch(_e){}this.es=null}if(remove)relayStreams.delete(this.key)}
  }
  function relayStream(path,q){const k=streamKey(path,q);let s=relayStreams.get(k);if(!s){s=new RelayStream(path,q);relayStreams.set(k,s)}return s}
@@ -72,24 +67,23 @@
    equalTo(v){return new HRef(this.path,Object.assign({},this.q,{equalToSet:true,equalTo:v}))}
    limitToFirst(n){return new HRef(this.path,Object.assign({},this.q,{limitFirst:+n}))}
    limitToLast(n){return new HRef(this.path,Object.assign({},this.q,{limitLast:+n}))}
-   async once(ev){if(mode==='DIRECT')return directQuery(this.path,this.q).once(ev);if(mode==='OFFLINE')throw new Error('중계서버 미연결 · Client Firebase OFF');if(ev!=='value')throw new Error('Relay once는 value만 지원합니다.');return new Snap((await rest(this.path,this.q,{method:'GET'})).data,this.key)}
+   async once(ev){if(mode==='DIRECT')return directQuery(this.path,this.q).once(ev);if(ev!=='value')throw new Error('Relay once는 value만 지원합니다.');return new Snap((await rest(this.path,this.q,{method:'GET'})).data,this.key)}
    on(ev,cb,err){const l=new Listener(this,ev,cb,err);this._ls.push(l);return cb}
    off(ev,cb){this._ls=this._ls.filter(l=>{if((!ev||l.event===ev)&&(!cb||l.cb===cb)){l.close();return false}return true})}
    async set(v){if(mode==='DIRECT')return directQuery(this.path,{}).set(v);await rest(this.path,{}, {method:'PUT',body:v});return v}
    async update(v){if(mode==='DIRECT')return directQuery(this.path,{}).update(v);await rest(this.path,{}, {method:'PATCH',body:v});return v}
    async remove(){if(mode==='DIRECT')return directQuery(this.path,{}).remove();await rest(this.path,{}, {method:'DELETE'});return null}
    push(v){const key=firebase.database().ref(this.path).push().key,r=new HRef([this.path,key].filter(Boolean).join('/'));if(arguments.length)return r.set(v).then(()=>r);return r}
-   async transaction(fn){if(mode==='DIRECT')return directQuery(this.path,{}).transaction(fn);if(mode==='OFFLINE')throw new Error('중계서버 미연결 · Client Firebase OFF');for(let i=0;i<10;i++){let g,p;try{g=await relayREST(this.path,{}, {method:'GET',headers:{'X-Firebase-ETag':'true'},forceToken:i>0})}catch(e){if(e&&e.relayTransport)setRelayState(false,'');throw e}if(!g.res.ok)throw new Error('Relay transaction GET '+g.res.status);const cur=g.data,etag=g.res.headers.get('ETag')||g.res.headers.get('etag'),next=fn(clone(cur));if(next===undefined)return {committed:false,snapshot:new Snap(cur,this.key)};try{p=await relayREST(this.path,{}, {method:'PUT',body:next,headers:{'If-Match':etag||'*'},forceToken:i>0})}catch(e){if(e&&e.relayTransport)setRelayState(false,'');throw e}if(p.res.status===412)continue;if(!p.res.ok)throw new Error('Relay transaction PUT '+p.res.status);return {committed:true,snapshot:new Snap(next,this.key)}}throw new Error('transaction retry exceeded')}
+   async transaction(fn){if(mode==='DIRECT')return directQuery(this.path,{}).transaction(fn);for(let i=0;i<10;i++){let g,p;try{g=await relayREST(this.path,{}, {method:'GET',headers:{'X-Firebase-ETag':'true'},forceToken:i>0})}catch(e){if(e&&e.relayTransport){setRelayState(false,'');return directQuery(this.path,{}).transaction(fn)}throw e}if(!g.res.ok)throw new Error('Relay transaction GET '+g.res.status);const cur=g.data,etag=g.res.headers.get('ETag')||g.res.headers.get('etag'),next=fn(clone(cur));if(next===undefined)return {committed:false,snapshot:new Snap(cur,this.key)};try{p=await relayREST(this.path,{}, {method:'PUT',body:next,headers:{'If-Match':etag||'*'},forceToken:i>0})}catch(e){if(e&&e.relayTransport){setRelayState(false,'');return directQuery(this.path,{}).transaction(fn)}throw e}if(p.res.status===412)continue;if(!p.res.ok)throw new Error('Relay transaction PUT '+p.res.status);return {committed:true,snapshot:new Snap(next,this.key)}}throw new Error('transaction retry exceeded')}
  }
  function externalRelayURL(v){try{v=String(v||'').replace(/\/+$/,'');if(!v)return'';const u=new URL(v);if(u.protocol!=='https:')return'';const h=String(u.hostname||'').toLowerCase();if(!h||h==='localhost'||h==='127.0.0.1'||h==='::1'||h==='[::1]'||/^10\./.test(h)||/^192\.168\./.test(h)||/^172\.(1[6-9]|2\d|3[01])\./.test(h))return'';return v}catch(_e){return''}}
  function savedRelayCandidates(){const out=[];const add=v=>{v=externalRelayURL(v);if(v&&!out.includes(v))out.push(v)};try{add(new URLSearchParams(location.search).get('psuRelay'));add(localStorage.getItem(RELAY_KEY))}catch(_e){}add(DEFAULT_RELAY);return out}
- async function health(u){u=externalRelayURL(u);if(!u)return null;const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),2500);try{const r=await fetch(u+'/health',{cache:'no-store',signal:ac.signal});if(!r.ok)return null;const h=await r.json();if(!h||!h.ok||!h.usable||h.mode!=='second-firebase'||(h.protocol&&h.protocol!=='firebase-delta-v1'))return null;return {url:u,health:h}}catch(_e){return null}finally{clearTimeout(tm)}}
- async function discover(forceDiscovery=false){for(const x of savedRelayCandidates()){const h=await health(x);if(h){setRelayState(true,h.url);return true}}const now=Date.now();if(!forceDiscovery&&now-lastDiscoveryAt<60000)return false;lastDiscoveryAt=now;try{const d=(await rawFirebaseREST('relayDiscovery/current/currentUrl',{}, {method:'GET'})).data,x=externalRelayURL(d);if(x){const h=await health(x);if(h){setRelayState(true,h.url);return true}}}catch(_e){}setRelayState(false,'');return false}
- async function probe(){if(probeBusy)return;probeBusy=true;try{if(relayReady&&relayURL){const h=await health(relayURL);if(h){if(directEnabled)directEnabled=false;if(mode!=='RELAY'||relayURL!==h.url)switchMode('RELAY',h.url);return}setRelayState(false,'')}await discover(false)}finally{probeBusy=false}}
- async function setDirectEnabled(v){const wanted=!!v;if(wanted){if(relayReady)throw new Error('중계서버가 연결된 동안 Client Firebase Direct는 켤 수 없습니다.');if(await discover(false)){throw new Error('중계서버가 연결되어 Client Firebase Direct를 켜지 않았습니다.')}directEnabled=true;switchMode('DIRECT','');return status()}directEnabled=false;if(!relayReady)switchMode('OFFLINE','');else switchMode('RELAY',relayURL);setTimeout(probe,0);return status()}
- hybrid={mode:'offline',auth:(...a)=>direct.auth(...a),bump:(...a)=>direct.bump(...a),bumpScheduleDeltaV286:(...a)=>direct.bumpScheduleDeltaV286(...a),read:(...a)=>direct.read(...a),readRange:(...a)=>direct.readRange(...a),readFresh:async p=>(await rest(p,{}, {method:'GET'})).data,set:(...a)=>direct.set(...a),update:(...a)=>direct.update(...a),del:(...a)=>direct.del(...a),b64key:(...a)=>direct.b64key(...a),isAdmin:(...a)=>direct.isAdmin(...a),isMaster:(...a)=>direct.isMaster(...a),ref:p=>new HRef(p)};
+ async function health(u){u=externalRelayURL(u);if(!u)return null;const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),700);try{const r=await fetch(u+'/health',{cache:'no-store',signal:ac.signal});if(!r.ok)return null;const h=await r.json();if(!h||!h.ok||!h.usable||h.mode!=='second-firebase'||(h.protocol&&h.protocol!=='firebase-delta-v1'))return null;return {url:u,health:h}}catch(_e){return null}finally{clearTimeout(tm)}}
+ async function discover(){for(const x of savedRelayCandidates()){const h=await health(x);if(h){setRelayState(true,h.url);return true}}try{const d=(await rawFirebaseREST('relayDiscovery/current/currentUrl',{}, {method:'GET'})).data,x=externalRelayURL(d);if(x){const h=await health(x);if(h){setRelayState(true,h.url);return true}}}catch(_e){}setRelayState(false,'');return false}
+ async function probe(){if(probeBusy)return status();probeBusy=true;try{return await discover()?status():status()}finally{probeBusy=false}}
+ hybrid={mode:'relay',auth:(...a)=>direct.auth(...a),bump:(...a)=>direct.bump(...a),bumpScheduleDeltaV286:(...a)=>direct.bumpScheduleDeltaV286(...a),read:(...a)=>direct.read(...a),readRange:(...a)=>direct.readRange(...a),readFresh:async p=>(await rest(p,{}, {method:'GET'})).data,set:(...a)=>direct.set(...a),update:(...a)=>direct.update(...a),del:(...a)=>direct.del(...a),b64key:(...a)=>direct.b64key(...a),isAdmin:(...a)=>direct.isAdmin(...a),isMaster:(...a)=>direct.isMaster(...a),ref:p=>new HRef(p)};
  hybrid.mode=mode.toLowerCase();
  window.__psuDataTransportV357=hybrid;window.__psuDataTransportV355=hybrid;window.__fbDirectV187=hybrid;
- window.__psuHybridTransportV360={status,probe,setDirectEnabled};
- setTimeout(probe,250);setInterval(probe,5000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(probe,80)});emit();
+ window.__psuHybridTransportV361={status,probe};window.__psuHybridTransportV360=window.__psuHybridTransportV361;
+ probe();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')probe()});window.addEventListener('focus',probe);emit();
 })();
