@@ -1,13 +1,13 @@
 (function(){
  'use strict';
- if(window.__webV367HardRouteInstalled)return;window.__webV367HardRouteInstalled=true;
+ if(window.__webV368HardRouteInstalled)return;window.__webV368HardRouteInstalled=true;
  const direct=window.__fbFirebaseDirectV355;
- if(!direct||!window.firebase||!firebase.database||!firebase.auth){console.warn('v3.67 transport: Firebase direct facade 준비 전');return;}
+ if(!direct||!window.firebase||!firebase.database||!firebase.auth){console.warn('v3.68 transport: Firebase direct facade 준비 전');return;}
  const DB=String(firebase.app().options&&firebase.app().options.databaseURL||'').replace(/\/+$/,'');
  const CLIENT_KEY='psuRelayClientIdV365';
  let CLIENT_ID='';
  try{CLIENT_ID=String(sessionStorage.getItem(CLIENT_KEY)||'');if(!CLIENT_ID){CLIENT_ID='web-'+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem(CLIENT_KEY,CLIENT_ID)}}catch(_e){CLIENT_ID='web-'+Date.now().toString(36)}
- let mode='WAIT',relayURL='',serverVersion='',generation=0,hybrid=null,aliveES=null,aliveWatch=0,recoveryTimer=0,recoveryBusy=false,authRebindTimer=0,cachedRelayURL='',lastDiscoveryAt=0;
+ let mode='WAIT',relayURL='',serverVersion='',generation=0,hybrid=null,aliveES=null,aliveWatch=0,recoveryTimer=0,recoveryBusy=false,cachedRelayURL='',lastDiscoveryAt=0;
  const ALIVE_TIMEOUT_MS=6500,RECOVERY_MS=2000,REDISCOVERY_MS=60000;
  const logicalListeners=new Set(),relayStreams=new Map();
  const clean=p=>String(p||'').replace(/^\/+|\/+$/g,''),clone=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v)),obj=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -79,9 +79,8 @@
  async function enterRelay(url,sv){url=externalRelayURL(url);if(!url)return false;cachedRelayURL=url;switchMode('RELAY',url,sv);startAlive();return true}
  async function recoveryTick(forceDiscovery=false){if(mode!=='DIRECT'||recoveryBusy)return;recoveryBusy=true;try{if(forceDiscovery||!cachedRelayURL||!lastDiscoveryAt||Date.now()-lastDiscoveryAt>=REDISCOVERY_MS){try{await fetchRelayURL(false)}catch(_e){lastDiscoveryAt=Date.now()}}if(cachedRelayURL){const h=await probeRelayHealth(cachedRelayURL);if(h.ok){await enterRelay(cachedRelayURL,h.version);return}}}finally{recoveryBusy=false}if(mode==='DIRECT')scheduleRecovery(RECOVERY_MS,false)}
  async function bootstrapRoute(){let discovered='';try{discovered=await fetchRelayURL(false)}catch(_e){}if(discovered){const h=await probeRelayHealth(discovered);if(h.ok){await enterRelay(discovered,h.version);return}}switchMode('DIRECT','',serverVersion);scheduleRecovery(RECOVERY_MS,false)}
- function rebindRelayForAuth(){if(mode!=='RELAY')return;for(const s of relayStreams.values())s.close(false);relayStreams.clear();for(const l of logicalListeners){l.detach();l.bind()}}
  hybrid={mode:'wait',auth:(...a)=>direct.auth(...a),bump:(...a)=>direct.bump(...a),bumpScheduleDeltaV286:(...a)=>direct.bumpScheduleDeltaV286(...a),read:(...a)=>direct.read(...a),readRange:(...a)=>direct.readRange(...a),readFresh:async p=>(await rest(p,{}, {method:'GET'})).data,set:(...a)=>direct.set(...a),update:(...a)=>direct.update(...a),del:(...a)=>direct.del(...a),b64key:(...a)=>direct.b64key(...a),isAdmin:(...a)=>direct.isAdmin(...a),isMaster:(...a)=>direct.isMaster(...a),ref:p=>new HRef(p)};
- window.__psuDataTransportV357=hybrid;window.__psuDataTransportV355=hybrid;window.__fbDirectV187=hybrid;window.__psuHybridTransportV367={status,reconnectStatus:()=>scheduleRecovery(0,true)};window.__psuHybridTransportV366=window.__psuHybridTransportV367;window.__psuHybridTransportV365=window.__psuHybridTransportV367;
- try{firebase.auth().onIdTokenChanged(()=>{clearTimeout(authRebindTimer);authRebindTimer=setTimeout(rebindRelayForAuth,120);if(mode==='DIRECT')scheduleRecovery(80,!cachedRelayURL)})}catch(_e){}
+ window.__psuDataTransportV357=hybrid;window.__psuDataTransportV355=hybrid;window.__fbDirectV187=hybrid;window.__psuHybridTransportV368={status,reconnectStatus:()=>scheduleRecovery(0,true)};window.__psuHybridTransportV367=window.__psuHybridTransportV368;window.__psuHybridTransportV366=window.__psuHybridTransportV368;window.__psuHybridTransportV365=window.__psuHybridTransportV368;
+ try{firebase.auth().onIdTokenChanged(()=>{if(mode==='DIRECT')scheduleRecovery(80,!cachedRelayURL)})}catch(_e){}
  bootstrapRoute();emit();
 })();
