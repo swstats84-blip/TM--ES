@@ -1,8 +1,8 @@
 (function(){
  'use strict';
- if(window.__webV365HardRouteInstalled)return;window.__webV365HardRouteInstalled=true;
+ if(window.__webV366HardRouteInstalled)return;window.__webV366HardRouteInstalled=true;
  const direct=window.__fbFirebaseDirectV355;
- if(!direct||!window.firebase||!firebase.database||!firebase.auth){console.warn('v3.65 transport: Firebase direct facade 준비 전');return;}
+ if(!direct||!window.firebase||!firebase.database||!firebase.auth){console.warn('v3.66 transport: Firebase direct facade 준비 전');return;}
  const DB=String(firebase.app().options&&firebase.app().options.databaseURL||'').replace(/\/+$/,'');
  const CLIENT_KEY='psuRelayClientIdV365';
  let CLIENT_ID='';
@@ -75,10 +75,10 @@
  }
  async function fetchControl(force=false){const x=await rawFirebaseREST('relayDiscovery/current',{}, {method:'GET',forceToken:force});if(!x.res.ok)throw new Error('relay status HTTP '+x.res.status);control=obj(x.data)?Object.assign({currentUrl:'',enabled:false,status:'',heartbeatAt:0,leaseUntil:0,serverVersion:''},x.data):{currentUrl:'',enabled:false,status:'',heartbeatAt:0,leaseUntil:0,serverVersion:''};evaluateControl()}
  function closeStatus(){clearTimeout(statusReconnect);statusReconnect=0;if(statusES){try{statusES.close()}catch(_e){}statusES=null}}
- async function connectStatus(force=false){if(statusBusy)return;statusBusy=true;closeStatus();try{await fetchControl(force);const sp=new URLSearchParams();sp.set('auth',await token(force));const es=new EventSource(DB+'/relayDiscovery/current.json?'+sp.toString());statusES=es;const ev=(kind,e)=>{if(statusES!==es)return;try{const m=JSON.parse(e.data||'{}');applyControl(kind,String(m.path||'/'),m.data)}catch(_e){}};es.addEventListener('put',e=>ev('put',e));es.addEventListener('patch',e=>ev('patch',e));es.addEventListener('auth_revoked',()=>{if(statusES!==es)return;closeStatus();statusReconnect=setTimeout(()=>connectStatus(true),500)});es.onerror=()=>{if(statusES!==es)return;if(es.readyState===EventSource.CLOSED){closeStatus();statusReconnect=setTimeout(()=>connectStatus(true),900)}}}catch(_e){if(mode==='WAIT')sdkGate(false);statusReconnect=setTimeout(()=>connectStatus(true),1500)}finally{statusBusy=false}}
+ async function connectStatus(force=false){if(statusBusy)return;statusBusy=true;closeStatus();try{await fetchControl(force);const sp=new URLSearchParams();sp.set('auth',await token(force));const es=new EventSource(DB+'/relayDiscovery/current.json?'+sp.toString());statusES=es;const ev=(kind,e)=>{if(statusES!==es)return;try{const m=JSON.parse(e.data||'{}');applyControl(kind,String(m.path||'/'),m.data)}catch(_e){}};es.addEventListener('put',e=>ev('put',e));es.addEventListener('patch',e=>ev('patch',e));es.addEventListener('auth_revoked',()=>{if(statusES!==es)return;closeStatus();statusReconnect=setTimeout(()=>connectStatus(true),500)});es.onerror=()=>{if(statusES!==es)return;if(es.readyState===EventSource.CLOSED){closeStatus();statusReconnect=setTimeout(()=>connectStatus(true),900)}}}catch(_e){if(mode==='WAIT')switchMode('DIRECT','',0,serverVersion);statusReconnect=setTimeout(()=>connectStatus(true),1500)}finally{statusBusy=false}}
  function rebindRelayForAuth(){if(mode!=='RELAY')return;for(const s of relayStreams.values())s.close(false);relayStreams.clear();for(const l of logicalListeners){l.detach();l.bind()}}
  hybrid={mode:'wait',auth:(...a)=>direct.auth(...a),bump:(...a)=>direct.bump(...a),bumpScheduleDeltaV286:(...a)=>direct.bumpScheduleDeltaV286(...a),read:(...a)=>direct.read(...a),readRange:(...a)=>direct.readRange(...a),readFresh:async p=>(await rest(p,{}, {method:'GET'})).data,set:(...a)=>direct.set(...a),update:(...a)=>direct.update(...a),del:(...a)=>direct.del(...a),b64key:(...a)=>direct.b64key(...a),isAdmin:(...a)=>direct.isAdmin(...a),isMaster:(...a)=>direct.isMaster(...a),ref:p=>new HRef(p)};
- window.__psuDataTransportV357=hybrid;window.__psuDataTransportV355=hybrid;window.__fbDirectV187=hybrid;window.__psuHybridTransportV365={status,reconnectStatus:()=>connectStatus(true)};
+ window.__psuDataTransportV357=hybrid;window.__psuDataTransportV355=hybrid;window.__fbDirectV187=hybrid;window.__psuHybridTransportV366={status,reconnectStatus:()=>connectStatus(true)};window.__psuHybridTransportV365=window.__psuHybridTransportV366;
  try{firebase.auth().onIdTokenChanged(()=>{closeStatus();clearTimeout(statusReconnect);statusReconnect=setTimeout(()=>connectStatus(false),80);clearTimeout(authRebindTimer);authRebindTimer=setTimeout(rebindRelayForAuth,120)})}catch(_e){}
  connectStatus(false);emit();
 })();
