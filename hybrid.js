@@ -2,7 +2,7 @@
  'use strict';
  if(window.__webV368HardRouteInstalled)return;window.__webV368HardRouteInstalled=true;
  const direct=window.__fbFirebaseDirectV355;
- if(!direct||!window.firebase||!firebase.database||!firebase.auth){console.warn('v3.72 transport: Firebase direct facade 준비 전');return;}
+ if(!direct||!window.firebase||!firebase.database||!firebase.auth){console.warn('v3.76 transport: Firebase direct facade 준비 전');return;}
  const DB=String(firebase.app().options&&firebase.app().options.databaseURL||'').replace(/\/+$/,'');
  const CLIENT_KEY='psuRelayClientIdV365';
  let CLIENT_ID='';
