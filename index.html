@@ -109,9 +109,9 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
   html,body,#mobileList,.mobile-list,.dategroup{overflow-anchor:none!important;}
 }
 </style>
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.73";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.74";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
 <script id="web-v317-shared-escape">window.__webEscAttrV317=function(v){return String(v??'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})};</script>
-<script>window.__PSU_WEB_TEST_BUILD="v3.73-cache-first-family-boot";</script>
+<script>window.__PSU_WEB_TEST_BUILD="v3.74-cache-first-no-legacy-hide";</script>
 <script id="web-v299-boot-perf-mode-hint">
 (function(){
   if(window.__psuBootPerfV299)return;
@@ -415,7 +415,7 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
      if(!x||![1,2,3].includes(Number(x.schema||0))||!Number.isFinite(Number(x.at))||Date.now()-Number(x.at)>MAX_AGE||!hasUseful(x)){if(x)dbDelete();return false}
      window.__psuFastSnapshotFamilyRevisionsV372=(x.familyRevisions&&typeof x.familyRevisions==='object'&&!Array.isArray(x.familyRevisions))?copy(x.familyRevisions,{}):{};
      if(typeof state!=='object'||!state)return false;
-     /* v3.73: boot 중에는 IndexedDB cache restore가 live/revision commit보다 먼저 끝나는 단일 barrier가 된다.
+     /* v3.74: boot 중에는 IndexedDB cache restore가 live/revision commit보다 먼저 끝나는 단일 barrier가 된다.
         과거처럼 live.ready 플래그와 경쟁해서 cache family 일부만 복원되는 상태를 허용하지 않는다. */
      const bootActive=!!(window.__psuBootV247&&window.__psuBootV247.isActive&&window.__psuBootV247.isActive()),live=window.__psuCanonicalReadyStateV287||{},covered=Object.create(null);let applied=false;
      const schema=Number(x.schema||0),declared=Array.isArray(x.coveredFamilies)?new Set(x.coveredFamilies.map(String)):null;
@@ -777,7 +777,7 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
  window.__fbMasterUpdateEquipmentV187=async function(oldUnit,date,fields){if(!isMaster())throw new Error('마스터 권한이 필요합니다.');await masterWriteAuthV320();const selected=(state.scheduleEvents||[]).find(e=>e&&String(e.unit||'')===String(oldUnit)&&(!date||String(e.date||'')===String(date)))||(state.scheduleEvents||[]).find(e=>e&&String(e.unit||'')===String(oldUnit));if(!selected)throw new Error('장비의 스케줄 정보를 찾지 못했습니다.');const src=String(selected.sourceUnit||selected.unit||oldUnit),nu=String(fields.unit||oldUnit).trim();if(!nu)throw new Error('장비 호기는 비워둘 수 없습니다.');const targets=(state.scheduleEvents||[]).filter(e=>e&&String(e.sourceUnit||e.unit||'')===src&&String(e.eventId||'')).map(e=>({id:String(e.eventId),date:String(e.date||'')}));if(!targets.length)throw new Error('수정할 일정 ID를 찾지 못했습니다.');const savedEvents=[];for(const t of targets){const tr=await window.__psuDbRefV355('scheduleV2/events/'+t.id).transaction(e=>{if(!e)return e;['line','sn','unit','type','workType'].forEach(f=>manual(e,f,String(fields[f]??e[f]??'').trim()));if(t.date===String(date)){if(fields.vendor!==undefined)manual(e,'vendor',String(fields.vendor||'').toUpperCase());if(fields.task!==undefined)manual(e,'task',String(fields.task||'').trim())}e.area=String(fields.area??e.area??'').trim();e.sourceUnit=e.sourceUnit||src;stripScheduleNoteV199(e);return e});const sv=tr&&tr.snapshot&&tr.snapshot.val?tr.snapshot.val():null;if(sv)savedEvents.push(sv)}let found=await findProgressChildV316(oldUnit);if(!found&&nu!==String(oldUnit))found=await findProgressChildV316(nu);if(found&&found.key){await window.__psuDbRefV355('mainState/current/progress/'+found.key).transaction(p=>{if(!p)return p;Object.assign(p,{area:String(fields.area||''),line:String(fields.line||''),sn:String(fields.sn||''),unit:nu,type:String(fields.type||''),workType:String(fields.workType||'')});if(fields.docNo!==undefined){p.docNo=String(fields.docNo||'').trim();p.docStatus=p.docNo?'found':'pending'}return p})}else{const e=selected||{},row={area:String(fields.area||e.area||''),line:String(fields.line||e.line||''),sn:String(fields.sn||e.sn||''),unit:nu,type:String(fields.type||e.type||''),workType:String(fields.workType||e.workType||''),docNo:String(fields.docNo||''),docStatus:fields.docNo?'found':'pending'},childKey=await nextProgressChildKeyV316();await set('mainState/current/progress/'+childKey,row)}if(nu!==String(oldUnit)){await window.__psuDbRefV355('mainState/current/progressVisibleUnitsV445').transaction(raw=>fbStringsV189(raw).map(x=>x===String(oldUnit)?nu:x))}await set('mainState/current/savedAt',new Date().toISOString());await Promise.all([bump('mainProgress'),bumpScheduleDeltaV286(savedEvents,[],{}),bump('progressList')]);if(fields.note!==undefined)await window.__fbMasterUpdateProgressInfoV187(nu,date,String(fields.task||selected.task||''),String(fields.note||''));return {unit:nu}};
 })();
 </script>
-<script src="./hybrid.js?v=3.73"></script>
+<script src="./hybrid.js?v=3.74"></script>
 <script id="web-v298-auth-prewarm-script">
 (function(){
   if(window.__psuAuthPrewarmStartedV298)return;
@@ -2936,90 +2936,6 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
 })();
 </script>
 
-
-<style id="web-v314-final-badge-firstpaint-style">
-/* v3.14: 모바일/웹 첫 화면은 배지 초기값→최종값 변환 과정을 노출하지 않는다.
-   v3.12의 전체 폭/줌 레이아웃은 그대로 두고, 작업진행현황만 최초 배지 데이터가 안정된 뒤 공개한다. */
-body:not(.psu-progress-badges-ready-v314) #plist{visibility:hidden!important}
-</style>
-<script id="web-v314-final-badge-firstpaint-script">
-(function(){
- if(window.__webV314FinalBadgeFirstPaintInstalled)return;window.__webV314FinalBadgeFirstPaintInstalled=true;
- let opened=false,start=Date.now(),timer=0;
- function ready(){
-   if(opened)return true;
-   const canonical=window.__psuCanonicalReadyStateV287||{};
-   const core=!!(canonical.schedule&&canonical.progress&&canonical.progressInfo);
-   const pending=window.__psuBadgePendingReadyV314===true;
-   const memo=window.__psuBadgeMemoReadyV314===true;
-   const token=(()=>{try{return typeof window.__psuAuthTokenSyncV212==='function'?String(window.__psuAuthTokenSyncV212()||''):''}catch(_e){return''}})();
-   const authSettled=!token||window.__psuAuthRestoreSettledV291===true;
-   if(!authSettled)return false;
-   const role=String(window.__webAuthInfoV136&&window.__webAuthInfoV136.role||'');
-   const privateReady=(role==='admin'||role==='master')?window.__psuBadgePrivateReadyV314===true:true;
-   return core&&pending&&memo&&privateReady;
- }
- function reveal(force){
-   if(opened)return;
-   if(!force&&!ready())return;
-   opened=true;clearTimeout(timer);
-   try{if(typeof window.normalizeProgressActionsV219==='function')window.normalizeProgressActionsV219()}catch(_e){}
-   document.body.classList.add('psu-progress-badges-ready-v314');
- }
- function check(){
-   if(ready())return reveal(false);
-   if(Date.now()-start>=4500)return reveal(true);
-   timer=setTimeout(check,70);
- }
- window.addEventListener('psu-badge-ready-v314',()=>reveal(false));
- document.addEventListener('DOMContentLoaded',check,{once:true});
- if(document.readyState!=='loading')check();
- window.__psuRevealProgressBadgesV314=()=>reveal(true);
-})();
-</script>
-
-
-<style id="web-v315-schedule-badge-firstpaint-style">
-/* v3.15: 일정 카드는 미비작업/메모/진행정보의 최초 상태가 준비된 뒤 최종 배지 상태로 한 번에 공개한다.
-   visibility만 제어하므로 v3.12/v3.14의 모바일 폭·줌 레이아웃은 변경하지 않는다. */
-body:not(.psu-schedule-badges-ready-v315) #calendar,
-body:not(.psu-schedule-badges-ready-v315) #mobileList{visibility:hidden!important}
-</style>
-<script id="web-v315-schedule-badge-firstpaint-script">
-(function(){
- if(window.__webV315ScheduleBadgeFirstPaintInstalled)return;window.__webV315ScheduleBadgeFirstPaintInstalled=true;
- let opened=false,start=Date.now(),timer=0;
- function ready(){
-   if(opened)return true;
-   const canonical=window.__psuCanonicalReadyStateV287||{};
-   const core=!!(canonical.schedule&&canonical.progress&&canonical.progressInfo);
-   const pending=window.__psuBadgePendingReadyV314===true;
-   const memo=window.__psuBadgeMemoReadyV314===true;
-   return core&&pending&&memo;
- }
- function finalizeHidden(){
-   try{if(typeof renderCalendar==='function')renderCalendar()}catch(_e){}
-   try{if(typeof renderMobile==='function')renderMobile()}catch(_e){}
-   try{if(typeof window.__decorateCalendarFlagsV160==='function')window.__decorateCalendarFlagsV160()}catch(_e){}
- }
- function reveal(force){
-   if(opened)return;
-   if(!force&&!ready())return;
-   opened=true;clearTimeout(timer);
-   finalizeHidden();
-   document.body.classList.add('psu-schedule-badges-ready-v315');
- }
- function check(){
-   if(ready())return reveal(false);
-   if(Date.now()-start>=4500)return reveal(true);
-   timer=setTimeout(check,70);
- }
- window.addEventListener('psu-badge-ready-v314',()=>reveal(false));
- document.addEventListener('DOMContentLoaded',check,{once:true});
- if(document.readyState!=='loading')check();
- window.__psuRevealScheduleBadgesV315=()=>reveal(true);
-})();
-</script>
 
 <script id="web-v310-cache-refresh-script">
 (function(){
