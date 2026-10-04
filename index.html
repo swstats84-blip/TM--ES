@@ -109,7 +109,7 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
   html,body,#mobileList,.mobile-list,.dategroup{overflow-anchor:none!important;}
 }
 </style>
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.74";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.75";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
 <script id="web-v317-shared-escape">window.__webEscAttrV317=function(v){return String(v??'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})};</script>
 <script>window.__PSU_WEB_TEST_BUILD="v3.74-cache-first-no-legacy-hide";</script>
 <script id="web-v299-boot-perf-mode-hint">
@@ -142,7 +142,7 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
 <script id="web-v247-first-paint-script">
 (function(){
   if(window.__psuBootV247)return;
-  const st={auth:false,hint:false,data:false,anchor:false,mode:'unknown',released:false,cached:false,fastPrepared:false,fastReleased:false};
+  const st={auth:false,hint:false,data:false,anchor:false,mode:'unknown',released:false,cached:false,ui:false,fastPrepared:false,fastReleased:false};
   function needsAnchor(){try{return matchMedia('(max-width:820px)').matches&&st.mode==='admin'&&window.main&&main.dataset.tab==='calendar'&&Array.isArray(window.state||state&&state.scheduleEvents)&&((window.state||state).scheduleEvents||[]).length>0}catch(e){try{return matchMedia('(max-width:820px)').matches&&st.mode==='admin'&&window.main&&main.dataset.tab==='calendar'&&Array.isArray(state.scheduleEvents)&&state.scheduleEvents.length>0}catch(_e){return false}}}
   function reveal(fast){if(st.released)return;st.released=true;st.fastReleased=!!fast;try{if(window.__psuBootPerfV299)window.__psuBootPerfV299.mark(fast?'revealFast':'revealCanonical')}catch(_e){};/* v3.05: 캐시 DOM + 최초 오늘 위치가 이미 완성된 순간에는 추가 rAF를 기다리지 않고 같은 task에서 본 화면을 공개한다. 로딩 레이어가 완성 화면 위에 남아 보이는 체감 지연만 제거하며, 날짜 잠금/초기 child 버퍼링은 그대로 유지한다. */document.documentElement.classList.remove('psu-web-boot-v247');const el=document.getElementById('psuBootV247');if(el)el.setAttribute('aria-hidden','true');try{if(window.__releaseMobileBootV226)window.__releaseMobileBootV226()}catch(_e){}try{if(window.__psuBootPerfV299)window.__psuBootPerfV299.mark('overlayGone')}catch(_e){}}
   function prepareCached(){
@@ -159,15 +159,16 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
   function maybe(){
     if(st.released)return;
     // v2.97: 인증/권한이 확정되고 IndexedDB 캐시가 있으면 Firebase 전체 초기 snapshot을 기다리지 않고 즉시 첫 화면을 만든다.
-    if((st.auth||st.hint)&&st.cached){prepareCached();if(!st.released&&(!needsAnchor()||st.anchor))reveal(true);return}
-    // 캐시가 없는 최초 접속만 기존처럼 canonical 실시간 데이터 준비를 기다린다.
-    if(!st.auth||!st.data)return;if(needsAnchor()&&!st.anchor)return;reveal(false)
+    if((st.auth||st.hint)&&st.cached&&st.ui){prepareCached();if(!st.released&&(!needsAnchor()||st.anchor))reveal(true);return}
+    // v3.75: 최초 공개는 전체 UI 모듈과 로컬 보조 캐시가 준비된 뒤에만 허용한다.
+    if(!st.ui||!st.auth||!st.data)return;if(needsAnchor()&&!st.anchor)return;reveal(false)
   }
   window.__psuBootV247={
     mode(admin){if(st.released)return;st.mode=admin?'admin':'general';if(!st.cached)st.anchor=false;maybe()},
     hint(admin){if(st.released)return;st.hint=true;st.mode=admin?'admin':'general';maybe()},
     auth(admin){if(st.released)return;st.auth=true;st.mode=admin?'admin':'general';maybe()},
     cache(){if(st.released)return;st.cached=true;maybe()},
+    ui(){if(st.released)return;st.ui=true;maybe()},
     data(){if(st.released)return;st.data=true;maybe()},
     anchor(){if(st.released)return;st.anchor=true;maybe()},
     isActive(){return !st.released},
@@ -562,14 +563,19 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
 <script id="v115-shared-leave-script">
 (function(){
  if(window.__v115SharedLeaveInstalled)return;window.__v115SharedLeaveInstalled=true;
- const cache={};let loading=false,pendingForce=false,lastRangeKey='',lastLoadedAt=0;
+ const CACHE_KEY_V375='psuAnnualLeaveStableV375';
+ const cache={};let loading=false,pendingForce=false,lastLoadedAt=0,cachedRevisionV375='',cacheRestoredV375=false;
  function arr(v){if(Array.isArray(v))return v.map(x=>String(x||'').trim()).filter(Boolean);if(typeof v==='string')return v.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean);return []}
  function parse(v){const out=[];String(v||'').split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).forEach(x=>{if(!out.includes(x))out.push(x)});return out}
  function uniq(v){const out=[];arr(v).forEach(x=>{if(!out.includes(x))out.push(x)});return out}
+ function clone(v,f){try{return JSON.parse(JSON.stringify(v))}catch(_e){return f}}
+ function replaceCacheV375(raw){Object.keys(cache).forEach(k=>delete cache[k]);Object.keys(raw&&typeof raw==='object'?raw:{}).forEach(ds=>{const g=raw[ds]||{};cache[ds]={teoist:arr(g.teoist),temaat:arr(g.temaat),reno:arr(g.reno),workTeams:g.workTeams&&typeof g.workTeams==='object'?clone(g.workTeams,{}):{},additionalTeams:g.additionalTeams&&typeof g.additionalTeams==='object'?clone(g.additionalTeams,{}):{}}})}
+ function saveCacheV375(revision=cachedRevisionV375){try{localStorage.setItem(CACHE_KEY_V375,JSON.stringify({schema:1,revision:String(revision||''),at:Date.now(),data:cache}))}catch(_e){}}
+ function restoreCacheV375(){try{const x=JSON.parse(localStorage.getItem(CACHE_KEY_V375)||'null');if(!x||x.schema!==1||!x.data||typeof x.data!=='object')return false;replaceCacheV375(x.data);cachedRevisionV375=String(x.revision||'');cacheRestoredV375=true;return true}catch(_e){return false}}
+ let annualCacheReadyResolveV375=null,annualCacheReadySettledV375=false;window.__psuAnnualLeaveCacheReadyV375=new Promise(r=>{annualCacheReadyResolveV375=r});function settleAnnualCacheReadyV375(v){if(annualCacheReadySettledV375)return;annualCacheReadySettledV375=true;if(annualCacheReadyResolveV375){annualCacheReadyResolveV375(!!v);annualCacheReadyResolveV375=null}}const annualCachedV375=restoreCacheV375();if(annualCachedV375){try{decorateDesktop();decorateMobile()}catch(_e){}settleAnnualCacheReadyV375(true)}
  function group(ds){if(Object.prototype.hasOwnProperty.call(cache,ds)){const g=cache[ds]||{};return {teoist:arr(g.teoist),temaat:arr(g.temaat),reno:arr(g.reno),workTeams:g.workTeams&&typeof g.workTeams==='object'?g.workTeams:{},additionalTeams:g.additionalTeams&&typeof g.additionalTeams==='object'?g.additionalTeams:{}}}return {teoist:[],temaat:arr((state.annualLeaveByDate||{})[ds]),reno:arr((state.renovationLeaveByDate||{})[ds])}}
  function names(ds){const g=group(ds),dyn=Object.values(g.workTeams||{}).flatMap(arr),add=Object.values(g.additionalTeams||{}).flatMap(arr),work=uniq(g.teoist.concat(g.temaat,dyn)),role=String(window.__webAuthInfoV136&&window.__webAuthInfoV136.role||'');return role==='admin'?work:uniq(work.concat(g.reno,add))}
- function range(){const visible=[...document.querySelectorAll('#calendar .day[data-date]')].map(x=>String(x.dataset.date||'')).filter(Boolean).sort();if(visible.length)return [visible[0],visible[visible.length-1]];const first=new Date(viewDate.getFullYear(),viewDate.getMonth(),1);let start=new Date(first);while(start.getDay()!==1)start.setDate(start.getDate()-1);return [iso(start),iso(addDays(start,39))]}
- async function refreshLeave(force=false){if(loading){if(force)pendingForce=true;return}const [start,end]=range(),key=start+'|'+end;if(!force&&key===lastRangeKey&&Date.now()-lastLoadedAt<12000)return;loading=true;try{const fb=window.__fbDirectV187;if(!fb)return;const raw=await fb.readRange('annualLeave',start,end)||{};Object.keys(cache).forEach(k=>delete cache[k]);Object.keys(raw).forEach(ds=>{if(ds<start||ds>end)return;const g=raw[ds]||{};cache[ds]={teoist:arr(g.teoist),temaat:arr(g.temaat),reno:arr(g.reno),workTeams:g.workTeams&&typeof g.workTeams==='object'?g.workTeams:{},additionalTeams:g.additionalTeams&&typeof g.additionalTeams==='object'?g.additionalTeams:{}}});lastRangeKey=key;lastLoadedAt=Date.now();decorateDesktop();decorateMobile()}catch(err){console.warn('연차 Firebase 불러오기 오류',err)}finally{loading=false;if(pendingForce){pendingForce=false;setTimeout(()=>refreshLeave(true),0)}}}
+ async function refreshLeave(force=false,knownRevision=''){if(loading){if(force)pendingForce=true;return}if(!force&&cacheRestoredV375)return;loading=true;try{const fb=window.__fbDirectV187;if(!fb){settleAnnualCacheReadyV375(false);return}const raw=await fb.readFresh('annualLeave')||{};replaceCacheV375(raw);let rev=String(knownRevision||leaveRevValueV356||'');if(!rev){try{rev=String(await fb.readFresh('meta/revisions/annualLeave')||'')}catch(_e){}}if(rev){cachedRevisionV375=rev;leaveRevValueV356=rev}cacheRestoredV375=true;lastLoadedAt=Date.now();saveCacheV375(cachedRevisionV375);decorateDesktop();decorateMobile();settleAnnualCacheReadyV375(true)}catch(err){console.warn('연차 Firebase 불러오기 오류',err);settleAnnualCacheReadyV375(false)}finally{loading=false;if(pendingForce){pendingForce=false;setTimeout(()=>refreshLeave(true),0)}}}
  function addBadge(head,ds){if(!head)return;head.querySelectorAll('.annual-leave-badge-v114,.annual-leave-badge-v115').forEach(x=>x.remove());const n=names(ds),b=document.createElement('button');b.type='button';b.className='annual-leave-badge-v115'+(n.length?'':' empty');b.textContent=n.length?`연차 ${n.length}명`:'연차 +';b.title=n.length?'연차자 보기/수정':'연차 입력';b.onclick=e=>{e.preventDefault();e.stopPropagation();openEditor(ds)};head.appendChild(b)}
  function decorateDesktop(){document.querySelectorAll('#calendar .day[data-date]').forEach(day=>addBadge(day.querySelector('.date'),day.dataset.date))}
  function ensureLeaveOnlyMobile(){const [s,e]=monthWeekRangeV328();Object.keys(cache).sort().forEach(ds=>{const n=names(ds);if(!n.length)return;const d=fromISO(ds);if(d<s||d>e||d.getDay()===0||d.getDay()===6)return;if(mobileList.querySelector(`.dategroup[data-date="${ds}"]`))return;const empty=mobileList.querySelector(':scope > .empty');if(empty)empty.remove();const wn=['일','월','화','수','목','금','토'][d.getDay()],g=document.createElement('div');g.className='dategroup leave-only-v115';g.dataset.date=ds;g.innerHTML=`<h3>${d.getMonth()+1}/${d.getDate()} <span class="weekday">${wn}요일</span></h3><div class="mnone">등록된 일정이 없습니다.</div>`;mobileList.appendChild(g)});[...mobileList.querySelectorAll('.dategroup[data-date]')].sort((a,b)=>a.dataset.date.localeCompare(b.dataset.date)).forEach(x=>mobileList.appendChild(x))}
@@ -582,20 +588,17 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
    psuAlert('연차 입력 화면을 준비 중입니다. 잠시 후 다시 눌러 주세요.');
  }
  window.__getAnnualLeaveGroupV236=ds=>group(ds);
-
-
- const oldCal=renderCalendar;renderCalendar=function(){oldCal();decorateDesktop();setTimeout(()=>refreshLeave(false),0)};
- const oldMob=renderMobile;renderMobile=function(){oldMob();decorateMobile();setTimeout(()=>refreshLeave(false),0)};
+ const oldCal=renderCalendar;renderCalendar=function(){oldCal();decorateDesktop()};
+ const oldMob=renderMobile;renderMobile=function(){oldMob();decorateMobile()};
  decorateDesktop();decorateMobile();window.refreshLeave=refreshLeave;
-  // v3.72: 연차 revision 구독은 Hybrid transport lifecycle이 단독 소유하고 family cache commit과 독립적으로 유지한다.
-  let leaveRevRefV356=null,leaveRevHandlerV356=null,leaveRevReadyV356=false,leaveRevValueV356='',leaveRevRetryV371=0;
-  function detachLeaveRevV356(){if(leaveRevRefV356&&leaveRevHandlerV356)try{leaveRevRefV356.off('value',leaveRevHandlerV356)}catch(_e){}leaveRevRefV356=null;leaveRevHandlerV356=null;leaveRevReadyV356=false;leaveRevValueV356=''}
-  function transportReadyV371(){try{const h=window.__psuHybridTransportV368,st=h&&typeof h.status==='function'?h.status():null;return !!(st&&(st.mode==='RELAY'||st.mode==='DIRECT'))}catch(_e){return false}}
-  function attachLeaveRevV356(){if(leaveRevRefV356||!transportReadyV371()||!window.__psuDbRefV355)return;try{leaveRevRefV356=window.__psuDbRefV355('meta/revisions/annualLeave');leaveRevHandlerV356=snap=>{leaveRevRetryV371=0;const v=String(snap&&snap.val?snap.val()||'':'');if(!leaveRevReadyV356){leaveRevReadyV356=true;leaveRevValueV356=v;return}if(v===leaveRevValueV356)return;leaveRevValueV356=v;lastRangeKey='';lastLoadedAt=0;try{if(typeof window.__invalidateMasterLeaveV358==='function')window.__invalidateMasterLeaveV358()}catch(_e){}if(loading)pendingForce=true;setTimeout(()=>refreshLeave(true),30)};leaveRevRefV356.on('value',leaveRevHandlerV356,e=>{console.warn('연차 revision 실시간 구독 실패',e);detachLeaveRevV356();const ms=Math.min(10000,800*Math.pow(2,leaveRevRetryV371++));setTimeout(()=>{if(transportReadyV371())attachLeaveRevV356()},ms)})}catch(e){detachLeaveRevV356();const ms=Math.min(10000,800*Math.pow(2,leaveRevRetryV371++));setTimeout(()=>{if(transportReadyV371())attachLeaveRevV356()},ms)}}
-  let leaveInitialRefreshV371=false;
-  function onLeaveTransportReadyV371(){if(!transportReadyV371())return;if(!leaveRevRefV356)attachLeaveRevV356();if(!leaveInitialRefreshV371){leaveInitialRefreshV371=true;Promise.resolve().then(()=>refreshLeave(true))}}
-  window.addEventListener('psu-transport-mode',e=>{const m=String(e&&e.detail&&e.detail.mode||'');if(m==='RELAY'||m==='DIRECT')onLeaveTransportReadyV371()});
-  Promise.resolve().then(onLeaveTransportReadyV371);
+ // v3.75: 연차는 저장된 전체 snapshot + revision 비교로 동작한다. 변경되지 않은 시작에서는 본문을 다시 읽지 않는다.
+ let leaveRevRefV356=null,leaveRevHandlerV356=null,leaveRevReadyV356=false,leaveRevValueV356='',leaveRevRetryV371=0;
+ function detachLeaveRevV356(){if(leaveRevRefV356&&leaveRevHandlerV356)try{leaveRevRefV356.off('value',leaveRevHandlerV356)}catch(_e){}leaveRevRefV356=null;leaveRevHandlerV356=null;leaveRevReadyV356=false;leaveRevValueV356=''}
+ function transportReadyV371(){try{const h=window.__psuHybridTransportV368,st=h&&typeof h.status==='function'?h.status():null;return !!(st&&(st.mode==='RELAY'||st.mode==='DIRECT'))}catch(_e){return false}}
+ function attachLeaveRevV356(){if(leaveRevRefV356||!transportReadyV371()||!window.__psuDbRefV355)return;try{leaveRevRefV356=window.__psuDbRefV355('meta/revisions/annualLeave');leaveRevHandlerV356=snap=>{leaveRevRetryV371=0;const v=String(snap&&snap.val?snap.val()||'':'');if(!leaveRevReadyV356){leaveRevReadyV356=true;leaveRevValueV356=v;if(!cacheRestoredV375||!cachedRevisionV375||v!==cachedRevisionV375)refreshLeave(true,v);return}if(v===leaveRevValueV356)return;leaveRevValueV356=v;try{if(typeof window.__invalidateMasterLeaveV358==='function')window.__invalidateMasterLeaveV358()}catch(_e){}if(loading)pendingForce=true;else refreshLeave(true,v)};leaveRevRefV356.on('value',leaveRevHandlerV356,e=>{console.warn('연차 revision 실시간 구독 실패',e);detachLeaveRevV356();const ms=Math.min(10000,800*Math.pow(2,leaveRevRetryV371++));setTimeout(()=>{if(transportReadyV371())attachLeaveRevV356()},ms)})}catch(e){detachLeaveRevV356();const ms=Math.min(10000,800*Math.pow(2,leaveRevRetryV371++));setTimeout(()=>{if(transportReadyV371())attachLeaveRevV356()},ms)}}
+ function onLeaveTransportReadyV371(){if(!transportReadyV371())return;if(!leaveRevRefV356)attachLeaveRevV356()}
+ window.addEventListener('psu-transport-mode',e=>{const m=String(e&&e.detail&&e.detail.mode||'');if(m==='RELAY'||m==='DIRECT')onLeaveTransportReadyV371()});
+ Promise.resolve().then(onLeaveTransportReadyV371);
  setTimeout(()=>{const ver=document.getElementById('version');if(ver)ver.textContent=WEB_VERSION_V197+' · 메모·연차 입력 가능'},80);
 })();
 </script>
@@ -777,7 +780,7 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
  window.__fbMasterUpdateEquipmentV187=async function(oldUnit,date,fields){if(!isMaster())throw new Error('마스터 권한이 필요합니다.');await masterWriteAuthV320();const selected=(state.scheduleEvents||[]).find(e=>e&&String(e.unit||'')===String(oldUnit)&&(!date||String(e.date||'')===String(date)))||(state.scheduleEvents||[]).find(e=>e&&String(e.unit||'')===String(oldUnit));if(!selected)throw new Error('장비의 스케줄 정보를 찾지 못했습니다.');const src=String(selected.sourceUnit||selected.unit||oldUnit),nu=String(fields.unit||oldUnit).trim();if(!nu)throw new Error('장비 호기는 비워둘 수 없습니다.');const targets=(state.scheduleEvents||[]).filter(e=>e&&String(e.sourceUnit||e.unit||'')===src&&String(e.eventId||'')).map(e=>({id:String(e.eventId),date:String(e.date||'')}));if(!targets.length)throw new Error('수정할 일정 ID를 찾지 못했습니다.');const savedEvents=[];for(const t of targets){const tr=await window.__psuDbRefV355('scheduleV2/events/'+t.id).transaction(e=>{if(!e)return e;['line','sn','unit','type','workType'].forEach(f=>manual(e,f,String(fields[f]??e[f]??'').trim()));if(t.date===String(date)){if(fields.vendor!==undefined)manual(e,'vendor',String(fields.vendor||'').toUpperCase());if(fields.task!==undefined)manual(e,'task',String(fields.task||'').trim())}e.area=String(fields.area??e.area??'').trim();e.sourceUnit=e.sourceUnit||src;stripScheduleNoteV199(e);return e});const sv=tr&&tr.snapshot&&tr.snapshot.val?tr.snapshot.val():null;if(sv)savedEvents.push(sv)}let found=await findProgressChildV316(oldUnit);if(!found&&nu!==String(oldUnit))found=await findProgressChildV316(nu);if(found&&found.key){await window.__psuDbRefV355('mainState/current/progress/'+found.key).transaction(p=>{if(!p)return p;Object.assign(p,{area:String(fields.area||''),line:String(fields.line||''),sn:String(fields.sn||''),unit:nu,type:String(fields.type||''),workType:String(fields.workType||'')});if(fields.docNo!==undefined){p.docNo=String(fields.docNo||'').trim();p.docStatus=p.docNo?'found':'pending'}return p})}else{const e=selected||{},row={area:String(fields.area||e.area||''),line:String(fields.line||e.line||''),sn:String(fields.sn||e.sn||''),unit:nu,type:String(fields.type||e.type||''),workType:String(fields.workType||e.workType||''),docNo:String(fields.docNo||''),docStatus:fields.docNo?'found':'pending'},childKey=await nextProgressChildKeyV316();await set('mainState/current/progress/'+childKey,row)}if(nu!==String(oldUnit)){await window.__psuDbRefV355('mainState/current/progressVisibleUnitsV445').transaction(raw=>fbStringsV189(raw).map(x=>x===String(oldUnit)?nu:x))}await set('mainState/current/savedAt',new Date().toISOString());await Promise.all([bump('mainProgress'),bumpScheduleDeltaV286(savedEvents,[],{}),bump('progressList')]);if(fields.note!==undefined)await window.__fbMasterUpdateProgressInfoV187(nu,date,String(fields.task||selected.task||''),String(fields.note||''));return {unit:nu}};
 })();
 </script>
-<script src="./hybrid.js?v=3.74"></script>
+<script src="./hybrid.js?v=3.75"></script>
 <script id="web-v298-auth-prewarm-script">
 (function(){
   if(window.__psuAuthPrewarmStartedV298)return;
@@ -930,12 +933,9 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
  if(window.__v125ProgressWorkClassInstalled)return;window.__v125ProgressWorkClassInstalled=true;
  function kind(v){const s=String(v||'').replace(/\s+/g,'');if(s.includes('해체'))return '해체';if(s.includes('신규'))return '신규';if(s.includes('이설'))return '이설';return ''}
  function forUnit(unit){const p=progressFor(unit)||{};let k=kind(p.workType);if(k)return k;for(const e of activeEvents().filter(x=>x&&x.unit===unit)){k=kind(e.workType);if(k)return k}return ''}
- function cleanSchedule(){document.querySelectorAll('#calendar .workclass-v124,#mobileList .workclass-v124,.event .workclass-v124,.mcard .workclass-v124').forEach(x=>x.remove())}
- function decorate(){cleanSchedule();if(!window.plist)return;plist.querySelectorAll('.pitem[data-unit]').forEach(card=>{card.querySelectorAll('.workclass-v124,.workclass-v125').forEach(x=>x.remove());const k=forUnit(card.dataset.unit||'');if(!k)return;const t=card.querySelector('.ptype');if(!t)return;const b=document.createElement('span');b.className='workclass-v125';b.dataset.kind=k;b.textContent=k;b.title=`작업 구분: ${k}`;t.insertAdjacentElement('afterend',b)})}
- const rc=window.renderCalendar;if(typeof rc==='function')window.renderCalendar=renderCalendar=function(){const r=rc();cleanSchedule();return r};
- const rm=window.renderMobile;if(typeof rm==='function')window.renderMobile=renderMobile=function(){const r=rm();cleanSchedule();return r};
+ function decorate(){if(!window.plist)return;plist.querySelectorAll('.pitem[data-unit]').forEach(card=>{card.querySelectorAll('.workclass-v125').forEach(x=>x.remove());const k=forUnit(card.dataset.unit||'');if(!k)return;const t=card.querySelector('.ptype');if(!t)return;const b=document.createElement('span');b.className='workclass-v125';b.dataset.kind=k;b.textContent=k;b.title=`작업 구분: ${k}`;t.insertAdjacentElement('afterend',b)})}
  const rp=window.renderProgress;if(typeof rp==='function')window.renderProgress=renderProgress=function(){const r=rp();decorate();return r};
- cleanSchedule();decorate();
+ decorate();
 })();
 </script>
 
@@ -2182,13 +2182,15 @@ body.user-name-locked-v345{overflow:hidden!important;background:#f5f7fb!importan
 <script id="web-v219-memo-date-actions-script">
 (function(){
  if(window.__webV219MemoDateInstalled)return;window.__webV219MemoDateInstalled=true;
- let totals=Object.create(null),byDate=Object.create(null),memoCountsReadyV226=false;
+ let totals=Object.create(null),byDate=Object.create(null),memoCountsReadyV226=false,memoBadgeReadyResolveV375=null,memoBadgeReadySettledV375=false;window.__psuMemoBadgeReadyV375=new Promise(r=>{memoBadgeReadyResolveV375=r});function settleMemoBadgeReadyV375(v){if(memoBadgeReadySettledV375)return;memoBadgeReadySettledV375=true;if(memoBadgeReadyResolveV375){memoBadgeReadyResolveV375(!!v);memoBadgeReadyResolveV375=null}}
  function effectiveDateV219(m){const v=String(m&&m.memoDate||'').trim();if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;const x=String(m&&m.createdDate||m&&m.date||'').trim();if(/^\d{4}-\d{2}-\d{2}$/.test(x))return x;const s=String(m&&m.createdAt||'');try{const d=new Date(s);if(!isNaN(d)){const y=d.getFullYear(),mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return `${y}-${mm}-${dd}`}}catch(_e){}return s.slice(0,10)}
  function normalizeProgressActionsV219(){document.querySelectorAll('#plist .pitem[data-unit]').forEach(card=>{const head=card.querySelector('.phead');if(!head)return;let row=card.querySelector(':scope > .progress-actions-v219');if(!row){row=document.createElement('div');row.className='progress-actions-v219';head.insertAdjacentElement('afterend',row)}const detail=head.querySelector('.detail-btn-v162')||row.querySelector('.detail-btn-v162'),pi=head.querySelector('.progress-info-chip-v164')||row.querySelector('.progress-info-chip-v164'),pending=head.querySelector('.pending-btn-v138')||row.querySelector('.pending-btn-v138'),memo=head.querySelector('.sharedbtn-v15')||row.querySelector('.sharedbtn-v15'),want=[detail,pi,pending,memo].filter(Boolean),cur=[...row.children].filter(x=>want.includes(x));if(cur.length!==want.length||cur.some((x,i)=>x!==want[i]))want.forEach(x=>row.appendChild(x));if(memo){const u=card.dataset.unit||'';memo.onclick=e=>{e.preventDefault();e.stopPropagation();window.openSharedMemoV15&&window.openSharedMemoV15(u,'')}}})}
  function setScheduleMemoChipV219(el){if(!memoCountsReadyV226)return;const u=el.dataset.unit||'',d=el.dataset.date||'',n=Number(byDate[u]&&byDate[u][d]||0);let box=el.querySelector('.calendar-status-v160'),x=box&&box.querySelector('.memo');if(!n){if(x)x.remove();if(box&&!box.children.length)box.remove();return}if(!box){box=document.createElement('div');box.className='calendar-status-v160';el.appendChild(box)}if(!x){x=document.createElement('span');x.className='memo';box.appendChild(x)}x.dataset.v219Date=d;x.dataset.v219Count=String(n);x.textContent=`메모 ${n}건`;x.onclick=e=>{e.preventDefault();e.stopPropagation();window.openSharedMemoV15&&window.openSharedMemoV15(u,d)};const progress=box.querySelector('.progress-info-chip-v164'),pending=box.querySelector('.pending');if(pending){if(pending.nextElementSibling!==x)pending.insertAdjacentElement('afterend',x)}else if(progress){if(progress.nextElementSibling!==x)progress.insertAdjacentElement('afterend',x)}else if(box.lastElementChild!==x)box.appendChild(x)}
  window.normalizeProgressActionsV219=normalizeProgressActionsV219;
  function decorateScheduleV219(){document.querySelectorAll('.event[data-unit][data-date],.mcard[data-unit][data-date]').forEach(setScheduleMemoChipV219)}
- window.refreshMemoCountsV110=async function(){if(typeof window.__psuMemoGetRawV256!=='function')return null;try{const raw=await window.__psuMemoGetRawV256(false);totals=Object.create(null);byDate=Object.create(null);Object.keys(raw||{}).forEach(k=>{const m=raw[k];if(!m||m.deleted)return;const unit=String(m.unit||'').trim();if(!unit)return;const d=effectiveDateV219(m);totals[unit]=(totals[unit]||0)+1;if(!byDate[unit])byDate[unit]=Object.create(null);byDate[unit][d]=(byDate[unit][d]||0)+1});memoCountsReadyV226=true;window.__psuBadgeMemoReadyV314=true;try{window.dispatchEvent(new Event('psu-badge-ready-v314'))}catch(_e){}window.__calendarMemoCountsV160=totals;document.querySelectorAll('#plist .pitem[data-unit]').forEach(card=>{const u=card.dataset.unit||'',b=card.querySelector('.sharedbtn-v15'),n=Number(totals[u]||0);if(b){b.textContent=n?`메모 ${n}건`:'메모';b.title=b.textContent;b.classList.toggle('has-count-v146',!!n)}});normalizeProgressActionsV219();decorateScheduleV219();return {ok:true,counts:totals,countsByDate:byDate,storage:'firebase-canonical'}}catch(e){console.warn('v2.71 메모 건수 캐시 적용 실패',e);return null}};
+ function applyMemoBadgeRawV375(raw){totals=Object.create(null);byDate=Object.create(null);Object.keys(raw||{}).forEach(k=>{const m=raw[k];if(!m||m.deleted)return;const unit=String(m.unit||'').trim();if(!unit)return;const d=effectiveDateV219(m);totals[unit]=(totals[unit]||0)+1;if(!byDate[unit])byDate[unit]=Object.create(null);byDate[unit][d]=(byDate[unit][d]||0)+1});try{if(typeof window.__applyMemoCountsV270==='function')window.__applyMemoCountsV270(raw)}catch(_e){}memoCountsReadyV226=true;settleMemoBadgeReadyV375(true);window.__psuBadgeMemoReadyV314=true;try{window.dispatchEvent(new Event('psu-badge-ready-v314'))}catch(_e){}window.__calendarMemoCountsV160=totals;document.querySelectorAll('#plist .pitem[data-unit]').forEach(card=>{const u=card.dataset.unit||'',b=card.querySelector('.sharedbtn-v15'),n=Number(totals[u]||0);if(b){b.textContent=n?`메모 ${n}건`:'메모';b.title=b.textContent;b.classList.toggle('has-count-v146',!!n)}});normalizeProgressActionsV219();decorateScheduleV219();return {ok:true,counts:totals,countsByDate:byDate,storage:'cache-or-canonical'}}
+ window.__primeMemoBadgeFromRawV375=applyMemoBadgeRawV375;
+ window.refreshMemoCountsV110=async function(){if(typeof window.__psuMemoGetRawV256!=='function'){settleMemoBadgeReadyV375(false);return null}try{return applyMemoBadgeRawV375(await window.__psuMemoGetRawV256(false))}catch(e){console.warn('v3.75 메모 건수 캐시 적용 실패',e);settleMemoBadgeReadyV375(false);return null}};
  const oldFlags=window.__decorateCalendarFlagsV160;if(typeof oldFlags==='function')window.__decorateCalendarFlagsV160=function(){const r=oldFlags.apply(this,arguments);decorateScheduleV219();return r};const oldRP=window.renderProgress;if(typeof oldRP==='function')window.renderProgress=renderProgress=function(){const r=oldRP.apply(this,arguments);normalizeProgressActionsV219();return r};const oldRC=window.renderCalendar;if(typeof oldRC==='function')window.renderCalendar=renderCalendar=function(){const r=oldRC.apply(this,arguments);decorateScheduleV219();return r};const oldRM=window.renderMobile;if(typeof oldRM==='function')window.renderMobile=renderMobile=function(){const r=oldRM.apply(this,arguments);decorateScheduleV219();return r};setTimeout(normalizeProgressActionsV219,300);
 })();
 </script>
@@ -2218,6 +2220,11 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
  let privateUnits=new Set(),privateRaw={},privateRef=null,privateHandlers=null,privateUid='',privateReady=false,privateReadyPromise=Promise.resolve(),privateReadyResolve=null,connectBusy=false,connectTimer=0,privateReadyTimer=0,privateRetryV280=0;
  const isAdmin=()=>{const r=String(window.__webAuthInfoV136&&window.__webAuthInfoV136.role||'');return r==='admin'||r==='master'};
  function session(){try{return typeof window.__webAuthTokenV136==='function'?String(window.__webAuthTokenV136()||''):String(localStorage.getItem('psuWebAdminSessionV131')||'')}catch(e){return ''}}
+ function privateBadgeOwnerV375(){const a=window.__webAuthInfoV136||{},role=String(a.role||''),user=String(a.username||''),name=String(a.displayName||'');return (role==='admin'||role==='master')?encodeURIComponent(role+'|'+user+'|'+name):''}
+ function privateBadgeKeyV375(){const o=privateBadgeOwnerV375();return o?'psuPrivateBadgeStableV375_'+o:''}
+ function restorePrivateBadgeCacheV375(){const k=privateBadgeKeyV375();if(!k){privateUnits=new Set();return false}try{const x=JSON.parse(localStorage.getItem(k)||'null');if(!x||x.schema!==1||!Array.isArray(x.units))return false;privateUnits=new Set(x.units.map(v=>String(v||'').trim()).filter(Boolean));window.__psuBadgePrivateReadyV314=true;decorate();return true}catch(_e){return false}}
+ function savePrivateBadgeCacheV375(){const k=privateBadgeKeyV375();if(!k)return;try{localStorage.setItem(k,JSON.stringify({schema:1,at:Date.now(),units:[...privateUnits]}))}catch(_e){}}
+ let privateBadgeReadyResolveV375=null,privateBadgeReadySettledV375=false;window.__psuPrivateBadgeCacheReadyV375=new Promise(r=>{privateBadgeReadyResolveV375=r});function settlePrivateBadgeReadyV375(v){if(privateBadgeReadySettledV375)return;privateBadgeReadySettledV375=true;if(privateBadgeReadyResolveV375){privateBadgeReadyResolveV375(!!v);privateBadgeReadyResolveV375=null}}const privateBadgeCachedV375=restorePrivateBadgeCacheV375();if(privateBadgeCachedV375)settlePrivateBadgeReadyV375(true);else if(window.__psuAuthRestoreSettledV291===true&&!isAdmin())settlePrivateBadgeReadyV375(true);window.addEventListener('psu-auth-mode',e=>{const d=e&&e.detail||{};if(d.optimistic)return;if(d.admin){if(restorePrivateBadgeCacheV375())settlePrivateBadgeReadyV375(true)}else settlePrivateBadgeReadyV375(true)});
  function fmt(s){try{return new Date(s).toLocaleString('ko-KR',{year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return String(s||'')}}
  function info(unit){const p=typeof progressFor==='function'?(progressFor(unit)||{}):{},e=(typeof activeEvents==='function'?(activeEvents()||[]):[]).find(x=>x&&String(x.unit||'')===String(unit))||{};return {sn:String(p.sn||e.sn||'')}}
  function ensureButton(card){
@@ -2239,7 +2246,7 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
    const a=window.__webAuthInfoV136||{},displayName=String(a.displayName||a.username||'').trim(),uid=displayName===SHARED_NAME_V256?SHARED_UID_V256:String(u.uid||'').trim();
    if(!uid)throw new Error('개인메모 계정을 확인하지 못했습니다.');return {uid:uid,authUid:String(u.uid||''),displayName:displayName,username:String(a.username||''),role:String(a.role||'admin')}
  }
- function applyPrivateRawV272(raw){privateRaw=raw&&typeof raw==='object'?raw:{};const a=[];Object.values(privateRaw).forEach(n=>{const u=String(n&&n.unit||'').trim(),tx=String(n&&n.text||'').trim();if(u&&tx&&!a.includes(u))a.push(u)});privateUnits=new Set(a);privateReady=true;window.__psuBadgePrivateReadyV314=true;try{window.dispatchEvent(new Event('psu-badge-ready-v314'))}catch(_e){}if(privateReadyResolve){privateReadyResolve();privateReadyResolve=null}decorate()}
+ function applyPrivateRawV272(raw){privateRaw=raw&&typeof raw==='object'?raw:{};const a=[];Object.values(privateRaw).forEach(n=>{const u=String(n&&n.unit||'').trim(),tx=String(n&&n.text||'').trim();if(u&&tx&&!a.includes(u))a.push(u)});privateUnits=new Set(a);privateReady=true;savePrivateBadgeCacheV375();settlePrivateBadgeReadyV375(true);window.__psuBadgePrivateReadyV314=true;try{window.dispatchEvent(new Event('psu-badge-ready-v314'))}catch(_e){}if(privateReadyResolve){privateReadyResolve();privateReadyResolve=null}decorate()}
  function clearPrivateRefV272(reset=true){clearTimeout(connectTimer);clearTimeout(privateReadyTimer);if(privateRef&&privateHandlers){for(const [ev,fn] of Object.entries(privateHandlers))try{privateRef.off(ev,fn)}catch(_e){}}privateRef=null;privateHandlers=null;privateUid='';connectBusy=false;if(reset){privateRaw={};privateUnits=new Set();privateReady=false;if(!isAdmin())window.__psuBadgePrivateReadyV314=true;decorate()}}
  function newPrivateReadyV272(){privateReady=false;privateReadyPromise=new Promise(r=>{privateReadyResolve=r})}
  async function connectPrivateV272(){
@@ -2252,12 +2259,12 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
      privateRef=window.__psuDbRefV355('privateNotes/'+ident.uid);
      // v2.73: 개인메모도 상위 value snapshot 대신 변경된 장비 메모 child만 반영한다.
      const readySoon=()=>{clearTimeout(privateReadyTimer);privateReadyTimer=setTimeout(()=>applyPrivateRawV272(privateRaw),180)};
-     const applyChild=(snap,remove)=>{privateRetryV280=0;const k=String(snap&&snap.key||'');if(!k)return;if(remove)delete privateRaw[k];else privateRaw[k]=snap.val();applyPrivateRawV272(privateRaw);readySoon()};
-     const onErr=e=>{console.warn('개인메모 실시간 구독 실패',e);if(privateReadyResolve){privateReadyResolve();privateReadyResolve=null}privateReady=false;clearPrivateRefV272(false);if(privateRetryV280<5){const delay=[1800,4000,9000,20000,45000][privateRetryV280++]||45000;scheduleConnectV272(delay)}};
+     const applyChild=(snap,remove)=>{privateRetryV280=0;const k=String(snap&&snap.key||'');if(!k)return;if(remove)delete privateRaw[k];else privateRaw[k]=snap.val();if(privateReady)applyPrivateRawV272(privateRaw);else readySoon()};
+     const onErr=e=>{console.warn('개인메모 실시간 구독 실패',e);settlePrivateBadgeReadyV375(false);if(privateReadyResolve){privateReadyResolve();privateReadyResolve=null}privateReady=false;clearPrivateRefV272(false);if(privateRetryV280<5){const delay=[1800,4000,9000,20000,45000][privateRetryV280++]||45000;scheduleConnectV272(delay)}};
      privateRaw={};privateHandlers={child_added:s=>applyChild(s,false),child_changed:s=>applyChild(s,false),child_removed:s=>applyChild(s,true)};
      Object.entries(privateHandlers).forEach(([ev,fn])=>privateRef.on(ev,fn,onErr));readySoon();
      return privateReadyPromise
-   }catch(e){console.warn('개인메모 Firebase 연결 실패',e);if(privateReadyResolve){privateReadyResolve();privateReadyResolve=null}return null}finally{connectBusy=false}
+   }catch(e){console.warn('개인메모 Firebase 연결 실패',e);settlePrivateBadgeReadyV375(false);if(privateReadyResolve){privateReadyResolve();privateReadyResolve=null}return null}finally{connectBusy=false}
  }
  function scheduleConnectV272(delay){clearTimeout(connectTimer);connectTimer=setTimeout(()=>connectPrivateV272().catch(()=>{}),Number(delay||0))}
  async function refresh(){decorate();if(!privateRef&&isAdmin()&&session())await connectPrivateV272();return privateRaw}
@@ -2276,10 +2283,10 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
      render(raw);setTimeout(()=>updateUsageV256(ident,'open').catch(()=>{}),0);
    }catch(e){mbody.innerHTML=`<div class="pre">${esc(e&&e.message?e.message:String(e))}</div>`}
  };
- const oldRP=window.renderProgress;if(typeof oldRP==='function')window.renderProgress=renderProgress=function(){const r=oldRP.apply(this,arguments);setTimeout(decorate,0);return r};
+ const oldRP=window.renderProgress;if(typeof oldRP==='function')window.renderProgress=renderProgress=function(){const r=oldRP.apply(this,arguments);decorate();return r};
  const oldMemoRefresh=window.refreshMemoCountsV110;if(typeof oldMemoRefresh==='function')window.refreshMemoCountsV110=async function(){const r=await oldMemoRefresh.apply(this,arguments);decorate();return r};
  new MutationObserver(decorate).observe(document.body,{attributes:true,attributeFilter:['class']});
- try{if(window.firebase&&firebase.auth)firebase.auth().onAuthStateChanged(u=>{if(!u){clearPrivateRefV272(true);return}privateRetryV280=0;scheduleConnectV272(120)})}catch(_e){}
+ try{if(window.firebase&&firebase.auth)firebase.auth().onAuthStateChanged(u=>{if(!u){clearPrivateRefV272(true);return}restorePrivateBadgeCacheV375();privateRetryV280=0;scheduleConnectV272(120)})}catch(_e){}
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!privateRef){privateRetryV280=0;scheduleConnectV272(120)}});
  setTimeout(()=>{decorate();scheduleConnectV272(0)},350);
  window.refreshPrivateNotesV244=refresh;
@@ -2311,7 +2318,7 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
  async function startWatch(){if(window.__webRevisionFamilyModeV369||window.__revisionFamilySyncV369){watchStarted=true;return Promise.resolve(raw||{})}if(watchStarted)return loading||Promise.resolve(raw||{});if(!window.firebase)return Promise.resolve(raw||{});watchStarted=true;try{await fb().auth();watchRef=window.__psuDbRefV355('memos');loading=new Promise(resolve=>{settleResolve=resolve});const err=e=>console.warn('메모 실시간 구독 실패',e);watchRef.on('child_added',s=>memoChangedV274(s,false),err);watchRef.on('child_changed',s=>memoChangedV274(s,false),err);watchRef.on('child_removed',s=>memoChangedV274(s,true),err);settleTimer=setTimeout(finishMemoInitialV274,350);settleMaxTimer=setTimeout(finishMemoInitialV274,1500);return loading}catch(e){watchStarted=false;loading=null;throw e}}
  async function getRaw(force=false){if(!watchStarted)await startWatch();else if(!ready&&loading)await loading;return raw||{}}
  window.__psuMemoGetRawV256=getRaw;
- window.__applyMemoSnapshotV369=function(next){raw=(next&&typeof next==='object'&&!Array.isArray(next))?next:{};ready=true;watchStarted=true;clearTimeout(settleTimer);clearTimeout(settleMaxTimer);loading=null;if(window.__psuFamilyStateV372)window.__psuFamilyStateV372.markDirty('memos');else if(typeof window.refreshMemoCountsV110==='function')setTimeout(()=>window.refreshMemoCountsV110().catch(()=>{}),0);return true};
+ window.__applyMemoSnapshotV369=function(next){raw=(next&&typeof next==='object'&&!Array.isArray(next))?next:{};ready=true;watchStarted=true;clearTimeout(settleTimer);clearTimeout(settleMaxTimer);loading=null;try{if(typeof window.__primeMemoBadgeFromRawV375==='function')window.__primeMemoBadgeFromRawV375(raw)}catch(_e){}if(window.__psuFamilyStateV372)window.__psuFamilyStateV372.markDirty('memos');else if(typeof window.refreshMemoCountsV110==='function')setTimeout(()=>window.refreshMemoCountsV110().catch(()=>{}),0);return true};
  function putLocal(id,item){if(!raw||typeof raw!=='object')raw={};raw[id]=item;ready=true}
  async function itemsFor(unit,sn,date){const [r,oh,u]=await Promise.all([getRaw(false),sha(ownerToken()),fb().auth()]),master=String(window.__webAuthInfoV136&&window.__webAuthInfoV136.role||'')==='master';return Object.keys(r||{}).map(k=>Object.assign({id:k},r[k]||{})).filter(m=>m&&!m.deleted&&((unit&&String(m.unit||'')===String(unit))||(sn&&String(m.sn||'')===String(sn)))).filter(m=>!date||effective(m)===date).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))).map(m=>Object.assign({},m,{memoDate:effective(m),canEdit:master||String(m.ownerHash||'')===oh||String(m.createdUid||'')===String(u&&u.uid||'')}))}
  async function bumpLater(){try{await fb().bump('memo')}catch(e){console.warn('메모 revision 갱신 실패',e);setTimeout(()=>fb().bump('memo').catch(()=>{}),1200)}}
@@ -2408,24 +2415,8 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
 })();
 </script>
 
-<script id="web-v282-initial-memo-badge-sync-script">
-(function(){
- if(window.__webV282InitialMemoBadgeSyncInstalled)return;window.__webV282InitialMemoBadgeSyncInstalled=true;
- let syncing=false,pending=false;
- async function sync(){
-  if(syncing){pending=true;return}
-  if(typeof window.refreshMemoCountsV110!=='function')return;
-  syncing=true;
-  try{await window.refreshMemoCountsV110()}catch(_e){}finally{syncing=false;if(pending){pending=false;setTimeout(sync,0)}}
- }
- const rp=window.renderProgress;
- if(typeof rp==='function')window.renderProgress=renderProgress=function(){const r=rp.apply(this,arguments);setTimeout(sync,0);return r};
- // v2.82: 새로고침 직후 메모 child 초기 snapshot이 카드 렌더보다 먼저/늦게 끝나는 순서 모두 보정한다.
- // refreshMemoCountsV110은 v2.74 child-delta 메모 캐시를 사용하므로 부모 전체 REST 재조회는 추가하지 않는다.
- setTimeout(sync,350);
- setTimeout(sync,1200);
-})();
-</script>
+
+
 
 <style id="web-v262-feedback-style">
 /* 미비작업 추가 입력을 같은 창에서 바로 처리 */
@@ -3653,4 +3644,17 @@ body.master-landscape-v324-on #masterLandscapeV324{display:block}
 @media(max-width:680px){.web-leave-teamgrid-v347{grid-template-columns:repeat(2,minmax(280px,1fr))!important;min-width:570px!important}.web-leave-teamgrid-v347.one{grid-template-columns:minmax(280px,1fr)!important;min-width:280px!important}}
 </style>
 <script id="web-v354-task-edit-marker">window.__WEB_V354_TASK_DETAIL=true;</script>
+
+<script id="web-v375-coherent-cache-first-boot-barrier">
+(function(){
+ if(window.__webV375CoherentCacheBootInstalled)return;window.__webV375CoherentCacheBootInstalled=true;
+ const waits=[];
+ if(window.__psuBootCacheReadyV373)waits.push(Promise.resolve(window.__psuBootCacheReadyV373));
+ if(window.__psuFamilyBootHydrationV373)waits.push(Promise.resolve(window.__psuFamilyBootHydrationV373));
+ if(window.__psuAnnualLeaveCacheReadyV375)waits.push(Promise.resolve(window.__psuAnnualLeaveCacheReadyV375));
+ if(window.__psuMemoBadgeReadyV375)waits.push(Promise.resolve(window.__psuMemoBadgeReadyV375));
+ if(window.__psuPrivateBadgeCacheReadyV375)waits.push(Promise.resolve(window.__psuPrivateBadgeCacheReadyV375));
+ Promise.allSettled(waits).then(()=>{try{if(window.__psuBootV247&&typeof window.__psuBootV247.ui==='function')window.__psuBootV247.ui()}catch(_e){}});
+})();
+</script>
 </body></html>
