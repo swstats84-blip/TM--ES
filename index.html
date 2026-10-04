@@ -109,9 +109,9 @@ html:not(.psu-web-boot-v247) #psuBootV247{display:none!important}
   html,body,#mobileList,.mobile-list,.dategroup{overflow-anchor:none!important;}
 }
 </style>
-<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.72";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
+<script id="web-v197-version-source">const WEB_VERSION_V197="웹 v3.73";window.__PSU_WEB_VERSION=WEB_VERSION_V197;</script>
 <script id="web-v317-shared-escape">window.__webEscAttrV317=function(v){return String(v??'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})};</script>
-<script>window.__PSU_WEB_TEST_BUILD="v3.05-immediate-ready-reveal";</script>
+<script>window.__PSU_WEB_TEST_BUILD="v3.73-cache-first-family-boot";</script>
 <script id="web-v299-boot-perf-mode-hint">
 (function(){
   if(window.__psuBootPerfV299)return;
@@ -412,20 +412,25 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
    if(restorePromise)return restorePromise;
    restorePromise=(async()=>{
      const x=await dbGet();
-     if(!x||![1,2].includes(Number(x.schema||0))||!Number.isFinite(Number(x.at))||Date.now()-Number(x.at)>MAX_AGE||!hasUseful(x)){if(x)dbDelete();return false}
+     if(!x||![1,2,3].includes(Number(x.schema||0))||!Number.isFinite(Number(x.at))||Date.now()-Number(x.at)>MAX_AGE||!hasUseful(x)){if(x)dbDelete();return false}
      window.__psuFastSnapshotFamilyRevisionsV372=(x.familyRevisions&&typeof x.familyRevisions==='object'&&!Array.isArray(x.familyRevisions))?copy(x.familyRevisions,{}):{};
      if(typeof state!=='object'||!state)return false;
-     const live=window.__psuCanonicalReadyStateV287||{};let applied=false;
-     if(!live.schedule&&Array.isArray(x.scheduleEvents)&&x.scheduleEvents.length){state.scheduleEvents=copy(x.scheduleEvents,[]);applied=true}
-     if(!live.progress){
-       if(Array.isArray(x.progress)&&x.progress.length){state.progress=copy(x.progress,[]);applied=true}
-       if(Array.isArray(x.progressVisibleUnitsV445)){state.progressVisibleUnitsV445=x.progressVisibleUnitsV445.map(v=>String(v||'')).filter(Boolean);applied=true}
-       if(typeof x.progressListInitializedV558==='boolean')state.progressListInitializedV558=x.progressListInitializedV558;
+     /* v3.73: boot 중에는 IndexedDB cache restore가 live/revision commit보다 먼저 끝나는 단일 barrier가 된다.
+        과거처럼 live.ready 플래그와 경쟁해서 cache family 일부만 복원되는 상태를 허용하지 않는다. */
+     const bootActive=!!(window.__psuBootV247&&window.__psuBootV247.isActive&&window.__psuBootV247.isActive()),live=window.__psuCanonicalReadyStateV287||{},covered=Object.create(null);let applied=false;
+     const schema=Number(x.schema||0),declared=Array.isArray(x.coveredFamilies)?new Set(x.coveredFamilies.map(String)):null;
+     const allow=(name)=>declared?declared.has(name):(name==='schedule'||name==='mainProgress');
+     if((bootActive||!live.schedule)&&allow('schedule')&&Array.isArray(x.scheduleEvents)){state.scheduleEvents=copy(x.scheduleEvents,[]);covered.schedule=true;applied=true}
+     if((bootActive||!live.progress)&&allow('mainProgress')){
+       if(Array.isArray(x.progress)){state.progress=copy(x.progress,[]);covered.mainProgress=true;applied=true}
+       if(Array.isArray(x.progressVisibleUnitsV445)){state.progressVisibleUnitsV445=x.progressVisibleUnitsV445.map(v=>String(v||'')).filter(Boolean);covered.mainProgress=true;applied=true}
+       if(typeof x.progressListInitializedV558==='boolean'){state.progressListInitializedV558=x.progressListInitializedV558;covered.mainProgress=true}
        if(x.progressManualIncludeUnits&&typeof x.progressManualIncludeUnits==='object')state.progressManualIncludeUnits=copy(x.progressManualIncludeUnits,{});
        if(x.deletedProgressUnits&&typeof x.deletedProgressUnits==='object')state.deletedProgressUnits=copy(x.deletedProgressUnits,{});
      }
      if(!applied)return false;
-     window.__psuFastSnapshotRestoredV287=true;try{window.dispatchEvent(new CustomEvent('psu-fast-snapshot-restored-v372',{detail:{familyRevisions:window.__psuFastSnapshotFamilyRevisionsV372||{}}}))}catch(_e){};try{if(window.__psuBootPerfV299)window.__psuBootPerfV299.mark('cacheRestored')}catch(_e){};
+     window.__psuFastSnapshotAppliedFamiliesV373=covered;
+     window.__psuFastSnapshotRestoredV287=true;try{window.dispatchEvent(new CustomEvent('psu-fast-snapshot-restored-v372',{detail:{familyRevisions:window.__psuFastSnapshotFamilyRevisionsV372||{},coveredFamilies:Object.keys(covered)}}));window.dispatchEvent(new CustomEvent('psu-fast-snapshot-restored-v373',{detail:{familyRevisions:window.__psuFastSnapshotFamilyRevisionsV372||{},coveredFamilies:Object.keys(covered)}}))}catch(_e){};try{if(window.__psuBootPerfV299)window.__psuBootPerfV299.mark('cacheRestored')}catch(_e){};
      // v2.99: IndexedDB read는 페이지 파싱 초기에 미리 시작하고, state 준비 즉시 적용한다.
      const bootActiveV296=!!(window.__psuBootV247&&window.__psuBootV247.isActive&&window.__psuBootV247.isActive());
      if(!bootActiveV296){try{if(typeof render==='function')render()}catch(_e){};try{if(typeof beginInitialTodayAnchorV196==='function')beginInitialTodayAnchorV196()}catch(_e){}}
@@ -437,12 +442,15 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
  }
  async function save(){
    if(saveBusy||typeof state!=='object'||!state)return;const live=window.__psuCanonicalReadyStateV287||{};if(!live.schedule||!live.progress)return;
-   const appliedRevisions=(window.__revisionFamilySyncV369&&typeof window.__revisionFamilySyncV369.getRevisions==='function')?window.__revisionFamilySyncV369.getRevisions():{};const payload={schema:2,at:Date.now(),familyRevisions:copy(appliedRevisions,{}),scheduleEvents:copy(state.scheduleEvents,[]),progress:copy(state.progress,[]),progressVisibleUnitsV445:copy(state.progressVisibleUnitsV445,[]),progressListInitializedV558:state.progressListInitializedV558===true,progressManualIncludeUnits:copy(state.progressManualIncludeUnits,{}),deletedProgressUnits:copy(state.deletedProgressUnits,{})};
+   const appliedRevisions=(window.__revisionFamilySyncV369&&typeof window.__revisionFamilySyncV369.getRevisions==='function')?window.__revisionFamilySyncV369.getRevisions():{},fastRevisions={schedule:appliedRevisions.schedule||'',mainProgress:appliedRevisions.mainProgress||''};const payload={schema:3,at:Date.now(),coveredFamilies:['schedule','mainProgress'],familyRevisions:fastRevisions,scheduleEvents:copy(state.scheduleEvents,[]),progress:copy(state.progress,[]),progressVisibleUnitsV445:copy(state.progressVisibleUnitsV445,[]),progressListInitializedV558:state.progressListInitializedV558===true,progressManualIncludeUnits:copy(state.progressManualIncludeUnits,{}),deletedProgressUnits:copy(state.deletedProgressUnits,{})};
    if(!hasUseful(payload))return;saveBusy=true;try{await dbPut(payload);try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(_e){}}finally{saveBusy=false}
  }
  function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(save,500)}
  window.__psuFastSnapshotRestoreV287=restore;window.__psuFastSnapshotScheduleSaveV287=scheduleSave;window.__psuFastSnapshotClearV287=dbDelete;
- restore().catch(()=>{});
+ window.__psuBootCacheReadyV373=restore().catch(()=>false);
+ /* 현재 상태가 완성된 채 종료될 때 snapshot 저장 예약이 남아 있어도 다음 실행 cache가 유실되지 않게 한다. */
+ addEventListener('pagehide',()=>{try{if(typeof state==='object'&&state)save()}catch(_e){}});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')try{if(typeof state==='object'&&state)save()}catch(_e){}});
 })();
 </script>
 
@@ -769,7 +777,7 @@ prev.onclick=()=>{viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1
  window.__fbMasterUpdateEquipmentV187=async function(oldUnit,date,fields){if(!isMaster())throw new Error('마스터 권한이 필요합니다.');await masterWriteAuthV320();const selected=(state.scheduleEvents||[]).find(e=>e&&String(e.unit||'')===String(oldUnit)&&(!date||String(e.date||'')===String(date)))||(state.scheduleEvents||[]).find(e=>e&&String(e.unit||'')===String(oldUnit));if(!selected)throw new Error('장비의 스케줄 정보를 찾지 못했습니다.');const src=String(selected.sourceUnit||selected.unit||oldUnit),nu=String(fields.unit||oldUnit).trim();if(!nu)throw new Error('장비 호기는 비워둘 수 없습니다.');const targets=(state.scheduleEvents||[]).filter(e=>e&&String(e.sourceUnit||e.unit||'')===src&&String(e.eventId||'')).map(e=>({id:String(e.eventId),date:String(e.date||'')}));if(!targets.length)throw new Error('수정할 일정 ID를 찾지 못했습니다.');const savedEvents=[];for(const t of targets){const tr=await window.__psuDbRefV355('scheduleV2/events/'+t.id).transaction(e=>{if(!e)return e;['line','sn','unit','type','workType'].forEach(f=>manual(e,f,String(fields[f]??e[f]??'').trim()));if(t.date===String(date)){if(fields.vendor!==undefined)manual(e,'vendor',String(fields.vendor||'').toUpperCase());if(fields.task!==undefined)manual(e,'task',String(fields.task||'').trim())}e.area=String(fields.area??e.area??'').trim();e.sourceUnit=e.sourceUnit||src;stripScheduleNoteV199(e);return e});const sv=tr&&tr.snapshot&&tr.snapshot.val?tr.snapshot.val():null;if(sv)savedEvents.push(sv)}let found=await findProgressChildV316(oldUnit);if(!found&&nu!==String(oldUnit))found=await findProgressChildV316(nu);if(found&&found.key){await window.__psuDbRefV355('mainState/current/progress/'+found.key).transaction(p=>{if(!p)return p;Object.assign(p,{area:String(fields.area||''),line:String(fields.line||''),sn:String(fields.sn||''),unit:nu,type:String(fields.type||''),workType:String(fields.workType||'')});if(fields.docNo!==undefined){p.docNo=String(fields.docNo||'').trim();p.docStatus=p.docNo?'found':'pending'}return p})}else{const e=selected||{},row={area:String(fields.area||e.area||''),line:String(fields.line||e.line||''),sn:String(fields.sn||e.sn||''),unit:nu,type:String(fields.type||e.type||''),workType:String(fields.workType||e.workType||''),docNo:String(fields.docNo||''),docStatus:fields.docNo?'found':'pending'},childKey=await nextProgressChildKeyV316();await set('mainState/current/progress/'+childKey,row)}if(nu!==String(oldUnit)){await window.__psuDbRefV355('mainState/current/progressVisibleUnitsV445').transaction(raw=>fbStringsV189(raw).map(x=>x===String(oldUnit)?nu:x))}await set('mainState/current/savedAt',new Date().toISOString());await Promise.all([bump('mainProgress'),bumpScheduleDeltaV286(savedEvents,[],{}),bump('progressList')]);if(fields.note!==undefined)await window.__fbMasterUpdateProgressInfoV187(nu,date,String(fields.task||selected.task||''),String(fields.note||''));return {unit:nu}};
 })();
 </script>
-<script src="./hybrid.js?v=3.72"></script>
+<script src="./hybrid.js?v=3.73"></script>
 <script id="web-v298-auth-prewarm-script">
 (function(){
   if(window.__psuAuthPrewarmStartedV298)return;
@@ -2139,11 +2147,11 @@ body.user-name-locked-v345{overflow:hidden!important;background:#f5f7fb!importan
  function finishProgressBootstrap(){if(!progressBootstrapping)return;progressBootstrapping=false;clearTimeout(progressReadyTimer);clearTimeout(progressEmptyTimer);progressRaw=Object.keys(progressStore).sort((a,b)=>Number(a)-Number(b)).map(k=>progressStore[k]);initialSeenV270.add('progress');queueApplyV225()}
  function scheduleProgressBootstrapFinish(){clearTimeout(progressReadyTimer);progressReadyTimer=setTimeout(finishProgressBootstrap,220)}
  function progressChild(s,remove){const k=String(s&&s.key||'');if(!k)return;if(remove)delete progressStore[k];else progressStore[k]=s.val();if(progressBootstrapping){scheduleProgressBootstrapFinish();return}progressRaw=Object.keys(progressStore).sort((a,b)=>Number(a)-Number(b)).map(k=>progressStore[k]);queueApplyV225()}
- window.__applyMainProgressSnapshotV369=function(raw){progressStore=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:Object.create(null);progressRaw=Object.keys(progressStore).sort((a,b)=>Number(a)-Number(b)).map(k=>progressStore[k]);initialSeenV270.add('progress');queueApplyV225();return true};
+ window.__applyMainProgressSnapshotV369=function(raw){progressStore=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:Object.create(null);progressRaw=Object.keys(progressStore).sort((a,b)=>Number(a)-Number(b)).map(k=>progressStore[k]);initialSeenV270.add('progress');if(window.__psuBootFamilyHydratingV373&&state&&Array.isArray(state.progress)&&!state.progress.length&&progressRaw.length){state.progress=progressRaw.map(x=>x&&typeof x==='object'?Object.assign({},x):x);lastProgressSigV225=progressSigV225();if(window.__psuFamilyStateV372)window.__psuFamilyStateV372.markDirty('mainProgress')}queueApplyV225();return true};
  function watchProgressChildren(){const ref=window.__psuDbRefV355('mainState/current/progress'),err=()=>{};progressBootstrapping=true;for(const ev of ['child_added','child_changed','child_removed']){const cb=s=>progressChild(s,ev==='child_removed');ref.on(ev,cb,err);refs.push({ref,event:ev,cb})}/* v3.04: progress initial child_added burst가 끝날 때까지 기존 캐시 sidebar를 유지. 첫 child가 없으면 2.5초 뒤 빈 목록으로 확정. */progressEmptyTimer=setTimeout(finishProgressBootstrap,2500)}
- function primeFastProgressV372(){if(!window.__psuFastSnapshotRestoredV287||!state||!Array.isArray(state.progress)||initialSeenV270.has('progress'))return false;progressRaw=state.progress.map(x=>x&&typeof x==='object'?Object.assign({},x):x);initialSeenV270.add('progress');lastProgressSigV225=progressSigV225();return true}window.__primeMainProgressFromFastV372=primeFastProgressV372;function attach(){if(attached||!firebase.auth().currentUser)return;attached=true;initialSeenV270=new Set();progressStore=Object.create(null);primeFastProgressV372();if(!window.__webRevisionFamilyModeV369&&!window.__revisionFamilySyncV369)watchProgressChildren();watchValue('mainState/current/progressVisibleUnitsV445','visible',v=>visibleRaw=v);watchValue('mainState/current/progressListInitializedV558','initialized',v=>initializedRaw=v);watchValue('mainState/current/progressManualIncludeUnits','manual',v=>manualRaw=v);watchValue('mainState/current/deletedProgressUnits','deleted',v=>deletedRaw=v)}
+ function primeFastProgressV372(){const covered=window.__psuFastSnapshotAppliedFamiliesV373;if(!window.__psuFastSnapshotRestoredV287||(covered&&covered.mainProgress!==true)||!state||!Array.isArray(state.progress)||initialSeenV270.has('progress'))return false;progressRaw=state.progress.map(x=>x&&typeof x==='object'?Object.assign({},x):x);initialSeenV270.add('progress');lastProgressSigV225=progressSigV225();return true}window.__primeMainProgressFromFastV372=primeFastProgressV372;function attach(){if(attached||!firebase.auth().currentUser)return;attached=true;initialSeenV270=new Set();progressStore=Object.create(null);primeFastProgressV372();if(!window.__webRevisionFamilyModeV369&&!window.__revisionFamilySyncV369)watchProgressChildren();watchValue('mainState/current/progressVisibleUnitsV445','visible',v=>visibleRaw=v);watchValue('mainState/current/progressListInitializedV558','initialized',v=>initializedRaw=v);watchValue('mainState/current/progressManualIncludeUnits','manual',v=>manualRaw=v);watchValue('mainState/current/deletedProgressUnits','deleted',v=>deletedRaw=v)}
  try{firebase.auth().onAuthStateChanged(u=>{if(u&&!attached)attach()})}catch(_e){}
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!attached&&firebase.auth().currentUser)setTimeout(attach,120)});window.addEventListener('psu-fast-snapshot-restored-v372',()=>{if(attached&&primeFastProgressV372())queueApplyV225()});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!attached&&firebase.auth().currentUser)setTimeout(attach,120)});window.addEventListener('psu-fast-snapshot-restored-v372',()=>{if(attached&&primeFastProgressV372())queueApplyV225()});window.addEventListener('psu-fast-snapshot-restored-v373',()=>{if(attached&&primeFastProgressV372())queueApplyV225()});
  const rp=window.renderProgress;if(typeof rp==='function')window.renderProgress=renderProgress=function(){const vv=fbStringsV190(visibleRaw);if(vv.length&&!fbValuesV190(state.progress).length){state.progress=synthesize([],vv)}return rp.apply(this,arguments)};
 })();
 </script>
@@ -2346,13 +2354,36 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
  }
  async function cacheWrite(def,revision,data){const rec={revision:String(revision||''),data:data===undefined?null:data,at:Date.now()};try{await idbPutV370(def.cache,rec);return}catch(e){console.warn('revision family IndexedDB 저장 실패 · localStorage fallback',def.path,e)}try{localStorage.setItem(def.cache,JSON.stringify(rec))}catch(e){throw new Error('revision family 영구 캐시 저장 실패: '+(e&&e.message?e.message:String(e)))}}
  async function apply(def,data){const r=def.apply(data&&typeof data==='object'?data:{});if(r&&typeof r.then==='function')await r;return true}
- async function fb(){const x=window.__fbDirectV187;if(!x)throw new Error('Firebase transport 준비 중');await x.auth();return x}
+ let bootHydrationV373=null,bootHydratedV373=false;
+ async function hydratePersistedFamiliesV373(){
+  if(bootHydrationV373)return bootHydrationV373;
+  bootHydrationV373=(async()=>{
+   try{if(window.__psuBootCacheReadyV373)await window.__psuBootCacheReadyV373}catch(_e){}
+   const rows=await Promise.all(Object.keys(defs).map(async name=>{try{return [name,await cacheRead(defs[name])]}catch(_e){return [name,null]}}));
+   const c=coord();if(c)c.begin();let visible=false;
+   try{
+    for(const [name,rec] of rows){
+     if(!rec||!Object.prototype.hasOwnProperty.call(rec,'data')||!String(rec.revision||''))continue;
+     /* fast snapshot이 실제로 적용한 family는 같은 revision이면 다시 apply하지 않는다. */
+     if(fastRevisionMatches(name,String(rec.revision||''))){markHydrated(name,String(rec.revision||''),'fast-snapshot');continue}
+     try{window.__psuBootFamilyHydratingV373=true;await apply(defs[name],rec.data);markHydrated(name,String(rec.revision||''),'family-cache');if(name==='schedule'||name==='mainProgress')visible=true}catch(e){console.warn('boot family cache 적용 실패',name,e)}finally{window.__psuBootFamilyHydratingV373=false}
+    }
+   }finally{if(c)c.end()}
+   bootHydratedV373=true;
+   if(visible)try{if(window.__psuBootV247&&typeof window.__psuBootV247.cache==='function')window.__psuBootV247.cache()}catch(_e){}
+   return visible;
+  })();
+  window.__psuFamilyBootHydrationV373=bootHydrationV373;
+  return bootHydrationV373;
+ }
+ async function waitBootHydrationV373(){try{await hydratePersistedFamiliesV373()}catch(_e){}}
+ async function fb(){await waitBootHydrationV373();const x=window.__fbDirectV187;if(!x)throw new Error('Firebase transport 준비 중');await x.auth();return x}
  async function ensureRevisions(force=false){if(seenRevisions&&!force)return seenRevisions;if(revisionLoad)return revisionLoad;revisionLoad=(async()=>{const f=await fb(),r=await f.readFresh('meta/relayRevisions');seenRevisions=Object.assign({},obj(r));return seenRevisions})().finally(()=>revisionLoad=null);return revisionLoad}
  async function read(def){const f=await fb();return await f.readFresh(def.path)}
  function coord(){return window.__psuFamilyStateV372||null}
  function markHydrated(name,revision,source){const c=coord();if(c)c.markHydrated(name,revision,source)}
  function alreadyHydrated(name,revision){const c=coord();return !!(c&&c.isHydrated(name,revision))}
- function fastRevisionMatches(name,revision){const def=defs[name],r=window.__psuFastSnapshotFamilyRevisionsV372;if(!def||!def.fast||!window.__psuFastSnapshotRestoredV287||!r||typeof r!=='object'||!revision)return false;return sig(def,r)===revision}
+ function fastRevisionMatches(name,revision){const def=defs[name],r=window.__psuFastSnapshotFamilyRevisionsV372,covered=window.__psuFastSnapshotAppliedFamiliesV373;if(!def||!def.fast||!window.__psuFastSnapshotRestoredV287||!covered||covered[name]!==true||!r||typeof r!=='object'||!revision)return false;return sig(def,r)===revision}
  function legacyFastCovers(name,revision,rec){if(!window.__psuFastSnapshotRestoredV287||!rec||String(rec.revision||'')!==revision)return false;const r=window.__psuFastSnapshotFamilyRevisionsV372;if(r&&Object.keys(r).length)return false;if(name==='schedule')return !!(state&&Array.isArray(state.scheduleEvents)&&state.scheduleEvents.length);if(name==='mainProgress')return !!(state&&Array.isArray(state.progress)&&(state.progress.length||state.progressListInitializedV558===true));return false}
  function markReadyWithoutApply(name){try{if(name==='schedule'&&window.__psuCanonicalReadyV270)window.__psuCanonicalReadyV270('schedule');else if(name==='progressInfo'&&window.__psuCanonicalReadyV270)window.__psuCanonicalReadyV270('progressInfo');else if(name==='mainProgress'&&window.__primeMainProgressFromFastV372)window.__primeMainProgressFromFastV372()}catch(_e){}}
  async function plan(name,revisions,force=false){const def=defs[name],revision=sig(def,revisions);if(!def)return {name,ok:false,error:new Error('unknown family')};if(!force&&revision&&fastRevisionMatches(name,revision))return {name,def,revision,action:'skip',source:'fast-current'};let rec=null;try{rec=await cacheRead(def)}catch(_e){}
@@ -2364,7 +2395,7 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
  }
  async function commitPlan(p){if(!p||p.action==='error'){if(p&&p.error)throw p.error;return false}if(p.warn)console.warn('revision family 최신 조회 실패 · 캐시 유지',p.name,p.warn);if(p.action==='skip'){markHydrated(p.name,p.revision,p.source);markReadyWithoutApply(p.name);return false}await apply(p.def,p.data);markHydrated(p.name,p.revision,p.source);if(p.action==='fresh'){try{await cacheWrite(p.def,p.revision,p.data)}catch(e){console.warn('revision family 영구 캐시 저장 실패',p.name,e)}}return p.action==='fresh'}
  function mergeAppliedRevisions(names,revisions,isFull){if(isFull){appliedRevisions=Object.assign({},obj(revisions));return}const next=Object.assign({},obj(appliedRevisions));for(const name of names){const def=defs[name];if(!def)continue;for(const k of def.keys)next[k]=obj(revisions)[k]}appliedRevisions=next}
- async function syncNames(names,revisions,force=false){names=[...new Set((names||[]).filter(n=>defs[n]))];if(!names.length)return {changed:false,ok:true};const plans=await Promise.all(names.map(n=>plan(n,revisions,force)));const c=coord();if(c)c.begin();let changed=false,ok=true;try{for(const p of plans){try{if(await commitPlan(p))changed=true}catch(e){ok=false;console.warn('revision family 동기화 실패',p&&p.name,e)}}}finally{if(c)c.end()}const isFull=names.length===Object.keys(defs).length&&Object.keys(defs).every(n=>names.includes(n));if(ok&&(fullSyncDone||isFull)){mergeAppliedRevisions(names,revisions,isFull);if(isFull)fullSyncDone=true;try{if(window.__psuFastSnapshotScheduleSaveV287)window.__psuFastSnapshotScheduleSaveV287()}catch(_e){}}return {changed,ok}}
+ async function syncNames(names,revisions,force=false){await waitBootHydrationV373();names=[...new Set((names||[]).filter(n=>defs[n]))];if(!names.length)return {changed:false,ok:true};const plans=await Promise.all(names.map(n=>plan(n,revisions,force)));const c=coord();if(c)c.begin();let changed=false,ok=true;try{for(const p of plans){try{if(await commitPlan(p))changed=true}catch(e){ok=false;console.warn('revision family 동기화 실패',p&&p.name,e)}}}finally{if(c)c.end()}const isFull=names.length===Object.keys(defs).length&&Object.keys(defs).every(n=>names.includes(n));if(ok&&(fullSyncDone||isFull)){mergeAppliedRevisions(names,revisions,isFull);if(isFull)fullSyncDone=true;try{if(window.__psuFastSnapshotScheduleSaveV287)window.__psuFastSnapshotScheduleSaveV287()}catch(_e){}}return {changed,ok}}
  async function refresh(name,revisions=null,force=false){if(!defs[name])return false;if(!revisions)revisions=await ensureRevisions();const r=await syncNames([name],revisions,force);return !!r.changed}
  async function syncAll(revisions=null,force=false){if(!revisions)revisions=await ensureRevisions();seenRevisions=Object.assign({},obj(revisions));const r=await syncNames(Object.keys(defs),seenRevisions,force);return !!r.changed}
  function enqueue(next,names,force=false){next=Object.assign({},obj(next));names=[...new Set((names||[]).filter(n=>defs[n]))];if(!names.length)return;if(pendingBatch){pendingBatch.next=next;names.forEach(n=>pendingBatch.names.add(n));pendingBatch.force=pendingBatch.force||force}else pendingBatch={next,names:new Set(names),force:!!force};if(!batchRunning)drain()}
@@ -2372,8 +2403,8 @@ body.general-mode #plist .private-note-btn-v244{display:none!important}
  function onRevisions(next){next=Object.assign({},obj(next));const prev=seenRevisions;seenRevisions=next;if(!fullSyncDone){enqueue(next,Object.keys(defs),false);return}const changed=Object.keys(defs).filter(name=>sig(defs[name],prev||{})!==sig(defs[name],next));enqueue(next,changed,false)}
  function bindRevision(){if(revBound||!window.__psuDbRefV355)return;revBound=true;try{revRef=window.__psuDbRefV355('meta/relayRevisions');revRef.on('value',s=>onRevisions(obj(s&&s.val?s.val():{})),e=>{console.warn('revision 신호 연결 실패',e);revBound=false;revRef=null;setTimeout(bindRevision,1800)})}catch(e){revBound=false;setTimeout(bindRevision,1800)}}
  async function rebuild(){for(const d of Object.values(defs)){try{await idbDeleteV370(d.cache)}catch(_e){}try{localStorage.removeItem(d.cache)}catch(_e){}}fullSyncDone=false;appliedRevisions=null;const revisions=await ensureRevisions(true);seenRevisions=Object.assign({},obj(revisions));return syncAll(seenRevisions,true)}
- window.__revisionFamilySyncV369={defs,refresh,syncAll,onRevisions,rebuild,getRevisions:()=>Object.assign({},appliedRevisions||{}),ensureRevisions};
- bindRevision();window.addEventListener('psu-transport-mode',()=>{if(!revBound)setTimeout(bindRevision,30)});setTimeout(bindRevision,300);
+ window.__revisionFamilySyncV369={defs,refresh,syncAll,onRevisions,rebuild,getRevisions:()=>Object.assign({},appliedRevisions||{}),ensureRevisions,hydratePersistedFamiliesV373};
+ hydratePersistedFamiliesV373().finally(()=>bindRevision());window.addEventListener('psu-transport-mode',()=>{Promise.resolve(hydratePersistedFamiliesV373()).finally(()=>{if(!revBound)setTimeout(bindRevision,30)})});setTimeout(()=>{Promise.resolve(hydratePersistedFamiliesV373()).finally(()=>{if(!revBound)bindRevision()})},300);
 })();
 </script>
 
