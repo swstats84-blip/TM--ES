@@ -2,7 +2,7 @@
  'use strict';
  if(window.__webV368HardRouteInstalled)return;window.__webV368HardRouteInstalled=true;
  const direct=window.__fbFirebaseDirectV355;
- if(!direct||!window.firebase||!firebase.database||!firebase.auth){console.warn('v3.71 transport: Firebase direct facade 준비 전');return;}
+ if(!direct||!window.firebase||!firebase.database||!firebase.auth){console.warn('v3.72 transport: Firebase direct facade 준비 전');return;}
  const DB=String(firebase.app().options&&firebase.app().options.databaseURL||'').replace(/\/+$/,'');
  const CLIENT_KEY='psuRelayClientIdV365';
  let CLIENT_ID='';
@@ -16,7 +16,7 @@
  // Critical startup rule: business RTDB stays OFF until relayDiscovery/current resolves.
  sdkGate(false);
  async function user(){
-   // v3.71: direct.auth()가 Firebase 첫 Auth 복원 상태를 기다린 뒤에만 익명 로그인을 허용한다.
+   // v3.72: direct.auth()가 Firebase 첫 Auth 복원 상태를 기다린 뒤에만 익명 로그인을 허용한다.
    // transport가 profile/RTDB 복원 promise를 기다리면 route 결정과 순환대기가 생길 수 있으므로 Auth SDK gate만 사용한다.
    return await direct.auth()
  }
@@ -55,7 +55,7 @@
    initial(l){if(l.event==='value')l.cb(new Snap(this.model,l.ref.key));else if(l.event==='child_added')for(const k of Object.keys(childMap(this.model)))l.cb(new Snap(this.model[k],k))}
    dispatch(before,after,initial){for(const l of [...this.listeners]){try{if(l.event==='value'){l.cb(new Snap(after,l.ref.key));continue}const a=childMap(before),b=childMap(after);if(initial){if(l.event==='child_added')for(const k of Object.keys(b))l.cb(new Snap(b[k],k));continue}if(l.event==='child_added'){for(const k of Object.keys(b))if(!(k in a))l.cb(new Snap(b[k],k))}else if(l.event==='child_removed'){for(const k of Object.keys(a))if(!(k in b))l.cb(new Snap(a[k],k))}else if(l.event==='child_changed'){for(const k of Object.keys(b))if(k in a&&JSON.stringify(a[k])!==JSON.stringify(b[k]))l.cb(new Snap(b[k],k))}}catch(e){if(l.err)l.err(e)}}}
    scheduleReopen(force){clearTimeout(this.reopenTimer);if(mode!=='RELAY'||!this.listeners.size)return;this.reopenTimer=setTimeout(()=>this.open(!!force),700)}
-   async open(forceToken=false){if(this.es||this.opening||mode!=='RELAY'||!relayURL||!this.listeners.size)return;this.opening=true;try{const sp=qs(this.q);sp.set('auth',await token(forceToken));sp.set('clientId',CLIENT_ID);sp.set('clientType','web');if(mode!=='RELAY'||!relayURL||!this.listeners.size)return;const es=new EventSource(relayURL+'/firebase/'+this.path+'.json?'+sp.toString());this.es=es;const ev=(kind,e)=>{if(this.es!==es)return;try{const m=JSON.parse(e.data||'{}'),before=clone(this.model),first=this.model===undefined;this.model=apply(this.model,String(m.path||'/'),kind,m.data);this.dispatch(before,this.model,first)}catch(x){for(const l of this.listeners)if(l.err)l.err(x)}};es.addEventListener('put',e=>ev('put',e));es.addEventListener('patch',e=>ev('patch',e));es.addEventListener('auth_revoked',()=>{if(this.es!==es)return;this.close(false);this.scheduleReopen(true)});es.addEventListener('cancel',()=>{if(this.es!==es)return;/* v3.71: 인증 전환/권한 재평가로 cancel되어도 논리 listener는 유지하고 새 토큰으로 복구한다. */this.close(false);this.scheduleReopen(true)});es.onerror=()=>{if(this.es!==es)return;if(es.readyState===EventSource.CLOSED){this.close(false);this.scheduleReopen(true)}}}catch(_e){this.scheduleReopen(forceToken)}finally{this.opening=false}}
+   async open(forceToken=false){if(this.es||this.opening||mode!=='RELAY'||!relayURL||!this.listeners.size)return;this.opening=true;try{const sp=qs(this.q);sp.set('auth',await token(forceToken));sp.set('clientId',CLIENT_ID);sp.set('clientType','web');if(mode!=='RELAY'||!relayURL||!this.listeners.size)return;const es=new EventSource(relayURL+'/firebase/'+this.path+'.json?'+sp.toString());this.es=es;const ev=(kind,e)=>{if(this.es!==es)return;try{const m=JSON.parse(e.data||'{}'),before=clone(this.model),first=this.model===undefined;this.model=apply(this.model,String(m.path||'/'),kind,m.data);this.dispatch(before,this.model,first)}catch(x){for(const l of this.listeners)if(l.err)l.err(x)}};es.addEventListener('put',e=>ev('put',e));es.addEventListener('patch',e=>ev('patch',e));es.addEventListener('auth_revoked',()=>{if(this.es!==es)return;this.close(false);this.scheduleReopen(true)});es.addEventListener('cancel',()=>{if(this.es!==es)return;/* v3.72: 인증 전환/권한 재평가로 cancel되어도 논리 listener는 유지하고 새 토큰으로 복구한다. */this.close(false);this.scheduleReopen(true)});es.onerror=()=>{if(this.es!==es)return;if(es.readyState===EventSource.CLOSED){this.close(false);this.scheduleReopen(true)}}}catch(_e){this.scheduleReopen(forceToken)}finally{this.opening=false}}
    close(remove){clearTimeout(this.reopenTimer);this.reopenTimer=0;if(this.es){try{this.es.close()}catch(_e){}this.es=null}if(remove)relayStreams.delete(this.key)}
  }
  function relayStream(path,q){const k=streamKey(path,q);let s=relayStreams.get(k);if(!s){s=new RelayStream(path,q);relayStreams.set(k,s)}return s}
